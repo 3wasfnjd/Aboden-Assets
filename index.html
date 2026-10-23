@@ -86,6 +86,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
     <button type="button" data-s="hara" aria-pressed="true">الحي النجدي</button>
     <button type="button" data-s="souq" aria-pressed="false">السوق</button>
     <button type="button" data-s="beings" aria-pressed="false">الكائنات</button>
+    <button type="button" data-s="badia" aria-pressed="false">البادية</button>
     <button type="button" data-s="vehicles" aria-pressed="false">المركبات</button>
     <button type="button" data-s="plants" aria-pressed="false">النباتات</button>
     <button type="button" data-s="architecture" aria-pressed="false">قطع العمارة</button>
@@ -149,6 +150,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <script src="majlis/majlis.js"></script>
 <script src="terrain/rocks.js"></script>
 <script src="vehicles/vehicles.js"></script>
+<script src="badia/badia.js"></script>
 <script src="core/viewer-three.js"></script>
 <script>
 (function(){
@@ -312,6 +314,29 @@ const SCENES = {
     paint: (x, z) => ({ packed: Math.max(rect(x, z, -31, 31, -2.6, 2.6, 0.6), rect(x, z, -7, 7.5, -6.6, 2.6, 0.6), 0.75 * rect(x, z, -27, 27, -12.2, -10.4, 0.4), 0.85 * rect(x, z, -6.2, 6.2, -12.4, -6.6, 0.3), 0.6 * rect(x, z, -60, -29, -1.8, 1.8, 1.2) * (1 - AA.smooth(-60, -40, -x) * 0)), wet: rect(x, z, -6, 5.5, 5, 19, 1) }) },
   souq: { title: 'السوق', pond: false, flat: 28, overview: [6, 22, 25], target: [1, 0.5, 0], entries: souqEntries(),
     paint: (x, z) => ({ packed: Math.max(rect(x, z, -16, 16, -2.6, 2.6, 0.5), 0.7 * rect(x, z, 15, 27, -8, 7, 1.5), 0.6 * rect(x, z, -40, -16, -1.8, 1.8, 1)), wet: 0 }) },
+  badia: { title: 'البادية', pond: false, flat: 30, overview: [10, 9, 22], target: [0, 1, 0], entries: [
+    { id:'bait_shaar', inst:[{ x:0, z:0, over:{ seed:1, length:12, depth:5 } }] },
+    { id:'shaib',  inst:[{ x:1.5, z:-1.93, y:0.14, clip:'sit_floor', over:{ seed:2, bisht:'brown' } }, { x:2.4, z:-1.93, y:0.14, clip:'sit_floor', over:{ seed:3, bisht:'black', stoop:0.4 } }, { x:5.53, z:0.6, y:0.14, rot:-Math.PI / 2, clip:'sit_floor', over:{ seed:4 } }, { x:6.5, z:4.2, rot:-2.6, over:{ seed:5 } }] },
+    { id:'boy',    inst:[{ x:3.5, z:-1.93, y:0.14, clip:'sit_floor', over:{ seed:6, headwear:'shemagh', agal:true, height:1.5 } }, { x:2.6, z:4.6, rot:2.8, clip:'wave', over:{ seed:7, headwear:'taqiyah' } }] },
+    { id:'woman',  inst:[{ x:-3.6, z:-1.93, y:0.14, clip:'sit_floor', over:{ seed:8 } }, { x:-2.4, z:-1.93, y:0.14, clip:'sit_floor', over:{ seed:9, veil:'niqab' } }, { x:-13, z:6.5, walk:[-13, 6.5, -4, 3.2], over:{ seed:10, veil:'niqab' } }] },
+    { id:'girl',   inst:[{ x:-4.5, z:-0.6, rot:0.6, over:{ seed:11, scarf:true, dress:'red' } }, { x:-1.6, z:4.3, rot:2.2, clip:'wave', over:{ seed:12, dress:'teal' } }] },
+    { id:'child',  inst:[{ x:-0.8, z:4.8, rot:-2.6, over:{ seed:13 } }] },
+    { id:'camel',  inst:[{ x:8.5, z:6, rot:-2.0, clip:'graze', over:{ seed:14 } }, { x:10.8, z:3.4, rot:-1.2, clip:'graze', over:{ seed:15, coat:'majaheem' } }, { x:-8.5, z:8.5, rot:1.4, clip:'graze', over:{ seed:16, coat:'humr' } }, { x:7.6, z:1.4, rot:-1.7, over:{ seed:17, saddle:true, coat:'wadh' } }, { x:13.5, z:8.6, rot:-2.6, clip:'graze', over:{ seed:18, coat:'sufr' } }] },
+    { id:'pen',    inst:[{ x:-12.5, z:-3, rot:Math.PI / 2, over:{ seed:19, width:8, depth:6, style:'fronds', height:1.3 } }] },
+    { id:'sheep',  inst:[{ x:-13, z:-2.6, rot:0.6, clip:'graze', over:{ seed:20 } }, { x:-11.6, z:-4.2, rot:2.0, clip:'graze', over:{ seed:21, breed:'naimi' } }, { x:-12.4, z:-0.6, rot:-1.2, over:{ seed:22, breed:'goat' } }, { x:-14, z:-4.8, rot:-2.4, clip:'graze', over:{ seed:23 } }, { x:-11, z:-1.8, rot:1.1, clip:'graze', over:{ seed:24, breed:'goat' } }, { x:-13.8, z:-1.2, rot:0.3, over:{ seed:25, size:0.65 } }] },
+    { id:'khaima', inst:[{ x:15, z:-5, rot:-0.6, over:{ seed:26 } }, { x:-17, z:8, rot:0.7, over:{ seed:27, style:'box', size:3 } }, { x:19.5, z:2.5, rot:-1.3, over:{ seed:28, color:'beige', size:2.2, furnish:false } }] },
+    { id:'wayt',   inst:[{ x:-6.5, z:11, rot:2.3, over:{ seed:29 } }] },
+    { id:'lorry',  inst:[{ x:13, z:13.5, rot:-2.5, over:{ seed:30, load:'hay', color:'blue' } }] },
+    { id:'pickup', inst:[{ x:-2.5, z:12, rot:3.4, over:{ seed:31, load:'water', color:'white', rims:'steel', dirt:0.6 } }] },
+    { id:'jeep',   inst:[{ x:9, z:-9, rot:-0.4, over:{ seed:32, color:'white', rack:true, tire:1.1, dirt:0.6, rims:'steel', doors:0.8 } }] },
+    { id:'firewood', inst:[{ x:-7.4, z:2.6, rot:0.4, over:{ seed:33, rows:4, length:1.4 } }] },
+    { id:'pottery',  inst:[{ x:-5.6, z:-3.7, over:{ seed:34, count:5, spread:1.4 } }] },
+    { id:'zir',      inst:[{ x:-6.8, z:-0.6, over:{ seed:35 } }] },
+    { id:'talh',   inst:[{ x:-21, z:-12, over:{ seed:36 } }, { x:22, z:-11, over:{ seed:37 } }] },
+    { id:'arfaj',  shared:true, inst:[{ x:5, z:15 }, { x:-10, z:16, scale:1.2 }, { x:20, z:9, scale:0.8 }, { x:-20, z:2, scale:1.1 }, { x:3, z:-11 }, { x:-6, z:-12, scale:0.9 }] },
+    { id:'thumam', shared:true, inst:[{ x:12, z:-1 }, { x:-17, z:-9, scale:0.8 }, { x:17, z:-14, scale:1.1 }] },
+    { id:'rocks',  shared:true, inst:[{ x:16, z:-16, over:{ seed:38, size:1.4 } }, { x:-24, z:12, rot:2, scale:1.3 }] }
+  ], paint: (x, z) => ({ packed: Math.max(0.55 * rect(x, z, -9, 9, -4.5, 6.5, 2.5), 0.5 * rect(x, z, -16, -9, -7, 1, 1.5)), wet: 0 }) },
   vehicles: { title: 'المركبات', pond: false, flat: 34, overview: [16, 11, 24], target: [0, 1, 0], entries: [
     { id:'jeep',   inst:[{ x:19, z:0, loop:[0, 0, 19, 12], over:{ seed:1 } }, { x:-1.5, z:-2.2, rot:0.5, over:{ seed:2, color:'white', rack:true, tire:1.12, dirt:0.6, rims:'steel', doors:0.85, steer:-18 } }, { x:8.5, z:-6.5, rot:-2.4, over:{ seed:3, color:'black', dirt:0.1, stripe:false, snorkel:false, bumper:'chrome', steer:22 } }] },
     { id:'pickup', inst:[{ x:4.4, z:-1.2, rot:-0.4, over:{ seed:4, load:'sheep', cage:true, dirt:0.5 } }, { x:-6.8, z:-3.6, rot:1.9, over:{ seed:5, load:'hay', color:'red', doors:0.6 } }, { x:3, z:7.2, rot:2.9, over:{ seed:6, load:'water', color:'blue', rims:'steel' } }, { x:-30, z:17, walk:[-34, 17, 34, 17], over:{ seed:7, color:'champagne', load:'crates' } }] },

@@ -427,7 +427,29 @@
     return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 300), repeat: 1 };
   }
 
-  const GEN = { sand, clay, rug, mud_wall: mudWall, mud_wall_worn: (n, s) => mudWall(n, s, { exposure: 1.5 }), mud_top: mudTop, gypsum, wood, najdi_door: najdiDoor, sandstone, water, fur, wool, sadu, shemagh, cloth, burlap, weave, stripes_red: (n, s) => stripes(n, s, [176, 44, 36], [236, 224, 196]), stripes_green: (n, s) => stripes(n, s, [46, 110, 74], [236, 224, 196]), stripes_blue: (n, s) => stripes(n, s, [40, 84, 140], [236, 224, 196]) };
+  // شعر الماعز (بيت الشعر): نسيج خشن داكن من شقاق (أشرطة منسوجة عرضها نحو 60 سم) بخيط فاتح أحياناً — الخامة تغطي مترين
+  function hairTent(n, seed) {
+    const nz = tileNoise(n, seed, [16, 64, Math.min(256, n / 2)], 1.2), f = tileNoise(n, seed + 1, [Math.min(512, n)], 1);
+    const rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n), strips = 3, rng = AA.rng(seed), tone = [0.8 + rng() * 0.3, 0.8 + rng() * 0.3, 0.8 + rng() * 0.3];
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x, sv = y / n * strips, st = Math.floor(sv), lv = sv - st, seam = lv < 0.03 || lv > 0.97 ? 0.6 : 1;
+      const weave = 0.5 + 0.5 * Math.sin(x / n * Math.PI * 2 * 90) * Math.sin(y / n * Math.PI * 2 * 260), light = st === 1 && Math.abs(lv - 0.5) < 0.02 ? 2.1 : 1;
+      const k = (0.75 + 0.35 * nz[i]) * (0.9 + 0.15 * weave) * seam * tone[st % 3] * (0.95 + 0.1 * f[i]);
+      rgb[i * 3] = 30 * k * light; rgb[i * 3 + 1] = 25 * k * light; rgb[i * 3 + 2] = 22 * k * light; h[i] = weave * 0.6 + nz[i] * 0.4 - (seam < 1 ? 0.4 : 0);
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 120), repeat: 2 };
+  }
+  // قماش خيمة (كانفس) فاتح بنسيج واضح ودرزات
+  function canvas(n, seed) {
+    const nz = tileNoise(n, seed, [8, 32, 128], 1.3), rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x, w = 0.5 + 0.5 * Math.sin(x / n * Math.PI * 2 * 200) * Math.sin(y / n * Math.PI * 2 * 200), seam = (x % (n / 2)) < Math.max(1, n / 256) ? 0.82 : 1;
+      const k = (0.9 + 0.08 * nz[i]) * (0.95 + 0.06 * w) * seam; rgb[i * 3] = 250 * k; rgb[i * 3 + 1] = 246 * k; rgb[i * 3 + 2] = 236 * k; h[i] = w * 0.5 + nz[i] * 0.5;
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 300), repeat: 2 };
+  }
+
+  const GEN = { hair_tent: hairTent, canvas, sand, clay, rug, mud_wall: mudWall, mud_wall_worn: (n, s) => mudWall(n, s, { exposure: 1.5 }), mud_top: mudTop, gypsum, wood, najdi_door: najdiDoor, sandstone, water, fur, wool, sadu, shemagh, cloth, burlap, weave, stripes_red: (n, s) => stripes(n, s, [176, 44, 36], [236, 224, 196]), stripes_green: (n, s) => stripes(n, s, [46, 110, 74], [236, 224, 196]), stripes_blue: (n, s) => stripes(n, s, [40, 84, 140], [236, 224, 196]) };
   const SIZES = { high: 1024, med: 512, low: 256 };
   const cache = {};
   // AA.texture('mud_wall', 'med') — تُبنى مرة واحدة وتُشارك

@@ -180,14 +180,14 @@
   function bodyInto(P, s, p, q, rng) {
     const paint = hex(PAINT[p.color] || PAINT.white), dust = hex('#b8996e'), dirt = p.dirt;
     const pc = pt => vary(mixc(paint, dust, dirt * (0.15 + 0.85 * smooth(0.95, 0.42, pt[1]))), rng, 0.01);
-    const W = s.W, wBody = () => W, Ra = s.R + 0.075;
+    const W = s.W, wBody = () => W, Ra = s.R + 0.075, zF = s.zF != null ? s.zF : s.L / 2, zB = s.zB != null ? s.zB : -s.L / 2, arches = s.arches || [s.axR, s.axF];
     // المقطع الجانبي السفلي: مقدمة، غطاء المحرك، الخط العلوي، المؤخرة، والقاع بفتحتي العجلات
     const arch = (zc, from, to) => { const out = [], n = LOW(q) ? 6 : 12, a0 = Math.PI - Math.asin(clamp((s.bottom - s.R) / Ra, -1, 1)), a1 = Math.asin(clamp((s.bottom - s.R) / Ra, -1, 1)); for (let k = 0; k <= n; k++) { const a = lerp(a0, a1, k / n); out.push([zc + Ra * Math.cos(a), s.R + Ra * Math.sin(a)]); } return out; };
-    const prof = [[s.L / 2 - 0.06, s.bottom], [s.L / 2, s.bumperY + 0.18], [s.L / 2 - 0.03, s.hoodY - 0.04], [s.L / 2 - 0.16, s.hoodY], [s.cowlZ, s.belt + 0.02]];
-    if (s.bed) prof.push([s.cabRear - 0.04, s.belt], [-s.L / 2 + 0.05, s.belt - 0.02]); else prof.push([-s.L / 2 + 0.08, s.belt]);
-    prof.push([-s.L / 2, s.belt - 0.1], [-s.L / 2 + 0.02, s.bottom + 0.05], [-s.L / 2 + 0.12, s.bottom]);
+    const prof = [[zF - 0.06, s.bottom], [zF, s.bumperY + 0.18], [zF - 0.03, s.hoodY - 0.04], [zF - 0.16, s.hoodY], [s.cowlZ, s.belt + 0.02]];
+    if (s.bed) prof.push([s.cabRear - 0.04, s.belt], [zB + 0.05, s.belt - 0.02]); else prof.push([zB + 0.08, s.belt]);
+    prof.push([zB, s.belt - 0.1], [zB + 0.02, s.bottom + 0.05], [zB + 0.12, s.bottom]);
     // القاع من الخلف للأمام: فتحة العجلة الخلفية ثم الأمامية (عكس اتجاه الزاوية لأن المسار يمشي نحو +Z)
-    for (const zc of [s.axR, s.axF]) for (const pt of arch(zc)) prof.push([pt[0], pt[1]]);
+    for (const zc of arches) for (const pt of arch(zc)) prof.push([pt[0], pt[1]]);
     // سطح الخط العلوي (فوق الكابينة والصندوق) لا يُرسم: البدن مجوّف من الداخل
     const topSkip = (i, a, b) => Math.abs(a[1] - s.belt) < 0.05 && Math.abs(b[1] - s.belt) < 0.05 && Math.abs(a[0] - b[0]) > 1 && Math.max(a[0], b[0]) <= s.cowlZ + 0.01;
     const body = extrudeX(P.paint, prof, { w: wBody, r: 0.05, color: pc, skip: topSkip, noCap: true });
@@ -241,23 +241,23 @@
     AA.quad(P.interior, [[-W + 0.06, s.floorY, s.cabRear + 0.03], [W - 0.06, s.floorY, s.cabRear + 0.03], [W - 0.06, s.floorY, s.cowlZ - 0.1], [-W + 0.06, s.floorY, s.cowlZ - 0.1]], [[0, 0], [1, 0], [1, 1], [0, 1]], [[0.55, 0.5, 0.45]], [0, 1, 0]);
     AA.quad(P.interior, [[-W + 0.06, s.floorY, s.cowlZ - 0.1], [W - 0.06, s.floorY, s.cowlZ - 0.1], [W - 0.06, s.belt, s.cowlZ - 0.1], [-W + 0.06, s.belt, s.cowlZ - 0.1]], [[0, 0], [1, 0], [1, 1], [0, 1]], [[0.6, 0.55, 0.5]], [0, 0, -1]);
     if (s.bed) AA.quad(P.interior, [[-W + 0.06, s.floorY, s.cabRear + 0.03], [W - 0.06, s.floorY, s.cabRear + 0.03], [W - 0.06, s.belt, s.cabRear + 0.03], [-W + 0.06, s.belt, s.cabRear + 0.03]], [[0, 0], [1, 0], [1, 1], [0, 1]], [[0.6, 0.55, 0.5]], [0, 0, 1]);
-    const archTop = z => { let y = s.bottom + 0.1; for (const zc of [s.axF, s.axR]) if (Math.abs(z - zc) < Ra) y = Math.max(y, s.R + Math.sqrt(Ra * Ra - (z - zc) * (z - zc)) + 0.06); return y; };
-    if (p.stripe) for (const [y0, y1] of [[s.belt - 0.24, s.belt - 0.2], [s.belt - 0.18, s.belt - 0.165]]) sidePoly(P.trim, clipZ([[-s.L / 2 + 0.15, y0], [s.L / 2 - 0.2, y0], [s.L / 2 - 0.2, y1], [-s.L / 2 + 0.15, y1]], -9, 9), wBody, 0.004, [1, 1, 1]);
+    const archTop = z => { let y = s.bottom + 0.1; for (const zc of arches) if (Math.abs(z - zc) < Ra) y = Math.max(y, s.R + Math.sqrt(Ra * Ra - (z - zc) * (z - zc)) + 0.06); return y; };
+    if (p.stripe) for (const [y0, y1] of [[s.belt - 0.24, s.belt - 0.2], [s.belt - 0.18, s.belt - 0.165]]) sidePoly(P.trim, clipZ([[zB + 0.15, y0], [zF - 0.2, y0], [zF - 0.2, y1], [zB + 0.15, y1]], -9, 9), wBody, 0.004, [1, 1, 1]);
     // شريط بلاستيك سفلي وحواف فتحات العجلات
-    for (const zc of [s.axF, s.axR]) for (const sx of [1, -1]) {
+    for (const zc of arches) for (const sx of [1, -1]) {
       const pts = arch(zc).map(pt => [sx * (W + 0.01), pt[1], pt[0]]);
       AA.tube(P.trim, pts, pts.map(() => 0.035), 5, () => [1, 1, 1], () => 0, 0, null, false);
     }
     // تحت السيارة: هيكل ومحوران
-    AA.box(P.under, [0, s.bottom - 0.08, (s.axF + s.axR) / 2], [W * 1.4, 0.16, s.axF - s.axR + 0.6], [1, 1, 1], 1, {});
-    for (const zc of [s.axF, s.axR]) AA.loft(P.under, { path: [[-W + 0.08, s.R, zc], [W - 0.08, s.R, zc]], sides: 6, up: () => [0, 1, 0], capStart: true, capEnd: true, radius: () => 0.05, color: () => [1, 1, 1] });
+    if (!s.noUnder) AA.box(P.under, [0, s.bottom - 0.08, (s.axF + s.axR) / 2], [W * 1.4, 0.16, s.axF - s.axR + 0.6], [1, 1, 1], 1, {});
+    if (!s.noUnder) for (const zc of [s.axF, s.axR]) AA.loft(P.under, { path: [[-W + 0.08, s.R, zc], [W - 0.08, s.R, zc]], sides: 6, up: () => [0, 1, 0], capStart: true, capEnd: true, radius: () => 0.05, color: () => [1, 1, 1] });
     // الداخل: مقاعد، لوحة قيادة، مقود (يسار)
     AA.box(P.interior, [0, s.belt - 0.02, s.cowlZ - 0.3], [W * 2 - 0.2, 0.22, 0.4], [1, 1, 1], 1, {});
     for (const x of [0.4, -0.4]) { AA.roundBox(P.interior, [x, s.floorY + 0.2, s.seatF], [0.5, 0.14, 0.5], 0.05, { seg: 1 }); AA.roundBox(P.interior, [x, s.floorY + 0.55, s.seatF - 0.26], [0.5, 0.65, 0.12], 0.05, { seg: 1 }); }
     if (s.seatR != null) { AA.roundBox(P.interior, [0, s.floorY + 0.2, s.seatR], [W * 2 - 0.3, 0.14, 0.5], 0.05, { seg: 1 }); AA.roundBox(P.interior, [0, s.floorY + 0.55, s.seatR - 0.26], [W * 2 - 0.3, 0.6, 0.12], 0.05, { seg: 1 }); }
     { const c = [0.4, s.belt + 0.08, s.cowlZ - 0.48], ring = []; for (let k = 0; k <= 16; k++) { const a = k / 16 * Math.PI * 2; ring.push([c[0] + Math.cos(a) * 0.19, c[1] + Math.sin(a) * 0.19 * 0.8, c[2] - Math.sin(a) * 0.19 * 0.6]); } AA.tube(P.trim, ring, ring.map(() => 0.018), 5, () => [1, 1, 1], () => 0, 0, null, false); }
     // المقدمة: شبك، مصابيح، صدام، ولوحة
-    const zf = s.L / 2;
+    const zf = zF;
     AA.box(P.trim, [0, s.hoodY - 0.2, zf + 0.005], [W * 1.15, 0.26, 0.03], [1, 1, 1], 1, {});
     for (let k = 0; k < 4; k++) AA.box(P.chrome, [0, s.hoodY - 0.11 - k * 0.06, zf + 0.022], [W * 1.12, 0.014, 0.012], [1, 1, 1], 1, {});
     for (const sx of [1, -1]) {
@@ -269,16 +269,16 @@
         AA.box(P.lamp, [sx * (W - 0.24), s.hoodY - 0.17, zf + 0.02], [0.32, 0.13, 0.01], [1, 1, 1], 1, {});
       }
       AA.box(P.amber, [sx * (W - 0.12), s.bumperY + 0.14, zf - 0.02], [0.14, 0.06, 0.03], [1, 1, 1], 1, {});
-      AA.box(P.tail, [sx * (W - 0.09), s.belt - 0.2, -s.L / 2 - 0.004], [0.16, 0.26, 0.02], [1, 1, 1], 1, {});
-      AA.box(P.amber, [sx * (W - 0.09), s.belt - 0.38, -s.L / 2 - 0.004], [0.16, 0.07, 0.02], [1, 1, 1], 1, {});
+      if (!s.noRear) AA.box(P.tail, [sx * (W - 0.09), s.belt - 0.2, zB - 0.004], [0.16, 0.26, 0.02], [1, 1, 1], 1, {});
+      if (!s.noRear) AA.box(P.amber, [sx * (W - 0.09), s.belt - 0.38, zB - 0.004], [0.16, 0.07, 0.02], [1, 1, 1], 1, {});
       // مرآة جانبية
       AA.box(P.trim, [sx * (W + 0.08), s.belt + 0.2, s.glassF - 0.05], [0.12, 0.16, 0.05], [1, 1, 1], 1, {});
       AA.box(P.trim, [sx * (W + 0.02), s.belt + 0.14, s.glassF - 0.05], [0.08, 0.03, 0.03], [1, 1, 1], 1, {});
     }
     const bump = p.bumper === 'chrome' ? P.chrome : P.trim;
     AA.roundBox(bump, [0, s.bumperY, zf + 0.05], [W * 2 + 0.06, 0.2, 0.16], 0.05, { seg: LOW(q) ? 1 : 2 });
-    AA.roundBox(bump, [0, s.bumperY, -zf - 0.05], [W * 2 + 0.06, 0.2, 0.16], 0.05, { seg: LOW(q) ? 1 : 2 });
-    for (const z of [zf + 0.135, -zf - 0.135]) AA.box(P.chrome, [0, s.bumperY + 0.04, z], [0.42, 0.11, 0.01], [0.95, 0.95, 0.95], 1, {}); // لوحة بلا كتابة
+    if (!s.noRear) AA.roundBox(bump, [0, s.bumperY, zB - 0.05], [W * 2 + 0.06, 0.2, 0.16], 0.05, { seg: LOW(q) ? 1 : 2 });
+    for (const z of s.noRear ? [zf + 0.135] : [zf + 0.135, zB - 0.135]) AA.box(P.chrome, [0, s.bumperY + 0.04, z], [0.42, 0.11, 0.01], [0.95, 0.95, 0.95], 1, {}); // لوحة بلا كتابة
     return { body, gW };
   }
 
@@ -350,6 +350,90 @@
       bed: { floorY: fy, z0: zb1, z1: zb0, halfWidth: wi }, riders, light: { at: [0, s.hoodY - 0.17, L / 2 + 0.4], color: [1, 0.95, 0.82], intensity: 2.2, distance: 14 }, walkSpeed: 3.6 }, s.axF, s.axR, R, { wx: 0.78, W, doors: s.doors, steer: p.steer, open: p.doors });
   }
 
+
+  // ---------- شاحنة (لوري) ووايت ماء: كابينة بغطاء محرك أمامي، شاسيه، عجلات خلفية مزدوجة ----------
+  function truck(p, q, kind) {
+    const P = kit(), rng = AA.rng(p.seed), R = 0.5 * p.tire, W = 1.12, axF = 2.75, axR = -2.35, zEnd = -4.15, fy = 1.32;
+    const s = { L: 8, W, R, axF, axR, zF: 4.02, zB: 0.95, arches: [axF], bottom: 1.0, bumperY: 0.92, hoodY: 1.82, belt: 1.92, cowlZ: 2.32, glassF: 2.16, roofY: 2.86, roofR: 1.06, cabRear: 0.98,
+      floorY: 1.12, seatF: 1.45, seatR: null, windows: [[1.1, 2.12]], doors: [[1.02, 2.2]], roundLamps: true, noRear: true, noUnder: true };
+    bodyInto(P, s, p, q, rng);
+    const paint = hex(PAINT[p.color] || PAINT.red), dust = hex('#b8996e'), pc = pt => vary(mixc(paint, dust, p.dirt * (0.15 + 0.85 * smooth(1.4, 0.6, pt[1]))), rng, 0.01);
+    // رفارف العجلات الأمامية: قوس سميك خارج الكابينة
+    for (const sx of [1, -1]) {
+      const Ra = R + 0.14, out = [], inn = [], n = LOW(q) ? 6 : 12;
+      for (let k = 0; k <= n; k++) { const a = lerp(0.15, Math.PI - 0.15, k / n); out.push([axF + Math.cos(a) * (Ra + 0.07), R + Math.sin(a) * (Ra + 0.07)]); inn.push([axF + Math.cos(a) * Ra, R + Math.sin(a) * Ra]); }
+      const st = P.paint.vertexCount; extrudeX(P.paint, out.concat(inn.reverse()), { w: () => 0.2, r: 0.02, color: pc });
+      moveNew(P.paint, st, pt => [pt[0] + sx * (W - 0.12), pt[1], pt[2]]);
+    }
+    // درجة الباب، شمسية فوق الزجاج، أنوار سقف، عادم، خزان وقود
+    for (const sx of [1, -1]) AA.box(P.trim, [sx * (W - 0.12), 0.78, 1.6], [0.3, 0.05, 0.9], [1, 1, 1], 1, {});
+    AA.box(P.paint, [0, s.roofY + 0.02, s.glassF + 0.1], [W * 2 - 0.1, 0.05, 0.36], [1, 1, 1], 1, {});
+    for (let k = -2; k <= 2; k++) AA.box(P.amber, [k * 0.3, s.roofY + 0.07, s.glassF + 0.1], [0.12, 0.06, 0.06], [1, 1, 1], 1, {});
+    AA.tube(P.chrome, [[-W + 0.12, 1.0, 0.78], [-W + 0.12, 2.4, 0.78], [-W + 0.12, 3.25, 0.76]], [0.065, 0.065, 0.06], 10, () => [0.8, 0.8, 0.8], () => 0, 0, null, false);
+    AA.loft(P.chrome, { path: [[W - 0.18, 0.72, 0.4], [W - 0.18, 0.72, -1.0]], sides: 12, up: () => [0, 1, 0], capStart: true, capEnd: true, radius: () => 0.26, color: () => [0.75, 0.75, 0.75] });
+    // الشاسيه والمحاور
+    for (const sx of [1, -1]) AA.box(P.under, [sx * 0.45, 0.88, (4.0 + zEnd) / 2], [0.16, 0.26, 4.0 - zEnd], [1, 1, 1], 1, {});
+    for (const zc of [axF, axR]) AA.loft(P.under, { path: [[-1.0, R, zc], [1.0, R, zc]], sides: 8, up: () => [0, 1, 0], capStart: true, capEnd: true, radius: () => zc === axR ? 0.12 : 0.07, color: () => [1, 1, 1] });
+    AA.blob(P.under, [0, R, axR], [0.22, 0, 0], [0, 0.22, 0], [0, 0, 0.2], () => [1, 1, 1], 0, 0, 0, null, 0, LOW(q)); // الدفرنس
+    // العجلات: أمامية مفردة، خلفية مزدوجة
+    const rimCol = p.rims === 'black' ? [0.18, 0.18, 0.18] : p.rims === 'silver' ? [0.72, 0.73, 0.74] : [0.92, 0.92, 0.9];
+    for (const sx of [1, -1]) {
+      wheelInto(P[sx > 0 ? 'tireFL' : 'tireFR'], P[sx > 0 ? 'rimFL' : 'rimFR'], [sx * 0.98, R, axF], R, 0.3, sx, q, rimCol);
+      wheelInto(P.tireR, P.rimR, [sx * 1.0, R, axR], R, 0.29, sx, q, rimCol); wheelInto(P.tireR, P.rimR, [sx * 0.69, R, axR], R, 0.29, sx, q, mixc(rimCol, [0.3, 0.3, 0.3], 0.4));
+      AA.box(P.trim, [sx * 0.92, 0.42, axR - R - 0.12], [0.55, 0.62, 0.02], [1, 1, 1], 1, {}); // رفرف طين
+      AA.quad(P.paint, [[sx * 1.2, 1.1, axR + 0.75], [sx * 1.2, 1.1, axR - 0.75], [sx * 0.55, 1.1, axR - 0.75], [sx * 0.55, 1.1, axR + 0.75]], [[0, 0], [1, 0], [1, 1], [0, 1]], [mixc(paint, [0.1, 0.1, 0.1], 0.5)], [0, 1, 0]);
+    }
+    // الخلف: صدام حماية، أنوار
+    AA.box(P.trim, [0, 0.62, zEnd + 0.05], [2.2, 0.12, 0.1], [1, 1, 1], 1, {});
+    for (const sx of [1, -1]) { AA.box(P.tail, [sx * 0.95, 0.82, zEnd], [0.22, 0.12, 0.04], [1, 1, 1], 1, {}); AA.box(P.amber, [sx * 0.68, 0.82, zEnd], [0.12, 0.12, 0.04], [1, 1, 1], 1, {}); }
+    AA.box(P.chrome, [0, 0.82, zEnd - 0.01], [0.42, 0.11, 0.01], [0.95, 0.95, 0.95], 1, {}); // لوحة بلا كتابة
+    let riders = null, height = s.roofY + 0.1;
+    if (kind === 'lorry') {
+      // صندوق خشب: أرضية، ألواح جانبية ملوّنة، جدار أمامي عالٍ، وباب خلفي
+      const z0 = 0.8, z1 = zEnd + 0.05, bw = 1.2, H = p.sideH, rows = Math.max(2, Math.round(H / 0.3)), COLS = [hex('#2a5a9a'), hex('#c9302a'), hex('#e0b030'), hex('#2f7a4a')];
+      for (let k = 0; k < 9; k++) AA.box(P.wood, [-bw + (k + 0.5) * bw * 2 / 9, fy, (z0 + z1) / 2], [bw * 2 / 9 - 0.01, 0.07, z0 - z1], vary([0.9, 0.82, 0.72], rng, 0.1), 1, {});
+      for (const sx of [1, -1]) AA.box(P.paint, [sx * (bw - 0.06), fy - 0.12, (z0 + z1) / 2], [0.12, 0.18, z0 - z1], [0.25, 0.25, 0.25], 1, {});
+      const plankCol = r => p.painted ? mixc(COLS[r % COLS.length], [1, 1, 1], 0.12) : vary([0.92, 0.84, 0.72], rng, 0.08);
+      for (let r = 0; r < rows; r++) {
+        const y = fy + 0.04 + (r + 0.5) * H / rows, h = H / rows - 0.02, c = plankCol(r);
+        const PB = p.painted ? P.paint : P.wood;
+        for (const sx of [1, -1]) AA.box(PB, [sx * bw, y, (z0 + z1) / 2], [0.05, h, z0 - z1], c, 1, {});
+        AA.box(PB, [0, y, z1], [bw * 2, h, 0.05], c, 1, {});
+      }
+      for (let r = 0; r < rows + 2; r++) { const y = fy + 0.04 + (r + 0.5) * (H + 0.6) / (rows + 2); AA.box(p.painted ? P.paint : P.wood, [0, y, z0], [bw * 2, (H + 0.6) / (rows + 2) - 0.02, 0.06], plankCol(r + 1), 1, {}); }
+      for (const z of [z0, (z0 + z1) / 2, z1]) for (const sx of [1, -1]) AA.box(P.paint, [sx * (bw + 0.03), fy + H / 2 + 0.03, z], [0.07, H + 0.06, 0.09], [0.22, 0.22, 0.22], 1, {}); // أعمدة حديد
+      for (const sx of [1, -1]) for (let k = 1; k < 5; k++) AA.box(P.chrome, [sx * (bw + 0.035), fy + 0.04 + H * 0.5, lerp(z0, z1, k / 5)], [0.02, 0.06, 0.06], [1, 1, 1], 1, {}); // أقفال
+      const ld = p.load, at = t => lerp(z0 - 0.2, z1 + 0.2, t);
+      if (ld === 'sacks') for (let k = 0; k < 14; k++) AA.souq.sackInto(P, { at: [(k % 3 - 1) * 0.7, fy + 0.04 + (k > 8 ? 0.5 : 0), at(((k % 9) / 3 | 0) * 0.33 + 0.12 + (k > 8 ? 0.1 : 0))], rot: rng() * 6 }, { height: 0.6, radius: 0.27, open: false, seed: k }, rng, q);
+      else if (ld === 'hay') for (let k = 0; k < 12; k++) AA.roundBox(P.hay, [(k % 2 ? 0.55 : -0.55), fy + 0.24 + Math.floor(k / 6) * 0.42, at(0.12 + (k % 6 / 2 | 0) * 0.36)], [1.0, 0.4, 1.3], 0.07, { seg: 1, tile: 0.4, color: () => vary([0.86, 0.82, 0.5], rng, 0.1) });
+      else if (ld === 'crates') for (let k = 0; k < 12; k++) AA.souq.crateInto(P, { at: [(k % 3 - 1) * 0.72, fy + 0.04 + (k > 8 ? 0.42 : 0), at(((k % 9) / 3 | 0) * 0.33 + 0.12)], rot: (rng() - 0.5) * 0.1 }, { w: 0.65, d: 0.5, h: 0.4, lid: true }, rng, q);
+      else if (ld === 'camel') riders = [{ asset: 'camel', params: { seed: p.seed, saddle: false, coat: 'wadh' }, at: [0, fy + 0.04, at(0.5)], rot: 0 }];
+      else if (ld === 'sheep') { riders = []; for (let k = 0; k < 6; k++) riders.push({ asset: 'sheep', params: { seed: p.seed + k, breed: k % 3 === 1 ? 'naimi' : k % 3 === 2 ? 'goat' : 'najdi' }, at: [(k % 2 ? 0.45 : -0.45), fy + 0.04, at(0.15 + (k >> 1) * 0.32)], rot: (rng() - 0.5) * 1.5 }); }
+      height = Math.max(height, fy + H + 0.7);
+    } else { // وايت: خزان ماء بيضاوي على قواعد، سلّم، فتحات علوية، ومحابس خلفية
+      const z0 = 0.62, z1 = zEnd + 0.15, ry = 0.82, rx = 1.08, cy = fy + 0.02 + ry, tc = hex(p.tank === 'steel' ? '#c8cacb' : '#f2f2ee'), band = hex(p.band === 'green' ? '#2f7a4a' : p.band === 'red' ? '#b8312f' : '#2a5a9a');
+      const path = []; for (let k = 0; k <= 12; k++) path.push([0, cy, lerp(z0, z1, k / 12)]);
+      AA.loft(P.paint, { path, sides: LOW(q) ? 14 : 28, up: () => [0, 1, 0], uvU: 1, uvV: 0.5, radius: () => [rx, ry],
+        color: (t, ang) => { const yy = Math.cos(ang); return Math.abs(yy + 0.05) < 0.09 ? band : Math.abs(yy + 0.22) < 0.03 ? band : tc; } });
+      for (const [z, d] of [[z0, 1], [z1, -1]]) { const st = P.paint.vertexCount; AA.lathe(P.paint, [[0, 1], [0.08, 0.92], [0.14, 0.6], [0.16, 0]], { sides: LOW(q) ? 14 : 28, color: () => tc }); moveNew(P.paint, st, pt => [pt[0] * rx, cy + pt[2] * ry, z + d * pt[1]]); }
+      for (const z of [z0 - 0.3, (z0 + z1) / 2, z1 + 0.4]) AA.box(P.under, [0, fy + 0.12, z], [1.6, 0.24, 0.25], [1, 1, 1], 1, {});
+      for (const z of [z0 - 0.9, z1 + 1.1]) { AA.loft(P.chrome, { path: [[0, cy + ry - 0.05, z], [0, cy + ry + 0.08, z]], sides: 14, up: () => [0, 0, 1], capEnd: true, radius: () => 0.26, color: () => [0.85, 0.85, 0.85] }); }
+      for (const sx of [1, -1]) AA.loft(P.chrome, { path: [[sx * 0.55, cy + ry + 0.25, z0 - 0.2], [sx * 0.55, cy + ry + 0.25, z1 + 0.3]], sides: 6, up: () => [0, 1, 0], radius: () => 0.025, color: () => [0.8, 0.8, 0.8] }); // درابزين
+      for (let k = 0; k < 7; k++) AA.loft(P.chrome, { path: [[-0.25, fy + 0.4 + k * 0.28, z1 - 0.16], [0.25, fy + 0.4 + k * 0.28, z1 - 0.16]], sides: 5, up: () => [0, 1, 0], radius: () => 0.018, color: () => [0.8, 0.8, 0.8] });
+      for (const sx of [1, -1]) AA.loft(P.chrome, { path: [[sx * 0.25, fy + 0.2, z1 - 0.16], [sx * 0.25, cy + ry + 0.25, z1 - 0.16]], sides: 6, up: () => [0, 0, 1], radius: () => 0.022, color: () => [0.8, 0.8, 0.8] });
+      AA.loft(P.trim, { path: [[0.5, fy + 0.25, z1 - 0.1], [0.5, fy + 0.25, z1 - 0.45], [0.5, 0.6, zEnd - 0.1]], sides: 8, up: () => [0, 1, 0], radius: () => 0.07, color: () => [0.9, 0.9, 0.9] }); // خرطوم/محبس
+      AA.box(P.chrome, [0.5, fy + 0.25, z1 - 0.12], [0.2, 0.2, 0.12], [1, 1, 1], 1, {});
+      // خرطوم ملفوف على جنب
+      for (let k = 0; k < 3; k++) { const ring = []; for (let j = 0; j <= 14; j++) { const a = j / 14 * Math.PI * 2; ring.push([-1.14 - k * 0.04, fy - 0.2 + Math.sin(a) * 0.28, -1.5 + Math.cos(a) * 0.28]); } AA.tube(P.trim, ring, ring.map(() => 0.035), 5, () => [1, 1, 1], () => 0, 0, null, false); }
+      height = Math.max(height, cy + ry + 0.3);
+    }
+    const mass = kind === 'lorry' ? 7500 : 11000;
+    return done(kind, P, { height, radius: 4.4, collider: { type: 'box', size: [2.5, height, 8.3] },
+      physics: { mass, centerOfMass: [0, 1.2, -0.4], wheelbase: axF - axR, track: 2.0, wheelRadius: R, dualRear: true, suspension: { travel: 0.18, stiffness: 180000, damping: 14000 }, maxSteer: 38, drive: '4x2' },
+      wheels: [[0.98, R, axF], [-0.98, R, axF], [1.0, R, axR], [0.69, R, axR], [-0.69, R, axR], [-1.0, R, axR]], seats: [{ at: [0.45, s.floorY + 0.28, s.seatF], driver: true }, { at: [-0.45, s.floorY + 0.28, s.seatF] }],
+      riders, light: { at: [0, 1.3, 4.5], color: [1, 0.95, 0.82], intensity: 2.6, distance: 16 }, walkSpeed: 3.0, capacity: kind === 'wayt' ? { water_l: 12000 } : { kg: 6000 } }, axF, axR, R, { wx: 0.98, W, doors: s.doors, steer: p.steer, open: p.doors });
+  }
+
   const A = AA.assets;
   const colorOpt = def => ({ key: 'color', label: 'اللون', type: 'enum', options: [['white', 'أبيض'], ['beige', 'بيج'], ['champagne', 'ذهبي'], ['silver', 'فضي'], ['red', 'أحمر'], ['blue', 'أزرق'], ['green', 'زيتي'], ['black', 'أسود']], def });
   const common = [
@@ -373,4 +457,18 @@
       { key: 'load', label: 'الحمولة', type: 'enum', options: [['none', 'فاضي'], ['sacks', 'أكياس'], ['crates', 'صناديق'], ['hay', 'برسيم'], ['water', 'خزانات ماء'], ['sheep', 'غنم']], def: 'sacks' },
       { key: 'cage', label: 'قفص حديد', type: 'bool', def: false }
     ]), presets: { 'وانيت غنم': { load: 'sheep', cage: true, dirt: 0.5 }, 'وانيت برسيم': { load: 'hay', color: 'red' }, 'وانيت ماء': { load: 'water', color: 'blue', rims: 'steel' } }, generate: pickup };
+
+  A.lorry = { id: 'lorry', name: 'لوري', nameEn: 'Cargo lorry', category: 'vehicles',
+    schema: [colorOpt('red')].concat(common.filter(c => c.key !== 'bumper'), [
+      { key: 'sideH', label: 'ارتفاع الألواح', min: 0.5, max: 1.4, step: 0.05, def: 0.9, unit: 'م' },
+      { key: 'painted', label: 'ألواح ملوّنة', type: 'bool', def: true },
+      { key: 'load', label: 'الحمولة', type: 'enum', options: [['none', 'فاضي'], ['sacks', 'أكياس'], ['hay', 'برسيم'], ['crates', 'صناديق'], ['sheep', 'غنم'], ['camel', 'ناقة']], def: 'hay' }
+    ]).map(c => c.key === 'rims' ? Object.assign({}, c, { def: 'steel' }) : c),
+    presets: { 'لوري ناقة': { load: 'camel', sideH: 1.2, color: 'blue' }, 'لوري غنم': { load: 'sheep', sideH: 1.1, color: 'green' }, 'لوري خشب سادة': { painted: false, load: 'sacks', color: 'beige' } }, generate: (p, q) => truck(p, q, 'lorry') };
+  A.wayt = { id: 'wayt', name: 'وايت ماء', nameEn: 'Water tanker', category: 'vehicles',
+    schema: [colorOpt('white')].concat(common.filter(c => c.key !== 'bumper'), [
+      { key: 'tank', label: 'الخزان', type: 'enum', options: [['white', 'أبيض'], ['steel', 'ستانلس']], def: 'white' },
+      { key: 'band', label: 'لون الشريط', type: 'enum', options: [['blue', 'أزرق'], ['green', 'أخضر'], ['red', 'أحمر']], def: 'blue' }
+    ]).map(c => c.key === 'rims' ? Object.assign({}, c, { def: 'steel' }) : c),
+    presets: { 'وايت ستانلس': { tank: 'steel', color: 'blue' } }, generate: (p, q) => truck(p, q, 'wayt') };
 })(typeof window !== 'undefined' ? window : globalThis);
