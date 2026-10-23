@@ -317,7 +317,7 @@ const SCENES = {
     { id:'thumam', shared:true, inst: scatter(14, 6, 22, taken) } ] },
   hara: { title: 'الحي النجدي', pond: false, flat: 42, overview: [16, 30, 46], target: [0, 2, -2], entries: haraEntries(),
     paint: (x, z) => ({ packed: Math.max(rect(x, z, -31, 31, -2.6, 2.6, 0.6), rect(x, z, -7, 7.5, -6.6, 2.6, 0.6), 0.75 * rect(x, z, -27, 27, -12.2, -10.4, 0.4), 0.85 * rect(x, z, -6.2, 6.2, -12.4, -6.6, 0.3), 0.6 * rect(x, z, -60, -29, -1.8, 1.8, 1.2) * (1 - AA.smooth(-60, -40, -x) * 0)), wet: rect(x, z, -6, 5.5, 5, 19, 1) }) },
-  souq: { title: 'السوق', style: 'toon', pond: false, flat: 28, overview: [6, 22, 25], target: [1, 0.5, 0], entries: souqEntries(),
+  souq: { title: 'السوق', pond: false, flat: 28, overview: [6, 22, 25], target: [1, 0.5, 0], entries: souqEntries(),
     paint: (x, z) => ({ packed: Math.max(rect(x, z, -16, 16, -3.4, 3.4, 0.5), 0.7 * rect(x, z, 15, 29, -8, 7, 1.5), 0.6 * rect(x, z, -40, -16, -1.8, 1.8, 1)), wet: 0 }) },
   badia: { title: 'البادية', pond: false, flat: 30, overview: [10, 9, 22], target: [0, 1, 0], entries: [
     { id:'bait_shaar', inst:[{ x:0, z:0, over:{ seed:1, length:12, depth:5 } }] },
