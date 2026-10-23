@@ -10,9 +10,9 @@ const ctx = { console, Math, Float32Array, Uint32Array, Uint8Array, Object, Arra
 ctx.globalThis = ctx;
 vm.createContext(ctx);
 const order = ['core/math.js', 'core/builder.js', 'core/tree.js', 'core/texture.js', 'core/mud.js', 'core/skeleton.js'];
-const assetDirs = ['plants', 'architecture', 'animals', 'characters', 'souq', 'majlis', 'terrain', 'vehicles', 'badia'].filter(d => fs.existsSync(path.join(root, d)));
+const assetDirs = ['plants', 'architecture', 'animals', 'characters', 'souq', 'majlis', 'terrain', 'vehicles', 'badia', 'lowpoly'].filter(d => fs.existsSync(path.join(root, d)));
 for (const f of order) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
-for (const d of assetDirs) for (const f of fs.readdirSync(path.join(root, d)).filter(x => x.endsWith('.js')).sort())
+for (const d of assetDirs) for (const f of fs.readdirSync(path.join(root, d)).filter(x => x.endsWith('.js') && x !== 'scenes.js').sort((a, b) => (b === 'lp-core.js') - (a === 'lp-core.js') || a.localeCompare(b)))
   vm.runInContext(fs.readFileSync(path.join(root, d, f), 'utf8'), ctx, { filename: d + '/' + f });
 
 const AA = ctx.AA;

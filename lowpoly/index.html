@@ -1,0 +1,656 @@
+<!doctype html>
+<title>عبودين لو-بولي</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column — oasis viewer, plant chips, editor for the selected plant, library status */
+:root{
+  --bg:#e9ece2; --surface:#f8f9f4; --line:#d3d8c6; --ink:#1d2216; --muted:#5b6450;
+  --accent:#b0621a; --leaf:#4c6a2c; --chip:#eef1e6;
+  --display:"Baloo Bhaijaan 2","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12150e; --surface:#1b1f15; --line:#2e3524; --ink:#e8ecdc; --muted:#9ca48d;
+  --accent:#e39a4c; --leaf:#93b263; --chip:#22271a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12150e; --surface:#1b1f15; --line:#2e3524; --ink:#e8ecdc; --muted:#9ca48d;
+  --accent:#e39a4c; --leaf:#93b263; --chip:#22271a; color-scheme:dark}
+*{box-sizing:border-box}
+html{background:var(--bg);overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;direction:rtl}
+.wrap{max-width:1040px;min-width:0;width:100%;margin:0 auto;padding-block:20px 44px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-direction:column;gap:2px}
+.brand{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.04em;color:var(--muted)}
+.titleRow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(32px,7vw,50px);line-height:1.05;margin:0;color:var(--leaf);text-wrap:balance}
+.ver{font-size:12px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 9px}
+header p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.viewer{position:relative;height:clamp(340px,60vh,640px);border-radius:14px;overflow:hidden;background:#cfe0ea;touch-action:none}
+.viewer canvas{display:block;width:100%;height:100%}
+.hud{position:absolute;inset:auto 10px 10px 10px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.hud span,.hint{background:rgba(20,24,14,.62);color:#f1f3e8;font-size:12px;padding:3px 9px;border-radius:7px;font-variant-numeric:tabular-nums}
+.hint{position:absolute;top:10px;right:10px;pointer-events:none;transition:opacity .6s}
+.all{position:absolute;top:10px;left:10px;font:600 13px var(--body);background:rgba(20,24,14,.62);color:#f1f3e8;border:0;border-radius:7px;padding:5px 11px;cursor:pointer}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;max-width:100%}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:0 0 auto;white-space:nowrap;font:600 15px var(--display);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:10px;padding:6px 16px;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.chip{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:0;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:11px;padding:7px 13px;cursor:pointer;font-family:var(--body);text-align:start}
+.chip b{font-family:var(--display);font-size:17px;font-weight:600;line-height:1.2}
+.chip small{color:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
+.chip[aria-pressed=true]{border-color:var(--leaf);background:var(--leaf);color:var(--surface)}
+.chip[aria-pressed=true] small{color:inherit;opacity:.8}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.phead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.phead h2{font-family:var(--display);font-size:24px;margin:0}
+.phead h2 span{font-family:var(--body);font-size:13px;color:var(--muted);font-weight:500;margin-inline-start:8px}
+.phead .tri{color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;font-size:14px}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.presets button{font:500 13px var(--body);border:1px dashed var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:3px 11px;cursor:pointer}
+.presets button:hover{border-color:var(--accent);color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 22px}
+.ctl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-weight:500;font-size:14px}
+.ctl output{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;color:var(--ink);font:500 14px var(--body);padding:7px 4px;cursor:pointer}
+.seg button+button{border-inline-start:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--leaf);color:var(--surface)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:600 14px var(--body);border-radius:9px;padding:8px 15px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#fff}
+.btn.ghost{background:transparent;color:var(--accent)}
+.toast{color:var(--muted);font-size:13px;word-break:break-all}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.note{color:var(--muted);font-size:13px;margin:0}
+.section-title{font-family:var(--display);font-size:20px;margin:0}
+.status{display:flex;flex-wrap:wrap;gap:6px}
+.status span{font-size:12px;border-radius:999px;padding:2px 10px;border:1px solid var(--line);color:var(--muted)}
+.status span.ok{border-color:var(--leaf);color:var(--leaf)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">عبودين قيمز · حزمة لو-بولي</div>
+    <div class="titleRow"><h1 id="sceneTitle">الحي النجدي</h1><span class="ver">v0.8</span></div>
+    <p>نفس أصول المستودع بأسلوب لو-بولي: أوجه مسطحة وألوان صريحة وعدد مثلثات قليل جداً، والشخصيات تشيبي. هذه عينات أولى للاعتماد قبل إكمال الباقي.</p>
+  </header>
+
+  <div class="tabs" id="tabs" role="group" aria-label="الفئات">
+    <button type="button" data-s="lp" aria-pressed="true">العينات</button>
+  </div>
+
+  <div class="viewer" id="viewer">
+    <div class="hint" id="hint">اسحب للتدوير · قرّب بإصبعين</div>
+    <button class="all" id="showAll" type="button">عرض المشهد كاملاً</button>
+    <div class="hud"><span id="sTris">—</span><span id="sCalls">—</span><span id="sFps">—</span></div>
+  </div>
+
+  <nav class="chips" id="chips" aria-label="الأصول"></nav>
+
+  <section class="panel" id="editor" aria-live="polite">
+    <div class="phead"><h2 id="eName">—</h2><span class="tri" id="eTris"></span></div>
+    <div class="presets" id="ePresets"></div>
+    <div class="ctl" id="eClipsWrap" hidden><label>الحركة</label><div class="seg" id="eClips"></div></div>
+    <div class="grid" id="eGrid"></div>
+    <div class="actions">
+      <button class="btn" id="reseed" type="button">شكل جديد</button>
+      <button class="btn ghost" id="copy" type="button">نسخ الإعدادات</button>
+      <span class="toast" id="toast"></span>
+    </div>
+    <p class="note" id="eNote"></p>
+  </section>
+
+  <section class="panel">
+    <h3 class="section-title">المشهد</h3>
+    <div class="grid">
+      <div class="ctl"><label for="wind">قوة الرياح <output id="o-wind">55%</output></label><input type="range" id="wind" min="0" max="1.5" step="0.05" value="0.55"></div>
+      <div class="ctl"><label>الجودة</label>
+        <div class="seg" id="quality"><button type="button" data-v="high" aria-pressed="false">عالية</button><button type="button" data-v="med" aria-pressed="true">متوسطة</button><button type="button" data-v="low" aria-pressed="false">خفيفة</button></div></div>
+    </div>
+    <div class="ctl"><label>الأسلوب</label>
+      <div class="seg" id="style"><button type="button" data-v="real" aria-pressed="true">واقعي</button><button type="button" data-v="toon" aria-pressed="false">كرتوني</button></div></div>
+    <div class="ctl"><label>الوقت</label>
+      <div class="seg" id="tod"><button type="button" data-v="day" aria-pressed="true">نهار</button><button type="button" data-v="dusk" aria-pressed="false">مغرب</button><button type="button" data-v="night" aria-pressed="false">ليل</button></div></div>
+    <div class="status"><span class="ok">نجحت الاختبارات الآلية للأشكال</span><span class="ok">يعمل في المتصفح</span><span>لم يُنقل لمحرك بعد</span><span>لم تجرّبه في لعبة</span></div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="../core/math.js"></script>
+<script src="../core/builder.js"></script>
+<script src="../core/tree.js"></script>
+<script src="../core/texture.js"></script>
+<script src="../core/mud.js"></script>
+<script src="../core/skeleton.js"></script>
+<script src="lp-core.js"></script>
+<script src="lp-animals.js"></script>
+<script src="lp-architecture.js"></script>
+<script src="lp-characters.js"></script>
+<script src="lp-plants.js"></script>
+<script src="../core/viewer-three.js"></script>
+<script>
+(function(){
+'use strict';
+const T = THREE, A = AA.assets, X = AA.three;
+const $ = id => document.getElementById(id);
+let quality = 'med', sceneId = 'plants';
+
+// ---------- scenes ----------
+const R = AA.rng(7);
+function scatter(n, rMin, rMax, avoid){
+  const out = []; let guard = 0;
+  while (out.length < n && guard++ < 500){
+    const a = R() * 6.283, r = rMin + R() * (rMax - rMin), x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (avoid.some(p => Math.hypot(p[0] - x, p[1] - z) < p[2])) continue;
+    out.push({ x, z, rot: R() * 6.283, scale: 0.8 + R() * 0.45 }); avoid.push([x, z, 1.4]);
+  }
+  return out;
+}
+const POND = { x: 0.5, z: 0.5, r: 2.6 };
+const taken = [[POND.x, POND.z, POND.r + 1], [-5,-1,2.5],[-2,4.5,2.5],[4.5,3,2.5],[-1.5,-3.6,1.6],[6.5,-1.5,1.6],[13,-8,4],[-13,-9,4.5],[12,10,4]];
+// تحويل من إحداثيات قطعة (مدورة rot حول Y) إلى العالم — نفس قاعدة AA.xform
+const L2W = (x0, z0, rot, lx, lz) => [x0 + lx * Math.cos(rot) + lz * Math.sin(rot), z0 - lx * Math.sin(rot) + lz * Math.cos(rot)];
+const doorCache = {};
+function houseDoor(over){ const k = JSON.stringify(over); if (!doorCache[k]) doorCache[k] = A.najdi_house.generate(AA.params(A.najdi_house, over), 'low').meta.door; return doorCache[k]; }
+// قناع مستطيل ناعم الحواف (لرسم الأزقة على الأرض)
+const rect = (x, z, x0, x1, z0, z1, soft) => { const dx = Math.max(x0 - x, x - x1), dz = Math.max(z0 - z, z - z1), d = Math.max(dx, dz); return 1 - AA.smooth(-soft, soft, d); };
+
+// حي نجدي مسوّر: بوابة غربية ببرجين، زقاق رئيسي (5 م) يتسع إلى براحة أمام المسجد فيها البئر والحوض ومجلس قهوة،
+// صفّان من البيوت وزقاق خلفي، بستان نخل مسوّر جنوباً يسقيه مجرى الماء، وحوش غنم، وأبراج على زوايا السور.
+function haraEntries(){
+  const PI = Math.PI, houses = [], backRow = [], lanterns = [], zirs = [], fills = [];
+  const north = [[-21, 8, 7, 1, {}], [-11.5, 9, 8, 2, { roofRoom: true }], [11.5, 8, 7.5, 1, { worn: true, tower: true }], [21, 9, 8, 2, {}]];
+  const south = [[-20.5, 9, 8, 2, { worn: true }], [-10.5, 8, 7, 1, { roofRoom: true }], [10.5, 9, 8, 1, {}], [20.5, 8, 7, 2, { tower: true }]];
+  let sd = 100;
+  const addHouse = (list, x, z, rot, over, lit) => {
+    list.push({ x, z, rot, over });
+    if (!lit) return;
+    const d = houseDoor(over), D = over.depth, sg = d.x > 0 ? -1 : 1; // الفانوس في الجهة الأوسع من الباب
+    const [lx, lz] = L2W(x, z, rot, d.x + sg * (d.width / 2 + 0.45), D / 2 - 0.02); lanterns.push({ x: lx, z: lz, rot });
+    if (sd % 3 === 0) { const [zx, zz] = L2W(x, z, rot, d.x - sg * (d.width / 2 + 0.75), D / 2 + 0.5); zirs.push({ x: zx, z: zz, rot }); }
+  };
+  for (const [x, W, D, F, ex] of north) addHouse(houses, x, -2.5 - D / 2, 0, Object.assign({ seed: sd++, width: W, depth: D, floors: F }, ex), true);
+  for (const [x, W, D, F, ex] of south) addHouse(houses, x, 2.5 + D / 2, PI, Object.assign({ seed: sd++, width: W, depth: D, floors: F }, ex), true);
+  for (const [x, W, D, F, ex] of [[-22, 7, 6.5, 1, {}], [-13, 8, 7, 2, {}], [13, 8, 7, 1, { roofRoom: true }], [22, 7, 6.5, 2, { worn: true }]]) addHouse(backRow, x, -12 - D / 2, 0, Object.assign({ seed: sd++, width: W, depth: D, floors: F }, ex), false);
+  // جدران تسد الفراغات بين البيوت على الزقاق
+  for (const [x, z, L] of [[-16.5, -2.75, 1.5], [16, -2.75, 1.5], [-15.25, 2.75, 2], [15.75, 2.75, 2]]) fills.push({ x, z, over: { seed: sd++, length: L, height: 3.3 } });
+  // السور: أضلاع بأطوال ثابتة حتى تتشارك الشكل
+  const N = [-20.25, -6.75, 6.75, 20.25];
+  const surLong = N.map(x => ({ x, z: -23, rot: PI })).concat(N.map(x => ({ x, z: 19, rot: 0 })));
+  return [
+    { id:'najdi_house',   inst: houses },
+    { id:'najdi_house',   lod:'low', inst: backRow },
+    { id:'mosque',        inst:[{ x:0, z:-13.5, over:{ seed:90, width:13, depth:8, court:6, minaretHeight:11.5 } }] },
+    { id:'gate',          inst:[{ x:-29, z:0, rot:-PI / 2, over:{ seed:91 } }, { x:29, z:0, rot:PI / 2, over:{ seed:92, towers:false, height:4.6, gateWidth:3.2, open:1 } }] },
+    { id:'sur',           shared:true, lod:'low', inst: surLong.map((i, k) => Object.assign(i, k ? {} : { over:{ seed:93, length:13.5 } })) },
+    { id:'sur',           lod:'low', inst:[{ x:-29, z:-13.25, rot:-PI / 2, over:{ seed:94, length:15.5 } }, { x:-29, z:11.25, rot:-PI / 2, over:{ seed:95, length:11.5 } }, { x:29, z:-16.5, rot:PI / 2, over:{ seed:96, length:9 } }, { x:29, z:-7.5, rot:PI / 2, over:{ seed:97, length:9 } }, { x:29, z:9.85, rot:PI / 2, over:{ seed:98, length:14.5 } }] },
+    { id:'tower',         shared:true, lod:'low', inst:[{ x:-29, z:-23, over:{ seed:99, height:8.5, width:4.2 } }, { x:29, z:-23, rot:PI / 2 }, { x:-29, z:19, rot:-PI / 2 }, { x:29, z:19, rot:PI }] },
+    { id:'sur',           lod:'low', inst:[{ x:-6.3, z:14.25, rot:-PI / 2, over:{ seed:120, length:9.5, height:2.6, thickness:0.6, crenels:false, loopholes:false } }, { x:5.8, z:14.75, rot:PI / 2, over:{ seed:121, length:8.5, height:2.6, thickness:0.6, crenels:false, loopholes:false } }] },
+    { id:'wall',          inst: fills },
+    { id:'well',          inst:[{ x:-2.5, z:-5.2, over:{ seed:61, trough:true, courses:3 } }] },
+    { id:'water_basin',   inst:[{ x:2.6, z:-5.6, over:{ seed:62 } }] },
+    { id:'water_channel', shared:true, inst:[{ x:2.6, z:-3.7, over:{ seed:63, length:2 } }, { x:2.6, z:-1.7 }, { x:2.6, z:0.3 }, { x:2.6, z:2.3 }, { x:2.6, z:4.3 }, { x:2.6, z:6.3 }] },
+    { id:'palm',          lod:'low', inst:[{ x:5.2, z:5.8, over:{ seed:64, height:8, bunches:3 } }, { x:-0.4, z:7.5, over:{ seed:65, height:10, lean:0.5 } }, { x:4.4, z:9.6, over:{ seed:66, height:6.5, bunches:4 } }] },
+    { id:'palm',          shared:true, lod:'low', inst:[{ x:-3.5, z:11, rot:0.4, over:{ seed:130, height:9 } }, { x:0.8, z:13.6, rot:2.2, scale:1.1 }, { x:3.9, z:16, rot:4.1, scale:0.9 }, { x:-2.2, z:16.9, rot:1.3, scale:1.05 }, { x:-4.8, z:14.6, rot:5.2, scale:0.85 }, { x:2.8, z:12.0, rot:3.3, scale:0.95 }, { x:-17, z:-21, rot:1, scale:0.9 }, { x:17.5, z:16.5, rot:2.4 }] },
+    { id:'fasila',        lod:'low', inst:[{ x:0.2, z:4.6, over:{ seed:67 } }, { x:-3.5, z:6.4, over:{ seed:68, fronds:10, frondLen:1.4 } }, { x:1.8, z:17.4, over:{ seed:131 } }] },
+    { id:'sidr',          lod:'low', inst:[{ x:19, z:13.8, over:{ seed:132 } }] },
+    { id:'dakka',         inst:[{ x:-6, z:-3.25, over:{ seed:69, length:2.4 } }, { x:8.6, z:-2.15, over:{ seed:70, length:1.8 } }] },
+    // مجلس القهوة في البراحة: جلسة على جدار صحن المسجد، ووجار ودلال وطقم قهوة
+    { id:'majlis_seat',   inst:[{ x:-5.0, z:-5.95, over:{ seed:140, layout:'line', length:2.5 } }] },
+    { id:'fire_pit',      inst:[{ x:-5.0, z:-4.3, over:{ seed:141 } }] },
+    { id:'coffee_set',    inst:[{ x:-6.1, z:-4.7, rot:0.5, over:{ seed:142, dallahs:2, cups:6 } }] },
+    { id:'mabkhara',      inst:[{ x:-3.75, z:-5.5, over:{ seed:143 } }] },
+    { id:'lantern',       shared:true, inst: lanterns.map((i, k) => Object.assign(i, k ? {} : { over:{ seed:150, mount:'wall' } })) },
+    { id:'lantern',       shared:true, inst:[{ x:6.6, z:-2.9, rot:PI, over:{ seed:151, mount:'pole' } }, { x:-24.5, z:2.9, rot:0 }, { x:24, z:-2.9, rot:PI }] },
+    { id:'zir',           shared:true, inst: zirs.concat([{ x:5.3, z:-6.0, rot:0 }]).map((i, k) => Object.assign(i, k ? {} : { over:{ seed:152 } })) },
+    { id:'pottery',       inst:[{ x:18.6, z:-1.95, over:{ seed:153, count:5, spread:1.2 } }] },
+    { id:'firewood',      inst:[{ x:-23.2, z:1.95, rot:1.5, over:{ seed:154 } }, { x:-14.2, z:15.5, rot:1.4, over:{ seed:155, rows:4, length:1.3 } }] },
+    { id:'pen',           inst:[{ x:-18, z:15, over:{ seed:156, width:9, depth:5.5, style:'pickets' } }] },
+    { id:'cart',          inst:[{ x:26.8, z:0.7, rot:-PI / 2 - 0.15, over:{ seed:157, load:'sacks' } }] },
+    { id:'rocks',         shared:true, inst:[{ x:-33, z:9.5, over:{ seed:160, size:0.9 } }, { x:-35, z:-10, rot:2, scale:1.4 }, { x:33.5, z:-14, rot:1 }, { x:12, z:16.5, rot:4, scale:0.7 }, { x:-25, z:-20.5, rot:3, scale:0.6 }, { x:36, z:12, rot:5, scale:1.6 }] },
+    { id:'shaib',         inst:[
+      { x:-14, z:0.4, walk:[-22, 0.4, 14, 0.4], over:{ seed:71 } },
+      { x:-5.83, z:-5.98, y:0.14, clip:'sit_floor', over:{ seed:72, bisht:'brown', stoop:0.5 } },
+      { x:-4.17, z:-5.98, y:0.14, clip:'sit_floor', over:{ seed:73, grey:0.5 } },
+      { x:-5.4, z:-3.08, rot:PI, clip:'sit', over:{ seed:74, bisht:'black', stoop:0.6 } },
+      { x:8.6, z:-2.28, rot:0.25, clip:'sit', over:{ seed:75 } } ] },
+    { id:'boy',           inst:[{ x:-5.0, z:-5.98, y:0.14, clip:'sit_floor', over:{ seed:85, headwear:'ghutra' } }, { x:12, z:1.3, walk:[12, 1.3, -8, 1.3], over:{ seed:86, headwear:'shemagh', agal:true } }, { x:1.3, z:-3.4, rot:-2.4, clip:'wave', over:{ seed:87 } }] },
+    { id:'woman',         inst:[{ x:-9, z:-1.2, walk:[-12, -1.2, 6, -1.2], over:{ seed:81 } }, { x:4.6, z:-3.6, rot:-1.9, over:{ seed:82, veil:'niqab' } }, { x:3.9, z:-4.3, rot:-0.4, over:{ seed:83 } }] },
+    { id:'girl',          inst:[{ x:-8.2, z:-0.6, walk:[-11.2, -0.6, 6.8, -0.6], over:{ seed:84 } }, { x:0.6, z:-2.9, rot:-2.6, clip:'wave', over:{ seed:88, dress:'teal' } }] },
+    { id:'child',         inst:[{ x:-2.9, z:-3.9, rot:0.4, over:{ seed:89 } }] },
+    { id:'worker',        inst:[{ x:16.5, z:-1.1, rot:3.0, clip:'work', over:{ seed:76, suit:'khaki', helmet:'white' } }] },
+    { id:'camel',         inst:[{ x:-40, z:-0.9, walk:[-40, -0.9, -24, -0.9], over:{ seed:77, saddle:true, coat:'wadh' } }, { x:3.3, z:11.0, rot:-2.3, clip:'graze', over:{ seed:78 } }, { x:-2.0, z:9.9, rot:2.8, clip:'graze', over:{ seed:79, coat:'majaheem' } }] },
+    { id:'sheep',         inst:[{ x:-19.5, z:14.4, rot:0.4, clip:'graze', over:{ seed:200 } }, { x:-17.8, z:15.8, rot:1.4, clip:'graze', over:{ seed:201, breed:'naimi' } }, { x:-16.6, z:14.2, rot:-0.7, over:{ seed:202 } }, { x:-20.6, z:16.2, rot:2.2, clip:'graze', over:{ seed:203, breed:'goat' } }, { x:-15.6, z:16.3, rot:0.9, clip:'graze', over:{ seed:204, size:0.65 } }, { x:1.2, z:14.6, rot:-1.1, clip:'graze', over:{ seed:205, breed:'goat' } }] },
+    { id:'jeep',          inst:[{ x:-37, z:5.5, rot:2.1, over:{ seed:210, color:'white', rack:true, tire:1.1, dirt:0.6, rims:'steel' } }] },
+    { id:'donkey',        inst:[{ x:-12.5, z:16.8, rot:1.2, clip:'graze', over:{ seed:206 } }] },
+    { id:'thumam',        shared:true, lod:'low', inst:[{ x:-34, z:2.5 }, { x:33, z:-3.6 }, { x:-32, z:-6.5, scale:0.6 }, { x:31.5, z:4.4, scale:0.7 }, { x:-8, z:17.5, scale:0.6 }, { x:9, z:17.2, scale:0.7 }] }
+  ];
+}
+// السوق: شارع مسقوف الجانبين بدكاكين وأكشاك، بائع خلف كل كشك، ركن قهوة بجلسة ونار، بوابة غربية،
+// وساحة دواب شرقاً فيها الحوش والجمال والخيل.
+function souqEntries(){
+  // الشارع بين صفّي الدكاكين صافٍ بعرض ~4 م (من حافة المظلات): z بين −2.1 و +2.1
+  const PI = Math.PI;
+  const N = (x, w, over) => ({ x, z: -4.2, over: Object.assign({ width: w }, over) }), S2 = (x, w, over) => ({ x, z: 4.2, rot: PI, over: Object.assign({ width: w }, over) });
+  const kiosks = [N(-4.6, 2.6, { seed:4, goods:'dates', roof:'palm' }), N(-1.8, 2.6, { seed:5, goods:'spices', roof:'blue' }), N(1.0, 2.6, { seed:6, goods:'pottery', roof:'palm' }), N(3.8, 2.6, { seed:7, goods:'cloth', roof:'red' }),
+    S2(-8.6, 3.2, { seed:8, goods:'fruit', roof:'green' }), S2(-5.4, 2.6, { seed:9, goods:'brass', roof:'blue' }), S2(4.2, 2.6, { seed:10, goods:'dates', roof:'red' })];
+  // البائعون: خلف البسطة مباشرة
+  const sellerAt = k => { const [x, z] = L2W(k.x, k.z, k.rot || 0, 0, -0.3); return { x, z, rot: k.rot || 0 }; };
+  const sl = kiosks.map(sellerAt);
+  const shopsN = [{ x:-12.5, z:-4.9, over:{ seed:1, roof:'red', width:4 } }, { x:-8, z:-4.9, over:{ seed:2, roof:'palm', goods:'grain', width:4 } }, { x:8, z:-4.9, over:{ seed:3, roof:'green', width:5 } }, { x:12.5, z:-4.9, over:{ seed:11, roof:'red', width:4 } }];
+  const shopsS = [{ x:-12.5, z:4.9, rot:PI, over:{ seed:12, roof:'palm', width:4 } }, { x:8.2, z:4.9, rot:PI, over:{ seed:13, roof:'blue', goods:'grain', width:4 } }, { x:12.6, z:4.9, rot:PI, over:{ seed:14, roof:'green', goods:'none', width:4 } }];
+  const shopSit = (sh) => { const [x, z] = L2W(sh.x, sh.z, sh.rot || 0, 0, 2.1); return { x, z, rot: sh.rot || 0 }; };
+  const ss = [shopSit(shopsN[1]), shopSit(shopsS[0]), shopSit(shopsN[2])];
+  return [
+    { id:'shop',   inst: shopsN.concat(shopsS) },
+    { id:'kiosk',  inst: kiosks },
+    { id:'sur',    shared:true, lod:'low', inst:[{ x:-7.5, z:-7.1, rot:PI, over:{ seed:40, length:15, height:3.6, thickness:0.6, crenels:true, loopholes:false } }, { x:7.5, z:-7.1, rot:PI }, { x:-7.5, z:7.1, rot:0 }, { x:7.5, z:7.1, rot:0 }] },
+    { id:'sur',    shared:true, lod:'low', inst:[{ x:-15.8, z:-4.95, rot:-PI / 2, over:{ seed:41, length:4.5, height:3.6, thickness:0.6, loopholes:false } }, { x:-15.8, z:4.95, rot:-PI / 2 }] },
+    { id:'gate',   inst:[{ x:-15.8, z:0, rot:-PI / 2, over:{ seed:42, towers:false, height:4.6, gateWidth:3.4, open:1 } }] },
+    // ركن القهوة بين الأكشاك الجنوبية
+    { id:'majlis_seat', inst:[{ x:-0.6, z:6.15, rot:PI, over:{ seed:43, layout:'line', length:3.5 } }] },
+    { id:'fire_pit',    inst:[{ x:-0.6, z:4.45, over:{ seed:44, radius:0.34 } }] },
+    { id:'coffee_set',  inst:[{ x:0.9, z:4.9, rot:2.6, over:{ seed:45, dallahs:3, cups:8 } }] },
+    { id:'mabkhara',    inst:[{ x:-1.9, z:5.1, over:{ seed:46 } }] },
+    { id:'carpet',      inst: ss.map((p2, k) => ({ x: p2.x, z: p2.z, rot: p2.rot, over: { seed: 47 + k, length: 1.3, width: 0.8 } })) },
+    // فوانيس على أعمدة في الفراغات بين المظلات
+    { id:'lantern',     shared:true, inst:[{ x:-6.2, z:-2.35, rot:PI, over:{ seed:50, mount:'pole' } }, { x:5.75, z:-2.35, rot:PI }, { x:-3.85, z:2.35, rot:0 }, { x:6.05, z:2.35, rot:0 }] },
+    { id:'cart',   inst:[{ x:-20, z:0.6, walk:[-20, 0.6, 13, 0.6], over:{ seed:51, load:'sacks', animal:'donkey' } }, { x:19.6, z:2.1, rot:-1.75, over:{ seed:52, load:'dates', animal:'horse' } }, { x:17.4, z:-1.1, rot:1.5, over:{ seed:53, load:'crates' } }] },
+    { id:'sack',   inst:[{ x:5.95, z:-3.1, over:{ seed:63, goods:'coffee' } }, { x:6.3, z:-3.55, over:{ seed:64, goods:'cardamom' } }, { x:17.2, z:3.9, over:{ seed:65, open:false } }] },
+    { id:'crate',  inst:[{ x:16.9, z:-2.9, rot:0.6, over:{ seed:68, goods:'closed', stack:2 } }, { x:17.6, z:-3.2, rot:0.1, over:{ seed:69, goods:'oranges' } }] },
+    { id:'basket', inst:[{ x:-3.4, z:-2.45, over:{ seed:70, goods:'dates' } }, { x:-2.6, z:-2.45, over:{ seed:71, goods:'lemons', handles:false } }, { x:5.65, z:2.85, over:{ seed:72, shape:'tall', goods:'dates' } }, { x:2.6, z:-2.45, over:{ seed:73, goods:'empty' } }] },
+    { id:'pen',    inst:[{ x:22, z:-5.2, over:{ seed:75, width:7, depth:5 } }] },
+    { id:'sheep',  inst:[{ x:21.2, z:-5.6, rot:0.6, clip:'graze', over:{ seed:76 } }, { x:22.8, z:-4.5, rot:2.0, clip:'graze', over:{ seed:77, breed:'naimi' } }, { x:23.6, z:-6.2, rot:-1.2, over:{ seed:78, breed:'goat' } }, { x:20.4, z:-4.4, rot:-2.4, clip:'graze', over:{ seed:79 } }] },
+    { id:'camel',  inst:[{ x:22.8, z:3.8, rot:-1.4, over:{ seed:80, saddle:true } }, { x:25.8, z:1.2, rot:-2.0, clip:'graze', over:{ seed:81, coat:'humr' } }] },
+    { id:'horse',  inst:[{ x:25.4, z:5.2, rot:-2.6, over:{ seed:82 } }] },
+    { id:'pickup', inst:[{ x:28.6, z:-3.6, rot:-0.15, over:{ seed:83, load:'sheep', cage:true, dirt:0.55 } }] },
+    // البائعون والناس (المشاة على خطوط لا تتقاطع مع مسار العربة z≈0.6)
+    { id:'shaib',  inst:[sl[0], sl[1], sl[5]].map((p2, k) => Object.assign({}, p2, { over:{ seed:90 + k, bisht: k === 2 ? 'cream' : 'none', stoop: 0.5 } }))
+        .concat([{ x:ss[0].x, z:ss[0].z, y:0.05, rot:ss[0].rot, clip:'sit_floor', over:{ seed:93, bisht:'brown' } }, { x:ss[1].x, z:ss[1].z, y:0.05, rot:ss[1].rot, clip:'sit_floor', over:{ seed:94 } },
+          { x:-1.77, z:6.17, y:0.14, rot:PI, clip:'sit_floor', over:{ seed:95, bisht:'black', stoop:0.4 } }, { x:0.57, z:6.17, y:0.14, rot:PI, clip:'sit_floor', over:{ seed:96 } },
+          { x:-13, z:-1.25, walk:[-13, -1.25, 13, -1.25], over:{ seed:97 } }, { x:0.4, z:-2.55, rot:PI + 0.3, over:{ seed:98, bisht:'brown' } }]) },
+    { id:'woman',  inst:[Object.assign({}, sl[3], { over:{ seed:100 } }), { x:4.0, z:-2.3, rot:PI, over:{ seed:101 } }, { x:10, z:-0.55, walk:[10, -0.55, -10, -0.55], over:{ seed:102, veil:'niqab' } }, { x:-8.4, z:2.35, rot:0.2, over:{ seed:103, veil:'niqab' } }] },
+    { id:'boy',    inst:[Object.assign({}, sl[6], { over:{ seed:104, headwear:'ghutra', height:1.5 } }), { x:-0.6, z:6.17, y:0.14, rot:PI, clip:'sit_floor', over:{ seed:105, headwear:'shemagh', agal:true, height:1.5 } }, { x:-2.6, z:2.2, rot:0.2, clip:'wave', over:{ seed:106 } }] },
+    { id:'girl',   inst:[{ x:10.6, z:-1.85, walk:[10.6, -1.85, -9.4, -1.85], over:{ seed:107, dress:'purple' } }, { x:-7.7, z:2.3, rot:-0.4, over:{ seed:108, scarf:true } }] },
+    { id:'worker', inst:[Object.assign({}, sl[2], { over:{ seed:109, suit:'khaki', helmet:'none', tool:false, vest:false } }), Object.assign({}, sl[4], { over:{ seed:110, suit:'blue', helmet:'none', tool:false, vest:false, gloves:false } }), { x:16.3, z:-2.55, rot:0.6, clip:'work', over:{ seed:111, suit:'orange', helmet:'none', tool:false, vest:false } }] },
+    { id:'child',  inst:[{ x:-8.0, z:2.75, rot:0.6, over:{ seed:112 } }] },
+    { id:'palm',   lod:'low', inst:[{ x:-18, z:6.5, over:{ seed:113, height:8 } }, { x:16.5, z:-6.0, over:{ seed:114, height:10, lean:0.5 } }, { x:-18.5, z:-5.5, over:{ seed:115, height:7 } }] },
+    { id:'rocks',  shared:true, inst:[{ x:-21, z:3, over:{ seed:116, size:0.6 } }, { x:26.5, z:-9.5, rot:2 }] },
+    { id:'thumam', shared:true, inst:[{ x:-20, z:-2.5 }, { x:28, z:5.5, scale:0.7 }, { x:-19.5, z:9, scale:0.8 }] }
+  ];
+}
+const SCENES = {
+  lp: { title: 'لو-بولي: العينات', pond: false, flat: 30, overview: [11, 9, 21], target: [0, 1.5, -1.5], entries: [
+    { id:'lp_house', inst:[{ x:-5, z:-6, over:{ seed:1 } }, { x:5.5, z:-6.5, rot:-0.3, over:{ seed:2, width:6, depth:5.5, floors:1, roofRoom:false } }] },
+    { id:'lp_palm',  inst:[{ x:-9.5, z:-1.5, over:{ seed:3 } }, { x:9, z:-0.5, over:{ seed:4, height:9, lean:0.6 } }, { x:1.2, z:-9.8, over:{ seed:5, height:5 } }, { x:-1, z:3.5, over:{ seed:6, height:3, fronds:9, frondLen:1.7, bunches:0 } }] },
+    { id:'lp_shaib', inst:[{ x:-0.8, z:0.6, rot:0.3, over:{ seed:7 } }, { x:0.6, z:1.2, rot:-0.5, clip:'wave', over:{ seed:8, bisht:'brown' } }, { x:-6, z:2.2, walk:[-6, 2.2, 6, 2.2], over:{ seed:9, bisht:'black' } }, { x:2.4, z:-0.6, rot:-0.9, clip:'sit_floor', over:{ seed:10, skin:'dark' } }] },
+    { id:'lp_camel', inst:[{ x:4.5, z:3.9, rot:-1.75, over:{ seed:11, saddle:true, coat:'wadh' } }, { x:-12, z:5.5, walk:[-12, 5.5, 12, 5.5], over:{ seed:12 } }, { x:-8, z:1.6, rot:2.4, clip:'graze', over:{ seed:13, coat:'humr' } }] }
+  ], paint: (x, z) => ({ packed: 0, wet: 0 }) }
+};
+
+let ENTRIES = [];
+function groundH(x, z){
+  const r = Math.hypot(x, z);
+  const dip = SCENES[sceneId].pond ? -0.55 * (1 - AA.smooth(POND.r - 0.4, POND.r + 1.4, Math.hypot(x - POND.x, z - POND.z))) : 0;
+  const ripple = (Math.sin(x * 0.13) + Math.sin(z * 0.11 + 1.3)) * 0.22 * AA.smooth(SCENES[sceneId].pond ? 8 : (SCENES[sceneId].flat || 20), (SCENES[sceneId].flat || 20) + 14, r);
+  const F = Math.max(28, SCENES[sceneId].flat || 20), dunes = Math.sin(x * 0.05 + z * 0.04) * 1.6 * AA.smooth(F, F + 32, r) + Math.max(0, Math.sin(x * 0.03 - z * 0.05)) * 2.5 * AA.smooth(F + 7, F + 42, r);
+  return dip + ripple + dunes;
+}
+
+// ---------- renderer ----------
+const host = $('viewer');
+let renderer;
+try { renderer = new T.WebGLRenderer({ antialias: true }); }
+catch(e){ host.insertAdjacentHTML('beforeend','<p style="padding:20px">جهازك لا يدعم WebGL في هذا العرض.</p>'); return; }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputEncoding = T.sRGBEncoding;
+renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
+X.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+host.prepend(renderer.domElement);
+
+const scene = new T.Scene();
+function sky(c0, c1, c2){ const c=document.createElement('canvas'); c.width=2; c.height=256; const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,0,256); gr.addColorStop(0,c0); gr.addColorStop(0.55,c1); gr.addColorStop(1,c2);
+  g.fillStyle=gr; g.fillRect(0,0,2,256); const tx=new T.CanvasTexture(c); tx.encoding=T.sRGBEncoding; if (scene.background) scene.background.dispose(); scene.background=tx; }
+sky('#6fa3cf', '#b9d3e2', '#efdcbc');
+scene.fog = new T.Fog(new T.Color('#e6d6bb'), 45, 120);
+const camera = new T.PerspectiveCamera(42, 1, 0.1, 400);
+const controls = new T.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = 0.35;
+controls.maxPolarAngle = Math.PI * 0.49; controls.minDistance = 1.2; controls.maxDistance = 90;
+controls.addEventListener('start', () => { controls.autoRotate = false; tween = null; $('hint').style.opacity = 0; });
+const hemi = new T.HemisphereLight(0xd6e6f2, 0xc9a77a, 0.7); scene.add(hemi);
+const sun = new T.DirectionalLight(0xfff0d4, 1.35);
+sun.position.set(18, 30, 22).setLength(60); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.02;
+Object.assign(sun.shadow.camera, { left:-40, right:40, top:40, bottom:-40, near:1, far:140 }); sun.shadow.camera.updateProjectionMatrix();
+scene.add(sun, sun.target);
+
+// ---------- الوقت والإضاءة الليلية ----------
+// كل أصل مضيء (فانوس، وجار) يحدد في meta.light مكان الضوء؛ المشهد يأخذ أقرب ثمانية ويضيئها في المغرب والليل.
+const TOD = {
+  day:   { sky: ['#6fa3cf', '#b9d3e2', '#efdcbc'], fog: '#e6d6bb', fn: 45, ff: 120, hs: 0xd6e6f2, hg: 0xc9a77a, hi: 0.7, sc: 0xfff0d4, si: 1.35, sp: [18, 30, 22], ex: 1.05, glow: 0.35, lamps: 0 },
+  dusk:  { sky: ['#34507e', '#d98d62', '#f4bd78'], fog: '#d29a72', fn: 40, ff: 115, hs: 0xb3a6c6, hg: 0x8a5f40, hi: 0.5, sc: 0xff9a55, si: 1.2, sp: [34, 8, 12], ex: 1.0, glow: 0.8, lamps: 0.45 },
+  night: { sky: ['#050914', '#101b33', '#25304a'], fog: '#111827', fn: 28, ff: 105, hs: 0x4c5d86, hg: 0x1a1410, hi: 0.3, sc: 0x9ab2e6, si: 0.32, sp: [-16, 30, 12], ex: 1.12, glow: 1.4, lamps: 1 }
+};
+const LAMPS = []; for (let k = 0; k < 8; k++) { const l = new T.PointLight(0xffb060, 0, 8, 2); scene.add(l); LAMPS.push({ l, base: 0, flicker: false, ph: k * 1.7 }); }
+let tod = 'day';
+function setTime(id){
+  tod = id; const t = TOD[id];
+  const toon = X.style === 'toon', TS = { day: ['#4aa6ef', '#9fd8f6', '#ffe6b0'], dusk: ['#5b5fb0', '#f08a6a', '#ffc978'], night: ['#0b1430', '#1d2c56', '#3a4470'] };
+  sky(...(toon ? TS[id] : t.sky)); scene.fog.color.set(t.fog); scene.fog.near = t.fn; scene.fog.far = t.ff;
+  hemi.color.set(t.hs); hemi.groundColor.set(t.hg); hemi.intensity = t.hi;
+  sun.color.set(t.sc); sun.intensity = t.si; sun.position.set(...t.sp).setLength(60);
+  renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = toon ? t.ex * 0.9 : t.ex;
+  if (toon) { scene.fog.near = t.fn * 1.6; scene.fog.far = t.ff * 1.4; hemi.intensity = t.hi * 1.15; }
+  X.setGlow(t.glow); placeLamps(); scene.traverse(o => { if (o.material) o.material.needsUpdate = true; });
+}
+function placeLamps(){
+  const cand = [];
+  for (const e of ENTRIES) for (const i of e.inst) {
+    const b = i.built || e.built, L = b && b.meta && b.meta.light; if (!L || !i.group) continue;
+    const w = i.group.localToWorld(new T.Vector3(...L.at)), tg = new T.Vector3(...SCENES[sceneId].target);
+    cand.push({ w, L, score: w.distanceTo(tg) - (L.intensity > 2 ? 30 : 0) });
+  }
+  cand.sort((a, b) => a.score - b.score);
+  LAMPS.forEach((m, k) => {
+    const c = cand[k];
+    if (!c || !TOD[tod].lamps) { m.l.intensity = 0; m.base = 0; return; }
+    m.l.position.copy(c.w); m.l.color.setRGB(...c.L.color); m.l.distance = c.L.distance * 1.3;
+    m.base = c.L.intensity * 1.6 * TOD[tod].lamps; m.flicker = !!c.L.flicker; m.l.intensity = m.base;
+  });
+}
+function flickerLamps(t){ for (const m of LAMPS) if (m.base && m.flicker) m.l.intensity = m.base * (0.86 + 0.08 * Math.sin(t * 13 + m.ph) + 0.06 * Math.sin(t * 29.7 + m.ph * 2)); }
+
+let groundMeshes = [];
+function buildGround(){
+  groundMeshes.forEach(m => { scene.remove(m); m.geometry.dispose(); m.material.dispose(); }); groundMeshes = [];
+  const g = new T.PlaneGeometry(180, 180, 60, 60).toNonIndexed(); g.rotateX(-Math.PI / 2);
+  const pos = g.attributes.position, cols = [];
+  const lin = h => new T.Color(h).convertSRGBToLinear();
+  const a = lin('#ecc993'), b = lin('#ddb075'), wet = lin('#8a7250'), packed = lin('#b48a62');
+  for (let i = 0; i < pos.count; i++){
+    const x = pos.getX(i), z = pos.getZ(i);
+    pos.setY(i, groundH(x, z));
+    const c = a.clone().lerp(b, 0.5 + 0.5 * Math.sin(x * 1.7 + z * 2.3) * Math.sin(x * 0.6 - z * 0.9));
+    if (SCENES[sceneId].pond) c.lerp(wet, 1 - AA.smooth(POND.r - 0.2, POND.r + 1.6, Math.hypot(x - POND.x, z - POND.z)));
+    if (SCENES[sceneId].paint) { // الأزقة: تراب مدكوك أغمق، والبستان: تربة رطبة
+      const pt = SCENES[sceneId].paint(x, z), n = 0.5 + 0.5 * Math.sin(x * 2.9 + Math.sin(z * 1.7) * 2) * Math.sin(z * 2.3 - x * 0.7);
+      if (pt.packed) c.lerp(packed, pt.packed * (0.82 + 0.18 * n));
+      if (pt.wet) c.lerp(wet, pt.wet * (0.6 + 0.25 * n));
+    }
+    c.multiplyScalar(1.12);
+    cols.push(c.r, c.g, c.b);
+  }
+  g.setAttribute('color', new T.Float32BufferAttribute(cols, 3)); g.computeVertexNormals();
+  const st = X.texture('sand', quality === 'low' ? 'low' : 'med'), map = st.map.clone(), nm = st.normal.clone();
+  map.needsUpdate = nm.needsUpdate = true; map.repeat.set(45, 45); nm.repeat.set(45, 45);
+  const m = new T.Mesh(g, new T.MeshStandardMaterial({ vertexColors: true, roughness: 1, flatShading: true }));
+  m.receiveShadow = true; scene.add(m); groundMeshes.push(m);
+  if (SCENES[sceneId].pond){
+    const water = new T.Mesh(new T.CircleGeometry(POND.r + 0.5, 48),
+      new T.MeshStandardMaterial({ color: new T.Color('#3e7a7e'), roughness: 0.06, metalness: 0.1, transparent: true, opacity: 0.88 }));
+    water.rotation.x = -Math.PI / 2; water.position.set(POND.x, -0.22, POND.z); scene.add(water); groundMeshes.push(water);
+  }
+}
+
+// ---------- build assets ----------
+function placeGroup(i, grp){
+  grp.position.set(i.x, groundH(i.x, i.z) - 0.02 + (i.y || 0), i.z);
+  grp.rotation.y = i.rot || 0; grp.scale.setScalar(i.scale || 1);
+  scene.add(grp);
+}
+function startClip(i){
+  if (i.animal) X.play(i.animal.group, i.walk || i.loop ? 'walk' : 'idle', 0);
+  if (!i.group || !i.group.userData.anim) return;
+  X.play(i.group, i.walk ? 'walk' : (i.clip || 'idle'), 0);
+}
+// دابة العربة: أصل متحرك مستقل يُركّب عند نقطة الربط
+function attachHitch(i, b){
+  const h = b.meta.hitch;
+  if (h && h.asset) {
+    const ab = X.build(A[h.asset].generate(h.params, quality), quality), ag = X.instance(ab);
+    ag.position.set(h.at[0], h.at[1], h.at[2]); i.group.add(ag); i.animal = { built: ab, group: ag };
+  }
+  // ركّاب الصندوق (غنم في الوانيت مثلاً): أصول متحركة مستقلة مربوطة بالمركبة
+  if (b.meta.riders) i.riders = b.meta.riders.map(r => {
+    const rb = X.build(A[r.asset].generate(AA.params(A[r.asset], r.params), quality), quality), rg = X.instance(rb);
+    rg.position.set(r.at[0], r.at[1], r.at[2]); rg.rotation.y = r.rot || 0; i.group.add(rg); return { built: rb, group: rg };
+  });
+}
+function detachHitch(i){
+  if (i.animal) { X.release(i.animal.group); X.dispose(i.animal.built); i.animal = null; }
+  if (i.riders) { for (const r of i.riders) { X.release(r.group); X.dispose(r.built); } i.riders = null; }
+}
+// المشاة: يتحركون ذهاباً وإياباً على خط
+function moveWalkers(dt){
+  for (const e of ENTRIES) for (const i of e.inst) {
+    if (i.loop && i.group) { // دوران على مسار بيضاوي: الاتجاه مماس للمسار، والكفرات الأمامية تلف حسب الانحناء
+      const [cx, cz, rx, rz] = i.loop, sp = (i.group.userData.speed || 3) * dt;
+      if (i.t == null) i.t = Math.atan2((i.z - cz) / rz, (i.x - cx) / rx);
+      const sn = Math.sin(i.t), cs = Math.cos(i.t), sl = Math.hypot(rx * sn, rz * cs);
+      i.t += sp / sl; i.x = cx + rx * Math.cos(i.t); i.z = cz + rz * Math.sin(i.t);
+      const dx = -rx * Math.sin(i.t), dz = rz * Math.cos(i.t); i.rot = Math.atan2(dx, dz);
+      const k = rx * rz / Math.pow(rx * rx * Math.sin(i.t) ** 2 + rz * rz * Math.cos(i.t) ** 2, 1.5), wb = ((i.built || e.built).meta.physics || {}).wheelbase || 2.6;
+      X.steer(i.group, -Math.atan(wb * k) * 180 / Math.PI); X.roll(i.group, sp);
+      i.group.position.set(i.x, groundH(i.x, i.z) - 0.02, i.z); i.group.rotation.y = i.rot; continue;
+    }
+    if (!i.walk || !i.group) continue;
+    const [x0, z0, x1, z1] = i.walk, sp = (i.group.userData.speed || 0.8) * dt;
+    if (i.group.userData.speed === 0) continue;
+    if (i.dir == null) i.dir = 1;
+    const tx = i.dir > 0 ? x1 : x0, tz = i.dir > 0 ? z1 : z0, dx = tx - i.x, dz = tz - i.z, d = Math.hypot(dx, dz);
+    if (d < 0.05) { i.dir *= -1; continue; }
+    i.x += dx / d * Math.min(sp, d); i.z += dz / d * Math.min(sp, d); i.rot = Math.atan2(dx, dz);
+    X.roll(i.group, Math.min(sp, d));
+    i.group.position.set(i.x, groundH(i.x, i.z) - 0.02, i.z); i.group.rotation.y = i.rot;
+  }
+}
+const lodQ = e => e.lod && quality !== 'low' && e !== current ? e.lod : quality;
+function buildEntry(e){
+  clearEntry(e);
+  if (e.shared){
+    e.built = X.build(e.asset.generate(e.inst[0].params, lodQ(e)), quality);
+    e.inst.forEach(i => { i.group = X.instance(e.built); placeGroup(i, i.group); });
+  } else {
+    e.built = e.inst.map(i => { const b = X.build(e.asset.generate(i.params, lodQ(e)), quality); i.built = b; i.group = X.instance(b); placeGroup(i, i.group); attachHitch(i, b); return b; });
+  }
+  e.inst.forEach(i => { if (i.group) { i.group.userData.speed = (i.built || e.built).meta.walkSpeed; startClip(i); } });
+}
+function clearEntry(e){
+  if (e.built) [].concat(e.built).forEach(b => b && X.dispose(b));
+  e.inst.forEach(i => { detachHitch(i); if (i.group) { X.release(i.group); scene.remove(i.group); } i.group = null; });
+  e.built = null;
+}
+function rebuildInstance(e, idx){
+  if (e.shared) { buildEntry(e); return; }
+  const i = e.inst[idx];
+  detachHitch(i); X.dispose(i.built); X.release(i.group); scene.remove(i.group);
+  i.built = X.build(e.asset.generate(i.params, lodQ(e)), quality); e.built[idx] = i.built;
+  i.group = X.instance(i.built); placeGroup(i, i.group); attachHitch(i, i.built); i.group.userData.speed = i.built.meta.walkSpeed; startClip(i);
+}
+function entryTris(e){ return e.shared ? e.built.triangles * e.inst.length : e.built.reduce((s, b) => s + b.triangles, 0) + e.inst.reduce((s, i) => s + (i.animal ? i.animal.built.triangles : 0) + (i.riders ? i.riders.reduce((t, r) => t + r.built.triangles, 0) : 0), 0); }
+function updateStats(){
+  let tris = 0, calls = 0;
+  for (const e of ENTRIES){
+    tris += entryTris(e);
+    calls += e.shared ? e.built.parts.length * e.inst.length : e.built.reduce((s, b) => s + b.parts.length, 0);
+  }
+  $('sTris').textContent = tris.toLocaleString('ar-SA') + ' مثلث في المشهد';
+  $('sCalls').textContent = calls.toLocaleString('ar-SA') + ' أمر رسم';
+  for (const e of ENTRIES) if (e.chipSmall) e.chipSmall.textContent = (e.inst.length > 1 ? e.inst.length + ' نسخ · ' : '') + entryTris(e).toLocaleString('ar-SA') + ' مثلث';
+}
+
+// ---------- camera ----------
+let tween = null;
+function focus(target, dist, dir){
+  if (!dir){ dir = camera.position.clone().sub(controls.target); dir.y = Math.max(dir.y, dir.length() * 0.25); }
+  dir = dir.clone().normalize();
+  tween = { t: 0, fromP: camera.position.clone(), fromT: controls.target.clone(), toT: target.clone(), toP: target.clone().addScaledVector(dir, dist) };
+  controls.autoRotate = false;
+}
+function focusEntry(e){
+  const i = e.inst[0], m = i.built ? i.built.meta : e.built.meta, s = i.scale || 1;
+  const h = (m.height + (e.id === 'palm' ? i.params.frondLen * 0.4 : 0)) * s;
+  const arch = e.asset.category === 'architecture' && sceneId === 'architecture';
+  focus(new T.Vector3(i.x, groundH(i.x, i.z) + h * 0.5, i.z), Math.max(2.4, arch ? Math.max(h * 1.7, m.radius * 2.4) : h * 1.5 + m.radius * 0.8),
+    arch ? new T.Vector3(0.35, 0.3, 1) : null);
+}
+$('showAll').addEventListener('click', () => {
+  const S = SCENES[sceneId];
+  focus(new T.Vector3(...S.target), new T.Vector3(...S.overview).sub(new T.Vector3(...S.target)).length(), new T.Vector3(...S.overview).sub(new T.Vector3(...S.target)));
+  setTimeout(() => { controls.autoRotate = sceneId === 'plants'; }, 900);
+});
+
+// ---------- UI ----------
+let current = null;
+const chips = $('chips');
+const fmtVal = (s, v) => s.pct ? Math.round(v * 100) + '%' : (s.unit ? v + ' ' + s.unit : String(v));
+function loadScene(id){
+  ENTRIES.forEach(clearEntry);
+  sceneId = id;
+  const S = SCENES[id];
+  $('sceneTitle').textContent = S.title;
+  $('tabs').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === id)));
+  ENTRIES = S.entries;
+  X.style = S.style || 'real'; $('style').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === X.style)));
+  for (const e of ENTRIES){
+    e.asset = A[e.id];
+    e.inst.forEach(i => { if (!i.params) i.params = AA.params(e.asset, Object.assign({ seed: Math.round(i.x * 1000 + i.z * 7) }, i.over)); });
+  }
+  buildGround();
+  ENTRIES.forEach(buildEntry);
+  chips.innerHTML = '';
+  for (const e of ENTRIES){
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = `<b>${e.asset.name}</b><small></small>`;
+    e.chip = b; e.chipSmall = b.querySelector('small');
+    b.addEventListener('click', () => select(e, true));
+    chips.appendChild(b);
+  }
+  updateStats(); setTime(tod);
+  camera.position.set(...S.overview); controls.target.set(...S.target); tween = null;
+  controls.autoRotate = id === 'plants' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  select(ENTRIES[0], false);
+}
+function select(e, move){
+  current = e;
+  for (const x of ENTRIES) x.chip.setAttribute('aria-pressed', String(x === e));
+  const p = e.inst[0].params;
+  $('eName').innerHTML = `${e.asset.name}<span>${e.asset.nameEn}${e.asset.ref && /^p\d/.test(e.asset.ref) ? ' · مرجع ' + e.asset.ref : ''}</span>`;
+  $('eNote').textContent = e.shared ? `التعديل يطبّق على كل النسخ الـ${e.inst.length} في المشهد لأنها تتشارك نفس الشكل.` :
+    (e.inst.length > 1 ? 'التعديل على النسخة الأولى فقط، والباقي يبقى كما هو.' : '');
+  const pr = $('ePresets'); pr.innerHTML = '';
+  for (const [name, over] of Object.entries(e.asset.presets || {})){
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = name;
+    b.addEventListener('click', () => { Object.assign(p, AA.params(e.asset, Object.assign({ seed: p.seed }, over))); renderControls(e); apply(e); });
+    pr.appendChild(b);
+  }
+  const cw = $('eClipsWrap'), cs = $('eClips'); cs.innerHTML = '';
+  cw.hidden = !e.asset.clips;
+  if (e.asset.clips) for (const [cid, lab] of e.asset.clips) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = lab;
+    b.setAttribute('aria-pressed', String((e.inst[0].clip || 'idle') === cid && !e.inst[0].walk));
+    b.addEventListener('click', () => {
+      cs.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      e.inst.forEach(i => { if (!i.walk) { i.clip = cid; if (i.group) X.play(i.group, cid); } });
+    });
+    cs.appendChild(b);
+  }
+  renderControls(e); updateTri(e);
+  if (move) focusEntry(e);
+}
+function renderControls(e){
+  const p = e.inst[0].params, grid = $('eGrid'); grid.innerHTML = '';
+  for (const s of e.asset.schema){
+    const id = 'p-' + s.key, wrap = document.createElement('div'); wrap.className = 'ctl';
+    if (s.type === 'enum' || s.type === 'bool'){
+      const opts = s.type === 'bool' ? [[true, 'نعم'], [false, 'لا']] : s.options;
+      wrap.innerHTML = `<label>${s.label}</label><div class="seg"></div>`;
+      const seg = wrap.querySelector('.seg');
+      for (const [v, lab] of opts){
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = lab; b.setAttribute('aria-pressed', String(p[s.key] === v));
+        b.addEventListener('click', () => { p[s.key] = v; seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); schedule(e); });
+        seg.appendChild(b);
+      }
+    } else {
+      wrap.innerHTML = `<label for="${id}">${s.label} <output>${fmtVal(s, p[s.key])}</output></label><input type="range" id="${id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${p[s.key]}">`;
+      const inp = wrap.querySelector('input'), out = wrap.querySelector('output');
+      inp.addEventListener('input', () => { p[s.key] = parseFloat(inp.value); out.textContent = fmtVal(s, p[s.key]); schedule(e); });
+    }
+    grid.appendChild(wrap);
+  }
+}
+function updateTri(e){
+  const t = e.shared ? e.built.triangles : e.inst[0].built.triangles;
+  $('eTris').textContent = t.toLocaleString('ar-SA') + ' مثلث' + (e.shared ? ' للنسخة' : '');
+}
+let pending = null;
+function schedule(e){ if (pending) return; pending = requestAnimationFrame(() => { pending = null; apply(e); }); }
+function apply(e){ rebuildInstance(e, 0); updateStats(); updateTri(e); placeLamps(); }
+
+$('tabs').addEventListener('click', ev => { const b = ev.target.closest('button'); if (b && b.dataset.s !== sceneId) loadScene(b.dataset.s); });
+$('reseed').addEventListener('click', () => { if (!current) return; current.inst[0].params.seed = (Math.random() * 1e9) | 0; apply(current); });
+$('copy').addEventListener('click', () => {
+  if (!current) return;
+  const txt = JSON.stringify({ asset: current.id, quality, params: current.inst[0].params }), t = $('toast');
+  const done = () => { t.textContent = 'نُسخت الإعدادات'; setTimeout(() => t.textContent = '', 2500); };
+  try { navigator.clipboard.writeText(txt).then(done, () => { t.textContent = txt; }); } catch(err){ t.textContent = txt; }
+});
+function setStyle(v){
+  if (X.style === v) return; X.style = v;
+  $('style').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === v)));
+  buildGround(); ENTRIES.forEach(buildEntry); updateStats(); setTime(tod); if (current) select(current, false);
+}
+$('style').addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) setStyle(b.dataset.v); });
+$('tod').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  $('tod').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  setTime(b.dataset.v);
+});
+$('wind').addEventListener('input', ev => { X.uniforms.uWind.value = parseFloat(ev.target.value); $('o-wind').textContent = Math.round(ev.target.value * 100) + '%'; });
+$('quality').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  $('quality').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  quality = b.dataset.v;
+  renderer.shadowMap.enabled = quality !== 'low'; sun.castShadow = quality !== 'low';
+  scene.traverse(o => { if (o.material) o.material.needsUpdate = true; });
+  ENTRIES.forEach(buildEntry); updateStats(); placeLamps(); if (current) select(current, false);
+});
+
+// ---------- loop ----------
+function resize(){ const w = host.clientWidth, h = host.clientHeight; renderer.setSize(w, h, false); X.outline.uRes.value.set(1 / w, 1 / h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(host); resize();
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clock = new T.Clock(); let fa = 0, fn = 0;
+function loop(){
+  const dt = Math.min(clock.getDelta(), 0.1);
+  X.uniforms.uTime.value += reduce ? dt * 0.3 : dt;
+  X.tick(X.uniforms.uTime.value, reduce ? dt * 0.3 : dt);
+  moveWalkers(dt); flickerLamps(X.uniforms.uTime.value);
+  if (tween){
+    tween.t = Math.min(1, tween.t + dt / 0.9);
+    const k = tween.t * tween.t * (3 - 2 * tween.t);
+    camera.position.lerpVectors(tween.fromP, tween.toP, k); controls.target.lerpVectors(tween.fromT, tween.toT, k);
+    if (tween.t >= 1) tween = null;
+  }
+  controls.update(); renderer.render(scene, camera);
+  fa += dt; fn++;
+  if (fa > 0.5){ $('sFps').textContent = Math.round(fn / fa).toLocaleString('ar-SA') + ' إطار/ث'; fa = 0; fn = 0; }
+  requestAnimationFrame(loop);
+}
+const startTab = (location.hash || '').replace('#', '');
+loadScene(SCENES[startTab] ? startTab : 'lp');
+loop();
+})();
+</script>
