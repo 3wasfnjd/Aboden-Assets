@@ -158,6 +158,7 @@
       collider: { type: 'box', size: [W, H, D] }, door: { x: doorX, z: D / 2, width: p.doorWidth } });
   }
 
+  AA.najdiCrenel = crenel; AA.najdiCornerCrenel = cornerCrenel; AA.najdiDoorLeaf = doorLeaf;
   AA.assets.najdi_house = {
     id: 'najdi_house', name: 'بيت نجدي', nameEn: 'Najdi house', category: 'architecture', ref: 'house',
     schema: [

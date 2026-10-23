@@ -145,6 +145,71 @@
     B.t(b0, m1, tp); B.t(b0, tp, m2);
   };
 
+  // جسم دوراني (دلة، فنجال، جرة): مقطع [[y, r], ...] من الأسفل، يمكن أن يصعد من الخارج وينزل من الداخل
+  // o = { sides, color(y, ang, i), uvU, uvV, capBottom, capTop, sx, sz, at }
+  AA.lathe = function (B, prof, o) {
+    o = o || {};
+    const at = o.at || [0, 0, 0], sides = o.sides || 16, sx = o.sx || 1, sz = o.sz || 1, rings = [];
+    let arc = 0;
+    for (let i = 0; i < prof.length; i++) {
+      if (i) arc += Math.hypot(prof[i][0] - prof[i - 1][0], prof[i][1] - prof[i - 1][1]);
+      const [y, r] = prof[i], ring = [];
+      for (let j = 0; j <= sides; j++) {
+        const a = j / sides * Math.PI * 2;
+        ring.push(B.v([at[0] + Math.sin(a) * r * sx, at[1] + y, at[2] + Math.cos(a) * r * sz], o.color ? o.color(y, a, i) : [1, 1, 1], 0, 0, 0, [j / sides * (o.uvU || 1), arc * (o.uvV || 4)]));
+      }
+      rings.push(ring);
+    }
+    for (let i = 0; i < rings.length - 1; i++) for (let j = 0; j < sides; j++) {
+      const a = rings[i][j], b = rings[i][j + 1], c = rings[i + 1][j + 1], d = rings[i + 1][j];
+      B.t(a, b, c); B.t(a, c, d);
+    }
+    const cap = (i, up) => {
+      const c0 = B.v([at[0], at[1] + prof[i][0], at[2]], o.color ? o.color(prof[i][0], 0, i) : [1, 1, 1], 0, 0, 0, [0.5, 0.5]);
+      for (let j = 0; j < sides; j++) { if (up) B.t(c0, rings[i][j], rings[i][j + 1]); else B.t(c0, rings[i][j + 1], rings[i][j]); }
+    };
+    if (o.capBottom) cap(0, false);
+    if (o.capTop) cap(prof.length - 1, true);
+    return rings;
+  };
+
+  // صندوق بحواف مدوّرة (مخدة، مسند، فرشة): نصف قطر التدوير r، وانتفاخ اختياري لوسط الأوجه
+  // o = { seg, bulge, color(p, n), tile, at, rot }
+  AA.roundBox = function (B, c, size, r, o) {
+    o = o || {};
+    const h = size.map(v => v / 2), seg = o.seg || 3, tile = o.tile || 1, bulge = o.bulge || 0;
+    r = Math.min(r, h[0] - 1e-4, h[1] - 1e-4, h[2] - 1e-4);
+    const samples = hh => { // كثيف عند الحواف المدوّرة
+      const out = [];
+      for (let k = 0; k <= seg; k++) out.push(-hh + r * (1 - Math.cos(k / seg * Math.PI / 2)));
+      const inner = Math.max(1, Math.round((hh - r) * 2 / Math.max(o.spacing || 0.3, r * 2)));
+      for (let k = 1; k < inner; k++) out.push(-hh + r + (hh - r) * 2 * k / inner);
+      for (let k = seg; k >= 0; k--) out.push(hh - r * (1 - Math.cos(k / seg * Math.PI / 2)));
+      return out;
+    };
+    const S = [samples(h[0]), samples(h[1]), samples(h[2])];
+    const faces = [[0, 1, 1, 2], [0, -1, 2, 1], [1, 1, 2, 0], [1, -1, 0, 2], [2, 1, 0, 1], [2, -1, 1, 0]]; // [محور، إشارة، محور U، محور V] بحيث U×V = الاتجاه
+    const xf = p => o.at || o.rot ? AA.xform(p, { at: o.at, rot: o.rot }) : p;
+    for (const [ax, sg, ua, va] of faces) {
+      const us = S[ua], vs = S[va], ids = [];
+      for (let i = 0; i < us.length; i++) {
+        ids.push([]);
+        for (let j = 0; j < vs.length; j++) {
+          const P = [0, 0, 0]; P[ax] = sg * h[ax]; P[ua] = us[i]; P[va] = vs[j];
+          const inn = P.map((v, k) => clampAbs(v, h[k] - r)), d = V.sub(P, inn), dl = V.len(d) || 1;
+          let q = V.madd(inn, d, r / dl);
+          const nf = [0, 0, 0]; nf[ax] = sg;
+          const bu = bulge * (1 - Math.pow(us[i] / h[ua], 2)) * (1 - Math.pow(vs[j] / h[va], 2));
+          if (bu) q = V.madd(q, nf, bu);
+          const wq = V.add(c, q);
+          ids[i].push(B.v(xf(wq), o.color ? o.color(q, nf) : [1, 1, 1], 0, 0, 0, [(us[i] + h[ua]) / tile, (vs[j] + h[va]) / tile]));
+        }
+      }
+      for (let i = 0; i < us.length - 1; i++) for (let j = 0; j < vs.length - 1; j++) { B.t(ids[i][j], ids[i + 1][j], ids[i + 1][j + 1]); B.t(ids[i][j], ids[i + 1][j + 1], ids[i][j + 1]); }
+    }
+  };
+  const clampAbs = (v, m) => Math.max(-m, Math.min(m, v));
+
   // ظل داخلي للتاج (Ambient occlusion مخبوز في الألوان):
   // كل ما كانت النقطة أعمق داخل التاج كانت أغمق — هذا ما يعطي إحساس الكثافة والعمق
   AA.crownAO = function (B, from, center, radii, minShade, topLift) {

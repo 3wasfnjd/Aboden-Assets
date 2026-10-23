@@ -8,7 +8,7 @@
   const LOW = q => q === 'low';
   const SIDES = { high: 14, med: 10, low: 6 };
 
-  function kit() { return { wheel: new AA.Builder(), tire: new AA.Builder(), wood: new AA.Builder(), burlap: new AA.Builder(), weave: new AA.Builder(), awning: new AA.Builder(), goods: new AA.Builder(), dark: new AA.Builder(), metal: new AA.Builder(), rope: new AA.Builder(), mud: new AA.Builder(), mudTop: new AA.Builder() }; }
+  function kit() { return { wheel: new AA.Builder(), tire: new AA.Builder(), wood: new AA.Builder(), burlap: new AA.Builder(), weave: new AA.Builder(), awning: new AA.Builder(), goods: new AA.Builder(), dark: new AA.Builder(), metal: new AA.Builder(), rope: new AA.Builder(), mud: new AA.Builder(), mudTop: new AA.Builder(), clay: new AA.Builder(), brass: new AA.Builder(), metal2: new AA.Builder(), glass: new AA.Builder(), flame: new AA.Builder(), cloth: new AA.Builder() }; }
   function done(id, P, meta, awningTex) {
     const spin = meta.spin; delete meta.spin;
     return AA.finalize(id, {
@@ -23,7 +23,13 @@
       metal:  { builder: P.metal,  material: { kind: 'metal', roughness: 0.55, color: [0.16, 0.15, 0.14] } },
       rope:   { builder: P.rope,   material: { kind: 'rope', roughness: 1, color: [0.62, 0.5, 0.32] } },
       mud:    { builder: P.mud,    material: { kind: 'mud', texture: 'mud_wall', roughness: 0.96 } },
-      mudTop: { builder: P.mudTop, material: { kind: 'mud', texture: 'mud_top', roughness: 0.95 } }
+      mudTop: { builder: P.mudTop, material: { kind: 'mud', texture: 'mud_top', roughness: 0.95 } },
+      clay:   { builder: P.clay,   material: { kind: 'clay', texture: 'clay', roughness: 0.92 } },
+      brass:  { builder: P.brass,  material: { kind: 'metal', roughness: 0.32, metalness: 0.55, color: [0.8, 0.6, 0.27] } },
+      metal2: { builder: P.metal2, material: { kind: 'metal', roughness: 0.4, metalness: 0.45, color: [0.3, 0.29, 0.27] } },
+      glass:  { builder: P.glass,  material: { kind: 'glass', roughness: 0.1, opacity: 0.32, doubleSided: true, color: [1, 0.95, 0.85] } },
+      flame:  { builder: P.flame,  material: { kind: 'flame', roughness: 1, emissive: [1, 0.45, 0.1], glow: 1.5, doubleSided: true } },
+      cloth:  { builder: P.cloth,  material: { kind: 'cloth', texture: 'cloth', roughness: 0.9, doubleSided: true } }
     }, Object.assign({ stiffness: 0 }, meta));
   }
   // يرسم بإحداثيات محلية ثم ينقل الرؤوس الجديدة إلى مكانها (إزاحة + دوران حول Y)
@@ -274,14 +280,44 @@
       const n = Math.max(2, Math.round(W / 0.55));
       for (let k = 0; k < n; k++) crateInto(P, { at: [-W / 2 + 0.33 + k * (W - 0.66) / Math.max(1, n - 1), cY + 0.04, D / 2 - 0.35], rot: (rng() - 0.5) * 0.1 }, { w: 0.48, d: 0.36, h: 0.2, goods: types[k % 3] }, rng, q);
       for (let k = 0; k < 2; k++) crateInto(P, { at: [-W / 2 + 0.4 + k * 0.6, 0, D / 2 + 0.3], rot: (rng() - 0.5) * 0.2 }, { w: 0.5, d: 0.38, h: 0.32, goods: types[(k + 1) % 3] }, rng, q);
+    } else if (g === 'pottery') { // فخار: جرار وبرم على البسطة وأمامها
+      const M = AA.majlis, kinds = ['jarra', 'burma', 'ibriq'], tints = [[0.8, 0.52, 0.34], [0.72, 0.45, 0.3], [0.86, 0.62, 0.42]];
+      const n = Math.max(3, Math.round(W / 0.42));
+      for (let k = 0; k < n; k++) M.jarInto(P, [-W / 2 + 0.25 + k * (W - 0.5) / Math.max(1, n - 1), cY + 0.04, D / 2 - 0.35], kinds[(k + 1) % 3], 0.8 + rng() * 0.3, q, rng, tints[k % 3]);
+      for (let k = 0; k < 3; k++) M.jarInto(P, [-W / 2 + 0.35 + k * 0.5, 0.02, D / 2 + 0.35], k === 1 ? 'burma' : 'jarra', 1.5 + rng() * 0.3, q, rng, tints[(k + 1) % 3]);
+      for (const y of [1.22, 1.67]) for (let k = 0; k < Math.round(W / 0.3); k++) M.jarInto(P, [-W / 2 + 0.2 + k * 0.3, y + 0.02, -D / 2 + 0.2], 'ibriq', 0.9, q, rng, tints[k % 3]);
+    } else if (g === 'brass') { // دلال وصواني وفوانيس
+      const M = AA.majlis, n = Math.max(3, Math.round(W / 0.36));
+      for (let k = 0; k < n; k++) M.dallahInto(P, [-W / 2 + 0.22 + k * (W - 0.44) / Math.max(1, n - 1), cY + 0.04, D / 2 - 0.35 + (k % 2) * 0.12], 0.9 + 0.4 * ((k * 7) % 3) / 2, (rng() - 0.5) * 1.2, q, P.brass);
+      for (const y of [1.22, 1.67]) for (let k = 0; k < Math.round(W / 0.4); k++) {
+        const x = -W / 2 + 0.25 + k * 0.4;
+        AA.loft(P.brass, { path: [[x, y + 0.17, -D / 2 + 0.07], [x, y + 0.17, -D / 2 + 0.085]], sides: LOW(q) ? 10 : 18, capStart: true, capEnd: true, up: () => [0, 1, 0], radius: () => 0.15, color: () => [0.95, 0.95, 0.95] }); // صينية مسنودة للجدار
+      }
+      for (let k = 0; k < 2; k++) M.lanternInto(P, { at: [-W / 2 + 0.5 + k * (W - 1), H - 0.45, D / 2 + 0.25] }, 1, q, rng, true);
+      for (let k = 0; k < 2; k++) AA.tube(P.metal2, [[-W / 2 + 0.5 + k * (W - 1), H - 0.45 + 0.335, D / 2 + 0.25], [-W / 2 + 0.5 + k * (W - 1), H + 0.05, D / 2 + 0.25]], [0.004, 0.004], 4, () => [1, 1, 1], () => 0, 0, null, false);
+    } else if (g === 'cloth') { // أقمشة: لفّات على البسطة والرفوف وقطع معلّقة
+      const COLS = ['#8a2a24', '#2f5f8a', '#d9c9a8', '#3f6f3a', '#c48a2a', '#6a3a7a', '#efe9de', '#1b1716'].map(hex);
+      const roll = (c, len, r, col) => AA.loft(P.cloth, { path: [[c[0] - len / 2, c[1] + r, c[2]], [c[0] + len / 2, c[1] + r, c[2]]], sides: LOW(q) ? 6 : 12, capStart: true, capEnd: true, uvU: 3, uvV: 1, up: () => [0, 1, 0], radius: () => r, color: () => col });
+      for (let k = 0; k < 6; k++) roll([-W / 2 + 0.5 + (k % 3) * (W - 1) / 2, cY + 0.04 + Math.floor(k / 3) * 0.13, D / 2 - 0.45 + (k % 2) * 0.16], 0.7, 0.065, COLS[k % COLS.length]);
+      for (const y of [1.22, 1.67]) for (let k = 0; k < Math.round((W - 0.2) / 0.16); k++) { // أطراف لفّات على الرفّ (مقطع دائري يواجه الزبون)
+        const x = -W / 2 + 0.16 + k * 0.16, col = COLS[(k * 3 + (y > 1.5 ? 1 : 0)) % COLS.length];
+        AA.loft(P.cloth, { path: [[x, y + 0.085, -D / 2 + 0.06], [x, y + 0.085, -D / 2 + 0.34]], sides: LOW(q) ? 6 : 10, capStart: true, capEnd: true, up: () => [0, 1, 0], radius: () => 0.065, color: () => col });
+      }
+      const nh = Math.max(3, Math.round(W / 0.45)); // قطع معلّقة من عارضة أمامية
+      AA.box(P.wood, [0, H - 0.12, D / 2 + 0.05], [W, 0.05, 0.05], [0.8, 0.72, 0.62], 0.6, {});
+      for (let k = 0; k < nh; k++) {
+        const x0 = -W / 2 + 0.15 + k * (W - 0.3) / nh, w = (W - 0.3) / nh - 0.05, col = COLS[(k + 1) % COLS.length], L2 = 0.8 + rng() * 0.5, rows = LOW(q) ? 2 : 5, ids = [];
+        for (let i = 0; i <= rows; i++) { const t = i / rows, y = H - 0.12 - L2 * t, zz = D / 2 + 0.05 + 0.03 * Math.sin(t * 3 + k); ids.push([P.cloth.v([x0, y, zz], col, 0.15 * t, k, 0.4 * t, [0, t * 2]), P.cloth.v([x0 + w, y, zz], col, 0.15 * t, k, 0.4 * t, [w * 2, t * 2])]); }
+        for (let i = 0; i < rows; i++) { P.cloth.t(ids[i][0], ids[i][1], ids[i + 1][1]); P.cloth.t(ids[i][0], ids[i + 1][1], ids[i + 1][0]); }
+      }
     } else { // تمور
       const n = Math.max(3, Math.round(W / 0.4));
       for (let k = 0; k < n; k++) basketInto(P, { at: [-W / 2 + 0.25 + k * (W - 0.5) / Math.max(1, n - 1), cY + 0.04, D / 2 - 0.35] }, { radius: 0.16, height: 0.16, flare: 1.25, goods: 'dates' }, rng, q);
       for (let k = 0; k < 2; k++) basketInto(P, { at: [-W / 2 + 0.4 + k * 0.55, 0, D / 2 + 0.3] }, { radius: 0.22, height: 0.4, flare: 1.08, handles: true, goods: 'dates' }, rng, q);
     }
     // بضاعة على الرفوف (أكياس صغيرة مغلقة)
-    for (const y of [1.22, 1.67]) for (let k = 0; k < Math.round(W / 0.32); k++) sackInto(P, { at: [-W / 2 + 0.22 + k * 0.32, y + 0.02, -D / 2 + 0.2], rot: rng() * 6 }, { height: 0.22, radius: 0.09, open: false, seed: k + y * 10 }, rng, q);
-    return done('kiosk', P, { height: H + 0.4, radius: W / 2 + 0.6, collider: { type: 'box', size: [W, H, D] } }, p.roof === 'red' ? 'stripes_red' : p.roof === 'green' ? 'stripes_green' : 'stripes_blue');
+    if (g !== 'pottery' && g !== 'brass' && g !== 'cloth') for (const y of [1.22, 1.67]) for (let k = 0; k < Math.round(W / 0.32); k++) sackInto(P, { at: [-W / 2 + 0.22 + k * 0.32, y + 0.02, -D / 2 + 0.2], rot: rng() * 6 }, { height: 0.22, radius: 0.09, open: false, seed: k + y * 10 }, rng, q);
+    return done('kiosk', P, { height: H + 0.4, radius: W / 2 + 0.6, collider: { type: 'box', size: [W, H, D] }, seller: { at: [0, 0, -0.25], rot: 0 }, light: g === 'brass' ? { at: [-W / 2 + 0.5, H - 0.35, D / 2 + 0.25], color: [1, 0.7, 0.35], intensity: 1.2, distance: 6, flicker: true } : null }, p.roof === 'red' ? 'stripes_red' : p.roof === 'green' ? 'stripes_green' : 'stripes_blue');
   }
 
   // ---------- دكان طين ----------
@@ -368,9 +404,9 @@
   A.kiosk = { id: 'kiosk', name: 'كشك', nameEn: 'Market stall', category: 'souq',
     schema: [
       { key: 'width', label: 'العرض', min: 1.6, max: 4, step: 0.1, def: 2.6, unit: 'م' },
-      { key: 'goods', label: 'البضاعة', type: 'enum', options: [['dates', 'تمور'], ['spices', 'بهارات'], ['fruit', 'خضار وفواكه']], def: 'spices' },
+      { key: 'goods', label: 'البضاعة', type: 'enum', options: [['dates', 'تمور'], ['spices', 'بهارات'], ['fruit', 'خضار وفواكه'], ['pottery', 'فخار'], ['brass', 'دلال ونحاس'], ['cloth', 'أقمشة']], def: 'spices' },
       { key: 'roof', label: 'المظلة', type: 'enum', options: [['palm', 'عريش سعف'], ['red', 'قماش أحمر'], ['green', 'قماش أخضر'], ['blue', 'قماش أزرق']], def: 'palm' }
-    ], presets: { 'كشك تمور': { goods: 'dates', roof: 'palm' }, 'كشك خضار': { goods: 'fruit', roof: 'green', width: 3.2 } }, generate: kiosk };
+    ], presets: { 'كشك تمور': { goods: 'dates', roof: 'palm' }, 'كشك خضار': { goods: 'fruit', roof: 'green', width: 3.2 }, 'كشك فخار': { goods: 'pottery', roof: 'palm' }, 'كشك دلال': { goods: 'brass', roof: 'blue' }, 'كشك أقمشة': { goods: 'cloth', roof: 'red', width: 3 } }, generate: kiosk };
   A.shop = { id: 'shop', name: 'دكان', nameEn: 'Mud shop', category: 'souq',
     schema: [
       { key: 'width', label: 'العرض', min: 3, max: 6, step: 0.25, def: 4, unit: 'م' },

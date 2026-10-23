@@ -278,12 +278,24 @@
         upArmR: [-100 + 70 * hard, 0, -10], loArmR: [-60 + 40 * hit, 0, 0], handR: [-20 + 30 * hard, 0, 0],
         upArmL: [-45, 0, 12], loArmL: [-55, 0, 0], thighL: [-12, 0, 0], shinL: [16, 0, 0], thighR: [8, 0, 0], shinR: [10, 0, 0], move: [0, -0.03, 0] };
     });
+    // جلوس على مقعد بارتفاع الركبة، وجلوس متربّع على الأرض (ينزل الجسم بمقدار طول الساق)
+        c.sit = AA.clip(sk, 5, 30, true, t => {
+      const w = t / 5 * Math.PI * 2, br = Math.sin(w * 1.5);
+      return { thighL: [-86, 0, 4], thighR: [-86, 0, -4], shinL: [84, 0, 0], shinR: [84, 0, 0], spine: [4, 0, 0], chest: [1.2 * br, 0, 0], head: [0, 14 * Math.sin(w), 0],
+        upArmL: [-20, 0, 10], loArmL: [-52, 0, 0], upArmR: [-20, 0, -10], loArmR: [-52, 0, 0], move: [0, -spec.sitDrop + 0.003 * br, -0.02] };
+    });
+    c.sit_floor = AA.clip(sk, 5, 30, true, t => {
+      const w = t / 5 * Math.PI * 2, br = Math.sin(w * 1.5);
+      return { thighL: [-80, -12, 48], thighR: [-80, 12, -48], shinL: [150, 0, -18], shinR: [150, 0, 18], footL: [-30, 0, 0], footR: [-30, 0, 0], spine: [5, 0, 0], chest: [1.2 * br, 0, 0], head: [-4, 12 * Math.sin(w), 0],
+        upArmL: [-18, 0, 18], loArmL: [-50, 0, 0], upArmR: [-18, 0, -18], loArmR: [-50, 0, 0], move: [0, -spec.floorDrop + 0.003 * br, -0.05 * spec.height / 1.7] };
+    });
     return c;
   }
 
   // ---------- المولّد ----------
   function person(spec, p, quality) {
     const q = Q[quality] || Q.med, rng = AA.rng(p.seed), b = body(spec), sk = skeleton(b);
+    spec.sitDrop = b.hipY - b.knee + 0.02 * b.k; spec.floorDrop = b.hipY - 0.13 * b.k;
     p.__q = q;
     const P = { cloth: new AA.Builder(), cover: new AA.Builder(), skin: new AA.Builder(), hair: new AA.Builder(), eye: new AA.Builder(), dark: new AA.Builder(), lip: new AA.Builder(),
       trim: new AA.Builder(), shoe: new AA.Builder(), glove: new AA.Builder(), plastic: new AA.Builder(), vest: new AA.Builder(), wood: new AA.Builder() };
@@ -433,7 +445,7 @@
       { key: 'trim', label: 'تطريز الأكمام', type: 'bool', def: true }, skinOpt
     ],
     presets: { 'بنقاب': { veil: 'niqab' }, 'عباية سادة': { trim: false } },
-    clips: [['idle', 'وقوف'], ['walk', 'مشي']],
+    clips: [['idle', 'وقوف'], ['walk', 'مشي'], ['sit', 'جالسة'], ['sit_floor', 'متربّعة']],
     generate: (p, q) => person({ id: 'woman', height: p.height, female: true, legs: 0.54, walkSpeed: 1.0,
       outfit: { long: 'abaya', color: [0.07, 0.065, 0.07], noCollar: true, sleeve: { r0: 0.07, r1: 0.1, color: [0.07, 0.065, 0.07], cuff: p.trim }, shoe: { kind: 'shoe', color: [0.1, 0.08, 0.08] }, trimColor: [0.55, 0.42, 0.2] },
       head: { hijab: [0.06, 0.055, 0.06], niqab: p.veil === 'niqab' } }, Object.assign({ lips: [0.6, 0.33, 0.3] }, p), q) };
@@ -445,7 +457,7 @@
       { key: 'taqiyah', label: 'طاقية', type: 'bool', def: false }, skinOpt
     ],
     presets: { 'بطاقية': { taqiyah: true }, 'ثوب أزرق': { outfit: 'color' } },
-    clips: [['idle', 'وقوف'], ['walk', 'مشي'], ['wave', 'يلوّح']],
+    clips: [['idle', 'وقوف'], ['walk', 'مشي'], ['wave', 'يلوّح'], ['sit', 'جالس'], ['sit_floor', 'متربّع']],
     generate: (p, q) => { const col = p.outfit === 'color' ? hex('#7fb2d9') : [0.97, 0.97, 0.96];
       return person({ id: 'child', height: p.height, kid: true, headPow: 0.25, legs: 0.4, width: 1.18, walkDur: 0.62, stride: 0.9, wave: true, walkSpeed: 0.85,
         outfit: { long: 'thobe', color: col, buttons: true, sleeve: { r0: 0.072, r1: 0.06, color: col }, shoe: { kind: 'sandal', color: [0.5, 0.3, 0.16] } },
@@ -462,7 +474,7 @@
       { key: 'mustache', label: 'شارب', type: 'bool', def: true }, skinOpt
     ],
     presets: { 'عامل بناء': { suit: 'khaki', helmet: 'white' }, 'عامل صيانة': { suit: 'orange', vest: false, tool: false } },
-    clips: [['idle', 'وقوف'], ['walk', 'مشي'], ['work', 'يشتغل']],
+    clips: [['idle', 'وقوف'], ['walk', 'مشي'], ['work', 'يشتغل'], ['sit', 'جالس'], ['sit_floor', 'متربّع']],
     generate: (p, q) => { const col = hex({ blue: '#2f4f7d', orange: '#d0662a', khaki: '#8f7f5c' }[p.suit] || '#2f4f7d');
       return person({ id: 'worker', height: p.height, legs: 0.52, width: 1.05, work: true, tool: true,
         outfit: { color: col, vest: p.vest, sleeve: { r0: 0.066, r1: 0.054, color: col, gloves: p.gloves ? [0.85, 0.78, 0.55] : null }, shoe: { kind: 'boot', color: [0.34, 0.24, 0.15] } },
@@ -476,7 +488,7 @@
       { key: 'hairColor', label: 'لون الشعر', type: 'enum', options: [['black', 'أسود'], ['brown', 'بني']], def: 'black' }, skinOpt
     ],
     presets: { 'بشيلة': { scarf: true, dress: 'teal' }, 'جلابية حمراء': { dress: 'red' } },
-    clips: [['idle', 'وقوف'], ['walk', 'مشي'], ['wave', 'تلوّح']],
+    clips: [['idle', 'وقوف'], ['walk', 'مشي'], ['wave', 'تلوّح'], ['sit', 'جالسة'], ['sit_floor', 'متربّعة']],
     generate: (p, q) => { const col = hex(COLORS[p.dress] || COLORS.pink);
       return person({ id: 'girl', height: p.height, kid: true, female: true, headPow: 0.32, legs: 0.49, width: 1.02, walkDur: 0.85, wave: true, walkSpeed: 1.0,
         outfit: { long: 'dress', color: col, embroidery: true, noCollar: true, sleeve: { r0: 0.064, r1: 0.06, color: col, cuff: true }, shoe: { kind: 'shoe', color: mixc(col, [0.1, 0.05, 0.05], 0.5) }, trimColor: [0.78, 0.58, 0.16] },
@@ -489,7 +501,7 @@
       { key: 'agal', label: 'عقال', type: 'bool', def: false }, skinOpt
     ],
     presets: { 'بشماغ وعقال': { headwear: 'shemagh', agal: true }, 'بغترة': { headwear: 'ghutra' } },
-    clips: [['idle', 'وقوف'], ['walk', 'مشي'], ['wave', 'يلوّح']],
+    clips: [['idle', 'وقوف'], ['walk', 'مشي'], ['wave', 'يلوّح'], ['sit', 'جالس'], ['sit_floor', 'متربّع']],
     generate: (p, q) => person({ id: 'boy', height: p.height, kid: true, headPow: 0.32, legs: 0.5, width: 1.0, walkDur: 0.9, wave: true,
       outfit: { long: 'thobe', color: [0.97, 0.97, 0.96], buttons: true, sleeve: { r0: 0.068, r1: 0.054, color: [0.97, 0.97, 0.96] }, shoe: { kind: 'sandal', color: [0.32, 0.2, 0.12] } },
       head: { hair: (p.headwear === 'ghutra' || p.headwear === 'shemagh') ? null : 'short', taqiyah: p.headwear === 'taqiyah',

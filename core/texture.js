@@ -376,7 +376,58 @@
     return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 400), repeat: 1 };
   }
 
-  const GEN = { mud_wall: mudWall, mud_wall_worn: (n, s) => mudWall(n, s, { exposure: 1.5 }), mud_top: mudTop, gypsum, wood, najdi_door: najdiDoor, sandstone, water, fur, wool, sadu, shemagh, cloth, burlap, weave, stripes_red: (n, s) => stripes(n, s, [176, 44, 36], [236, 224, 196]), stripes_green: (n, s) => stripes(n, s, [46, 110, 74], [236, 224, 196]), stripes_blue: (n, s) => stripes(n, s, [40, 84, 140], [236, 224, 196]) };
+  // رمل الأرض: حبيبات دقيقة + تموّجات ريح خفيفة + حصى متناثرة (الخامة تغطي 4 أمتار)
+  function sand(n, seed) {
+    const rng = AA.rng(seed), fine = tileNoise(n, seed, [Math.min(256, n / 2), Math.min(512, n)], 1.1), mid = tileNoise(n, seed + 1, [8, 16, 32], 1.5);
+    const rip = tileNoise(n, seed + 2, [4, 8], 1.4), rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x, w = 0.5 + 0.5 * Math.sin((y / n * 26 + rip[i] * 5 + x / n * 3) * Math.PI * 2);
+      const k = (0.9 + 0.1 * mid[i]) * (0.92 + 0.14 * fine[i]) * (0.97 + 0.05 * w);
+      rgb[i * 3] = 236 * k; rgb[i * 3 + 1] = 222 * k; rgb[i * 3 + 2] = 200 * k; h[i] = w * 0.5 + fine[i] * 0.5;
+    }
+    for (let c = 0; c < n * n / 900; c++) { // حصى صغيرة
+      const cx = rng() * n, cy = rng() * n, r = 1 + rng() * Math.max(1, n / 300), tone = 0.62 + rng() * 0.3;
+      for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
+        const d = Math.hypot(x, y) / r; if (d > 1) continue;
+        const i = (((Math.round(cy + y) % n) + n) % n) * n + (((Math.round(cx + x) % n) + n) % n);
+        for (let k = 0; k < 3; k++) rgb[i * 3 + k] *= tone; h[i] = 1 + (1 - d);
+      }
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 220), repeat: 4 };
+  }
+  // فخار: طين محروق ناعم بخطوط دولاب أفقية وبقع
+  function clay(n, seed) {
+    const a = tileNoise(n, seed, [4, 8, 16], 1.5), f = tileNoise(n, seed + 1, [64, 128], 1.2);
+    const rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x, ring = 0.5 + 0.5 * Math.sin((y / n * 40 + a[i] * 1.5) * Math.PI * 2);
+      const k = (0.86 + 0.16 * a[i]) * (0.95 + 0.06 * f[i]) * (0.97 + 0.04 * ring);
+      rgb[i * 3] = 255 * k; rgb[i * 3 + 1] = 250 * k; rgb[i * 3 + 2] = 244 * k; h[i] = ring * 0.6 + f[i] * 0.4;
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 260), repeat: 1 };
+  }
+  // زولية (سجادة): أرضية حمراء، إطار بأشرطة، ومعيّنات وسطى (الخامة تغطي السجادة كاملة)
+  function rug(n, seed) {
+    const nz = tileNoise(n, seed, [16, 64], 1.3), rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n);
+    const RED = [150, 28, 30], DRK = [44, 26, 40], CRM = [226, 206, 168], BLU = [38, 58, 104], GLD = [196, 140, 58];
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x, u = x / n, v = y / n, e = Math.min(u, 1 - u, v, 1 - v);
+      let c = RED;
+      if (e < 0.03) c = DRK; else if (e < 0.045) c = CRM; else if (e < 0.11) { const t = ((u + v) * 40) % 1; c = Math.abs(t - 0.5) < 0.18 ? GLD : BLU; } else if (e < 0.125) c = CRM;
+      else {
+        const cu = Math.abs(u - 0.5) / 0.37, cv = Math.abs(v - 0.5) / 0.37, d = cu + cv;
+        if (d < 0.55) c = d < 0.3 ? CRM : (d < 0.36 ? GLD : BLU);
+        else if (d > 0.62 && d < 0.68) c = GLD;
+        else { const gu = (u * 12) % 1, gv = (v * 12) % 1; if (Math.abs(gu - 0.5) + Math.abs(gv - 0.5) < 0.16) c = DRK; }
+      }
+      const k = 0.88 + 0.16 * nz[i] + 0.05 * ((x + y) % 2);
+      rgb[i * 3] = c[0] * k; rgb[i * 3 + 1] = c[1] * k; rgb[i * 3 + 2] = c[2] * k;
+      h[i] = 0.5 + 0.5 * Math.sin(x / n * Math.PI * 2 * 128) * Math.sin(y / n * Math.PI * 2 * 128);
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 300), repeat: 1 };
+  }
+
+  const GEN = { sand, clay, rug, mud_wall: mudWall, mud_wall_worn: (n, s) => mudWall(n, s, { exposure: 1.5 }), mud_top: mudTop, gypsum, wood, najdi_door: najdiDoor, sandstone, water, fur, wool, sadu, shemagh, cloth, burlap, weave, stripes_red: (n, s) => stripes(n, s, [176, 44, 36], [236, 224, 196]), stripes_green: (n, s) => stripes(n, s, [46, 110, 74], [236, 224, 196]), stripes_blue: (n, s) => stripes(n, s, [40, 84, 140], [236, 224, 196]) };
   const SIZES = { high: 1024, med: 512, low: 256 };
   const cache = {};
   // AA.texture('mud_wall', 'med') — تُبنى مرة واحدة وتُشارك

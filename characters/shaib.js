@@ -159,7 +159,7 @@
     sphereMesh(P.skin, headSurface, q.hu, q.hv, d => vary(mixc(skinC, hex('#c08a64'), 0.25 * Math.max(0, d[2]) * smooth(-0.2, 0.3, d[1])), rng, 0.02));
     sphereMesh(P.skin, nosePoint, 12, 9, () => mixc(skinC, hex('#b0715a'), 0.3));
     // العينان والجفنان
-    P.eye.setSkin([[sk.id('head'), 1]]);
+    P.eye.setSkin([[sk.id('head'), 1]]); P.dark.setSkin([[sk.id('head'), 1]]);
     for (const s of [1, -1]) {
       const e = EYE(s);
       AA.blob(P.eye, e, [0.0115, 0, 0], [0, 0.0115, 0], [0, 0, 0.0115], () => [0.93, 0.9, 0.85], 0, 0, 0, null, 0, false);
@@ -308,6 +308,23 @@
       pose.move = [0, 0.018 * Math.abs(Math.cos(ph)) - 0.012, 0];
       return pose;
     });
+    // جلوس على دكّة (ارتفاع الركبة) وجلوس متربّع على الأرض
+    clips.sit = AA.clip(sk, 5, 30, true, t => {
+      const w = t / 5 * Math.PI * 2, b = Math.sin(w * 1.5), pose = stoopPose(0.8);
+      pose.thighL = [-86, 0, 4]; pose.thighR = [-86, 0, -4]; pose.shinL = [84, 0, 0]; pose.shinR = [84, 0, 0]; pose.footL = [2, 0, 0]; pose.footR = [2, 0, 0];
+      pose.chest = [pose.chest[0] + 1.2 * b, 0, 0]; pose.head = [pose.head[0], 14 * Math.sin(w), 0];
+      pose.upArmL = [-20, 0, 10]; pose.loArmL = [-52, 0, 0]; pose.upArmR = [-26, 0, -8]; pose.loArmR = [-34, 0, 0]; pose.handR = [52, 0, 0];
+      pose.move = [0, -0.43 + 0.003 * b, -0.02];
+      return pose;
+    });
+    clips.sit_floor = AA.clip(sk, 5, 30, true, t => {
+      const w = t / 5 * Math.PI * 2, b = Math.sin(w * 1.5), pose = stoopPose(0.9);
+      pose.thighL = [-80, -12, 48]; pose.thighR = [-80, 12, -48]; pose.shinL = [150, 0, -18]; pose.shinR = [150, 0, 18]; pose.footL = [-30, 0, 0]; pose.footR = [-30, 0, 0];
+      pose.chest = [pose.chest[0] + 1.2 * b, 0, 0]; pose.head = [pose.head[0] - 4, 12 * Math.sin(w), 0];
+      pose.upArmL = [-18, 0, 18]; pose.loArmL = [-50, 0, 0]; pose.upArmR = [-34, 0, -14]; pose.loArmR = [-36, 0, 0];
+      pose.move = [0, -0.8 + 0.003 * b, -0.05];
+      return pose;
+    });
 
     return AA.finalize('shaib', {
       thobe:   { builder: P.thobe,   material: { kind: 'cloth', texture: 'cloth', roughness: 0.85 } },
@@ -332,7 +349,7 @@
       { key: 'skin', label: 'لون البشرة', type: 'enum', options: [['mid', 'حنطي'], ['dark', 'أسمر'], ['light', 'فاتح']], def: 'mid' }
     ],
     presets: { 'شايب ببشت': { bisht: 'brown' }, 'شيخ القبيلة': { bisht: 'black', stoop: 0.4, beard: 0.8 }, 'شايب كبير': { stoop: 1.8, beard: 1.3 } },
-    clips: [['idle', 'وقوف'], ['walk', 'مشي بالعصا']],
+    clips: [['idle', 'وقوف'], ['walk', 'مشي بالعصا'], ['sit', 'جالس'], ['sit_floor', 'متربّع']],
     generate: shaib
   };
 })(typeof window !== 'undefined' ? window : globalThis);

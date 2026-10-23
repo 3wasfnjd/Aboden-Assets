@@ -59,6 +59,10 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
     return (texCache[key] = { map: mk(t.albedo, true), normal: mk(t.normal, false) });
   };
 
+  // المواد المضيئة (فوانيس، جمر): شدتها تتبع الوقت — خافتة في النهار وقوية في الليل
+  const glowing = [];
+  three.glowLevel = 0.35;
+  three.setGlow = function (k) { three.glowLevel = k; for (const g2 of glowing) g2.mat.emissiveIntensity = k * g2.k; };
   // خامات متحركة (جريان الماء)
   const flowing = [];
   const mixers = new Set();
@@ -123,12 +127,16 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
         if (m.flow) { opts.map = tx.map.clone(); opts.normalMap = tx.normal.clone(); opts.map.needsUpdate = opts.normalMap.needsUpdate = true; flowing.push({ maps: [opts.map, opts.normalMap], v: m.flow }); }
       }
       if (m.opacity != null) { opts.transparent = true; opts.opacity = m.opacity; opts.depthWrite = false; opts.metalness = 0.1; }
+      if (m.metalness != null) opts.metalness = m.metalness;
+      if (m.emissive) { opts.emissive = new T.Color(m.emissive[0], m.emissive[1], m.emissive[2]); opts.emissiveIntensity = three.glowLevel * (m.glow || 1); }
       const mat = three.addWind(new T.MeshStandardMaterial(opts));
+      if (m.emissive) glowing.push({ mat, k: m.glow || 1 });
       parts.push({ name, geo, mat, kind: m.kind, spin: m.spin || null });
     }
     return { parts, triangles: out.triangles, meta: out.meta, skeleton: out.skeleton || null, clips: out.skeleton ? toClips(out) : null, clipNames: out.clips ? Object.keys(out.clips) : [] };
   };
   let skinDepth = null;
+  const NOSHADOW = { water: 1, flame: 1, glass: 1, smoke: 1 };
 
   three.instance = function (built) {
     const grp = new T.Group();
@@ -143,7 +151,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       if (!skinDepth) skinDepth = new T.MeshDepthMaterial({ depthPacking: T.RGBADepthPacking, skinning: true, side: T.DoubleSide });
       for (const p of built.parts) {
         const mesh = new T.SkinnedMesh(p.geo, p.mat);
-        mesh.bind(skel); mesh.castShadow = p.kind !== 'water'; mesh.receiveShadow = true;
+        mesh.bind(skel); mesh.castShadow = !NOSHADOW[p.kind]; mesh.receiveShadow = true;
         mesh.customDepthMaterial = skinDepth; mesh.frustumCulled = false;
         grp.add(mesh);
       }
@@ -157,7 +165,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
     grp.userData.spin = [];
     for (const p of built.parts) {
       const mesh = new T.Mesh(p.geo, p.mat);
-      mesh.castShadow = p.kind !== 'water'; mesh.receiveShadow = p.kind !== 'fruit' && p.kind !== 'flower';
+      mesh.castShadow = !NOSHADOW[p.kind]; mesh.receiveShadow = p.kind !== 'fruit' && p.kind !== 'flower' && p.kind !== 'flame';
       mesh.customDepthMaterial = three.depthMaterial();
       if (p.spin) { mesh.position.set(p.spin.pivot[0], p.spin.pivot[1], p.spin.pivot[2]); grp.userData.spin.push({ mesh, r: p.spin.radius }); }
       grp.add(mesh);
@@ -172,6 +180,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
     for (const p of built.parts) {
       p.geo.dispose(); p.mat.dispose();
       for (let i = flowing.length - 1; i >= 0; i--) if (flowing[i].maps[0] === p.mat.map) flowing.splice(i, 1);
+      for (let i = glowing.length - 1; i >= 0; i--) if (glowing[i].mat === p.mat) glowing.splice(i, 1);
     }
   };
 })(typeof window !== 'undefined' ? window : globalThis);
