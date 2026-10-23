@@ -120,6 +120,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
       <div class="ctl"><label>الجودة</label>
         <div class="seg" id="quality"><button type="button" data-v="high" aria-pressed="false">عالية</button><button type="button" data-v="med" aria-pressed="true">متوسطة</button><button type="button" data-v="low" aria-pressed="false">خفيفة</button></div></div>
     </div>
+    <div class="ctl"><label>الأسلوب</label>
+      <div class="seg" id="style"><button type="button" data-v="real" aria-pressed="true">واقعي</button><button type="button" data-v="toon" aria-pressed="false">كرتوني</button></div></div>
     <div class="ctl"><label>الوقت</label>
       <div class="seg" id="tod"><button type="button" data-v="day" aria-pressed="true">نهار</button><button type="button" data-v="dusk" aria-pressed="false">مغرب</button><button type="button" data-v="night" aria-pressed="false">ليل</button></div></div>
     <div class="status"><span class="ok">نجحت الاختبارات الآلية للأشكال</span><span class="ok">يعمل في المتصفح</span><span>لم يُنقل لمحرك بعد</span><span>لم تجرّبه في لعبة</span></div>
@@ -314,7 +316,7 @@ const SCENES = {
     { id:'thumam', shared:true, inst: scatter(14, 6, 22, taken) } ] },
   hara: { title: 'الحي النجدي', pond: false, flat: 42, overview: [16, 30, 46], target: [0, 2, -2], entries: haraEntries(),
     paint: (x, z) => ({ packed: Math.max(rect(x, z, -31, 31, -2.6, 2.6, 0.6), rect(x, z, -7, 7.5, -6.6, 2.6, 0.6), 0.75 * rect(x, z, -27, 27, -12.2, -10.4, 0.4), 0.85 * rect(x, z, -6.2, 6.2, -12.4, -6.6, 0.3), 0.6 * rect(x, z, -60, -29, -1.8, 1.8, 1.2) * (1 - AA.smooth(-60, -40, -x) * 0)), wet: rect(x, z, -6, 5.5, 5, 19, 1) }) },
-  souq: { title: 'السوق', pond: false, flat: 28, overview: [6, 22, 25], target: [1, 0.5, 0], entries: souqEntries(),
+  souq: { title: 'السوق', style: 'toon', pond: false, flat: 28, overview: [6, 22, 25], target: [1, 0.5, 0], entries: souqEntries(),
     paint: (x, z) => ({ packed: Math.max(rect(x, z, -16, 16, -3.4, 3.4, 0.5), 0.7 * rect(x, z, 15, 29, -8, 7, 1.5), 0.6 * rect(x, z, -40, -16, -1.8, 1.8, 1)), wet: 0 }) },
   badia: { title: 'البادية', pond: false, flat: 30, overview: [10, 9, 22], target: [0, 1, 0], entries: [
     { id:'bait_shaar', inst:[{ x:0, z:0, over:{ seed:1, length:12, depth:5 } }] },
@@ -427,10 +429,13 @@ const LAMPS = []; for (let k = 0; k < 8; k++) { const l = new T.PointLight(0xffb
 let tod = 'day';
 function setTime(id){
   tod = id; const t = TOD[id];
-  sky(...t.sky); scene.fog.color.set(t.fog); scene.fog.near = t.fn; scene.fog.far = t.ff;
+  const toon = X.style === 'toon', TS = { day: ['#4aa6ef', '#9fd8f6', '#ffe6b0'], dusk: ['#5b5fb0', '#f08a6a', '#ffc978'], night: ['#0b1430', '#1d2c56', '#3a4470'] };
+  sky(...(toon ? TS[id] : t.sky)); scene.fog.color.set(t.fog); scene.fog.near = t.fn; scene.fog.far = t.ff;
   hemi.color.set(t.hs); hemi.groundColor.set(t.hg); hemi.intensity = t.hi;
   sun.color.set(t.sc); sun.intensity = t.si; sun.position.set(...t.sp).setLength(60);
-  renderer.toneMappingExposure = t.ex; X.setGlow(t.glow); placeLamps();
+  renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = toon ? t.ex * 0.9 : t.ex;
+  if (toon) { scene.fog.near = t.fn * 1.6; scene.fog.far = t.ff * 1.4; hemi.intensity = t.hi * 1.15; }
+  X.setGlow(t.glow); placeLamps(); scene.traverse(o => { if (o.material) o.material.needsUpdate = true; });
 }
 function placeLamps(){
   const cand = [];
@@ -472,7 +477,8 @@ function buildGround(){
   g.setAttribute('color', new T.Float32BufferAttribute(cols, 3)); g.computeVertexNormals();
   const st = X.texture('sand', quality === 'low' ? 'low' : 'med'), map = st.map.clone(), nm = st.normal.clone();
   map.needsUpdate = nm.needsUpdate = true; map.repeat.set(45, 45); nm.repeat.set(45, 45);
-  const m = new T.Mesh(g, new T.MeshStandardMaterial({ vertexColors: true, roughness: 1, map, normalMap: nm, normalScale: new T.Vector2(0.6, 0.6) }));
+  const m = new T.Mesh(g, X.style === 'toon' ? new T.MeshToonMaterial({ vertexColors: true, gradientMap: X.toonGradient(), color: new T.Color(0.98, 0.93, 0.86) })
+    : new T.MeshStandardMaterial({ vertexColors: true, roughness: 1, map, normalMap: nm, normalScale: new T.Vector2(0.6, 0.6) }));
   m.receiveShadow = true; scene.add(m); groundMeshes.push(m);
   if (SCENES[sceneId].pond){
     const water = new T.Mesh(new T.CircleGeometry(POND.r + 0.5, 48),
@@ -600,6 +606,7 @@ function loadScene(id){
   $('sceneTitle').textContent = S.title;
   $('tabs').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === id)));
   ENTRIES = S.entries;
+  X.style = S.style || 'real'; $('style').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === X.style)));
   for (const e of ENTRIES){
     e.asset = A[e.id];
     e.inst.forEach(i => { if (!i.params) i.params = AA.params(e.asset, Object.assign({ seed: Math.round(i.x * 1000 + i.z * 7) }, i.over)); });
@@ -614,7 +621,7 @@ function loadScene(id){
     b.addEventListener('click', () => select(e, true));
     chips.appendChild(b);
   }
-  updateStats(); placeLamps();
+  updateStats(); setTime(tod);
   camera.position.set(...S.overview); controls.target.set(...S.target); tween = null;
   controls.autoRotate = id === 'plants' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   select(ENTRIES[0], false);
@@ -683,6 +690,12 @@ $('copy').addEventListener('click', () => {
   const done = () => { t.textContent = 'نُسخت الإعدادات'; setTimeout(() => t.textContent = '', 2500); };
   try { navigator.clipboard.writeText(txt).then(done, () => { t.textContent = txt; }); } catch(err){ t.textContent = txt; }
 });
+function setStyle(v){
+  if (X.style === v) return; X.style = v;
+  $('style').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === v)));
+  buildGround(); ENTRIES.forEach(buildEntry); updateStats(); setTime(tod); if (current) select(current, false);
+}
+$('style').addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) setStyle(b.dataset.v); });
 $('tod').addEventListener('click', ev => {
   const b = ev.target.closest('button'); if (!b) return;
   $('tod').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
@@ -699,7 +712,7 @@ $('quality').addEventListener('click', ev => {
 });
 
 // ---------- loop ----------
-function resize(){ const w = host.clientWidth, h = host.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+function resize(){ const w = host.clientWidth, h = host.clientHeight; renderer.setSize(w, h, false); X.outline.uRes.value.set(1 / w, 1 / h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 new ResizeObserver(resize).observe(host); resize();
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clock = new T.Clock(); let fa = 0, fn = 0;

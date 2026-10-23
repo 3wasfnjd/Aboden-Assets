@@ -96,6 +96,42 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
     st.current = next; st.name = name;
   };
 
+  // ---------- الأسلوب الكرتوني ----------
+  // three.style = 'toon': تظليل بطبقات (MeshToonMaterial)، ألوان مسطحة بدل الخامات المزدحمة، وخط داكن حول الحواف بعرض ثابت بالبكسل
+  three.style = 'real';
+  const PATTERN = { sadu: 1, rug: 1, stripes_red: 1, stripes_green: 1, stripes_blue: 1, najdi_door: 1, shemagh: 1, water: 1 }; // خامات نقوش تبقى
+  let gradTex = null;
+  three.toonGradient = function () {
+    if (gradTex) return gradTex;
+    const d = new Uint8Array([120, 120, 120, 255, 190, 190, 190, 255, 255, 255, 255, 255]);
+    gradTex = new T.DataTexture(d, 3, 1, T.RGBAFormat); gradTex.minFilter = gradTex.magFilter = T.NearestFilter; gradTex.generateMipmaps = false; gradTex.needsUpdate = true;
+    return gradTex;
+  };
+  const flatCache = {};
+  // ألوان كرتونية مختارة يدوياً للخامات الأساسية (أهدأ من متوسط الخامة)
+  const TOON = { mud_wall: '#dcb894', mud_wall_worn: '#d6b08a', mud_top: '#e8cca6', wood: '#9a6840', weave: '#d8b77c', burlap: '#cfa974', cloth: '#f6f3ec', canvas: '#f7f2e6', clay: '#d48e5c', sandstone: '#ddc49c', hair_tent: '#2e2622', gypsum: '#f2ece0' };
+  three.flatColor = function (id) { // متوسط لون الخامة (أو لون مختار) للأسلوب الكرتوني
+    if (flatCache[id]) return flatCache[id];
+    if (TOON[id]) { const c = new T.Color(TOON[id]); return (flatCache[id] = T.ColorManagement && T.ColorManagement.enabled ? c : c.convertSRGBToLinear()); } // النسخ الأحدث من Three تحوّل ألوان hex تلقائياً
+    const t = AA.texture(id, 'low'), a = t.albedo; let r = 0, g2 = 0, b = 0; const n = a.length / 4;
+    for (let i = 0; i < a.length; i += 4) { r += a[i]; g2 += a[i + 1]; b += a[i + 2]; }
+    const c = new T.Color(r / n / 255, g2 / n / 255, b / n / 255), hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, Math.min(1, hsl.s * 0.92), Math.min(0.9, hsl.l * 1.12));
+    return (flatCache[id] = c.convertSRGBToLinear());
+  };
+  three.outline = { px: 2.2, color: new T.Color('#24170e'), uRes: { value: new T.Vector2(1 / 800, 1 / 600) } };
+  const outlineMats = {};
+  three.outlineMaterial = function (skinned) {
+    const k = skinned ? 's' : 'n'; if (outlineMats[k]) return outlineMats[k];
+    const mat = new T.MeshBasicMaterial({ color: three.outline.color, side: T.BackSide, skinning: !!skinned });
+    mat.onBeforeCompile = sh => {
+      Object.assign(sh.uniforms, three.uniforms, { uInvRes: three.outline.uRes, uPx: { value: three.outline.px } });
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', WIND_HEAD + '\nuniform vec2 uInvRes; uniform float uPx;').replace('#include <begin_vertex>', WIND_BODY)
+        .replace('#include <fog_vertex>', 'vec4 cn = projectionMatrix * modelViewMatrix * vec4(normal, 0.0); gl_Position.xy += normalize(cn.xy + 1e-6) * uPx * uInvRes * 2.0 * gl_Position.w;\n#include <fog_vertex>');
+    };
+    return (outlineMats[k] = mat);
+  };
+  const NO_OUTLINE = { water: 1, glass: 1, flame: 1, smoke: 1, fruit: 1, rope: 1, leaves: 1, flower: 1, eye: 1, lamp: 1 };
+
   three.build = function (out, quality) {
     const parts = [];
     for (const name in out.parts) {
@@ -130,9 +166,15 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       if (m.opacity != null) { opts.transparent = true; opts.opacity = m.opacity; opts.depthWrite = false; opts.metalness = 0.1; }
       if (m.metalness != null) opts.metalness = m.metalness;
       if (m.emissive) { opts.emissive = new T.Color(m.emissive[0], m.emissive[1], m.emissive[2]); opts.emissiveIntensity = three.glowLevel * (m.glow || 1); }
-      const mat = three.addWind(new T.MeshStandardMaterial(opts));
+      let mat;
+      if (three.style === 'toon') {
+        const to = Object.assign({}, opts); delete to.roughness; delete to.metalness; delete to.normalMap; to.gradientMap = three.toonGradient();
+        if (m.texture && !PATTERN[m.texture]) { delete to.map; const fc = three.flatColor(m.texture).clone(); if (to.color) fc.multiply(to.color); to.color = fc; }
+        mat = three.addWind(new T.MeshToonMaterial(to));
+      } else mat = three.addWind(new T.MeshStandardMaterial(opts));
       if (m.emissive) glowing.push({ mat, k: m.glow || 1 });
-      parts.push({ name, geo, mat, kind: m.kind, spin: m.spin || null, hinge: m.hinge || null });
+      const outline = three.style === 'toon' && !m.doubleSided && !NO_OUTLINE[m.kind] && m.opacity == null;
+      parts.push({ name, geo, mat, kind: m.kind, spin: m.spin || null, hinge: m.hinge || null, outline });
     }
     return { parts, triangles: out.triangles, meta: out.meta, skeleton: out.skeleton || null, clips: out.skeleton ? toClips(out) : null, clipNames: out.clips ? Object.keys(out.clips) : [] };
   };
@@ -155,6 +197,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
         mesh.bind(skel); mesh.castShadow = !NOSHADOW[p.kind]; mesh.receiveShadow = true;
         mesh.customDepthMaterial = skinDepth; mesh.frustumCulled = false;
         grp.add(mesh);
+        if (p.outline) { const ol = new T.SkinnedMesh(p.geo, three.outlineMaterial(true)); ol.bind(skel); ol.frustumCulled = false; grp.add(ol); }
       }
       const mixer = new T.AnimationMixer(grp);
       grp.userData.anim = { mixer, clips: built.clips, current: null };
@@ -166,6 +209,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
     grp.userData.spin = []; grp.userData.steer = []; grp.userData.hinges = {};
     for (const p of built.parts) {
       const mesh = new T.Mesh(p.geo, p.mat); mesh.name = p.name;
+      if (p.outline) { const ol = new T.Mesh(p.geo, three.outlineMaterial(false)); ol.name = p.name + '_outline'; mesh.add(ol); }
       mesh.castShadow = !NOSHADOW[p.kind]; mesh.receiveShadow = p.kind !== 'fruit' && p.kind !== 'flower' && p.kind !== 'flame';
       mesh.customDepthMaterial = three.depthMaterial();
       if (p.spin && p.spin.steer) { // عجلة أمامية: محور توجيه عمودي، وداخله دوران العجلة
