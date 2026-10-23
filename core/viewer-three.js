@@ -42,7 +42,24 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
   const toLinear = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 
   // يبني الشبكات من بيانات الأصل (مرة واحدة) — يمكن مشاركتها بين نسخ كثيرة
-  three.build = function (out) {
+  // خامات الكود → خامات Three (تُبنى مرة وتُشارك)
+  const texCache = {};
+  three.anisotropy = 4;
+  three.texture = function (id, q) {
+    const key = id + ':' + q;
+    if (texCache[key]) return texCache[key];
+    const t = AA.texture(id, q);
+    const mk = (data, srgb) => {
+      const tx = new T.DataTexture(data, t.size, t.size, T.RGBAFormat);
+      tx.wrapS = tx.wrapT = T.RepeatWrapping; tx.generateMipmaps = true;
+      tx.minFilter = T.LinearMipmapLinearFilter; tx.magFilter = T.LinearFilter; tx.anisotropy = three.anisotropy;
+      if (srgb) tx.encoding = T.sRGBEncoding;
+      tx.needsUpdate = true; return tx;
+    };
+    return (texCache[key] = { map: mk(t.albedo, true), normal: mk(t.normal, false) });
+  };
+
+  three.build = function (out, quality) {
     const parts = [];
     for (const name in out.parts) {
       const d = out.parts[name];
@@ -56,14 +73,15 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       geo.setAttribute('aPhase', new T.BufferAttribute(d.phase, 1));
       geo.setAttribute('aFlutter', new T.BufferAttribute(d.flutter, 1));
       geo.setAttribute('aBend', new T.BufferAttribute(d.bend, 1));
+      if (d.uvs) geo.setAttribute('uv', new T.BufferAttribute(d.uvs, 2));
       geo.setIndex(new T.BufferAttribute(d.indices, 1));
       geo.computeBoundingSphere();
       geo.boundingSphere.radius += 1.2; // هامش لحركة الريح حتى لا يختفي الشكل عند حافة الشاشة
       const m = d.material || {};
-      const mat = three.addWind(new T.MeshStandardMaterial({
-        vertexColors: true, roughness: m.roughness == null ? 0.8 : m.roughness,
-        side: m.doubleSided ? T.DoubleSide : T.FrontSide
-      }));
+      const opts = { vertexColors: true, roughness: m.roughness == null ? 0.8 : m.roughness, side: m.doubleSided ? T.DoubleSide : T.FrontSide };
+      if (m.color) opts.color = new T.Color(m.color[0], m.color[1], m.color[2]);
+      if (m.texture) { const tx = three.texture(m.texture, quality || 'med'); opts.map = tx.map; opts.normalMap = tx.normal; }
+      const mat = three.addWind(new T.MeshStandardMaterial(opts));
       parts.push({ name, geo, mat, kind: m.kind });
     }
     return { parts, triangles: out.triangles, meta: out.meta };

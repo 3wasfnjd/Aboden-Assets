@@ -15,9 +15,10 @@
   const V = AA.v;
 
   class Builder {
-    constructor() { this.pos = []; this.col = []; this.sway = []; this.phase = []; this.flut = []; this.idx = []; }
-    v(p, c, sway, phase, flut) {
+    constructor() { this.pos = []; this.col = []; this.sway = []; this.phase = []; this.flut = []; this.idx = []; this.uv = []; }
+    v(p, c, sway, phase, flut, uv) {
       this.pos.push(p[0], p[1], p[2]); this.col.push(c[0], c[1], c[2]);
+      this.uv.push(uv ? uv[0] : 0, uv ? uv[1] : 0);
       this.sway.push(sway || 0); this.phase.push(phase || 0); this.flut.push(flut || 0);
       return this.pos.length / 3 - 1;
     }
@@ -192,6 +193,7 @@
         colors: new Float32Array(B.col),
         sway: new Float32Array(B.sway), phase: new Float32Array(B.phase),
         flutter: new Float32Array(B.flut), bend,
+        uvs: new Float32Array(B.uv),
         material
       };
       out.triangles += B.triangles; out.vertices += B.vertexCount;

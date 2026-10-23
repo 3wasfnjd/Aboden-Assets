@@ -5,11 +5,14 @@
 <script src="REPO/core/math.js"></script>
 <script src="REPO/core/builder.js"></script>
 <script src="REPO/core/tree.js"></script>
+<script src="REPO/core/texture.js"></script>
+<script src="REPO/core/mud.js"></script>
 <script src="REPO/plants/palm.js"></script>
 <script src="REPO/plants/trees.js"></script>
 <script src="REPO/plants/shrubs.js"></script>
+<script src="REPO/architecture/najdi.js"></script>
 <script>
-// Minimal raw-WebGL2 renderer for snapshots (no three.js): vertex colors, hemi + sun, PCF shadows, fog.
+// عارض صور معاينة بـ WebGL2 مباشرة (بدون three.js): ألوان النقاط، خامات + خرائط اتجاه، شمس وسماء، ظلال.
 window.render = function (assetId, quality, over, cam) {
   const cv = document.getElementById('c');
   const W = cam.w || 900, H = cam.h || 900; cv.width = W; cv.height = H;
@@ -18,77 +21,86 @@ window.render = function (assetId, quality, over, cam) {
   const p = AA.params(A, over || {});
   const out = A.generate(p, quality);
 
-  // merge parts
-  const pos = [], nor = [], col = [], idx = []; let base = 0;
-  for (const k in out.parts) {
-    const d = out.parts[k];
-    for (let i = 0; i < d.positions.length; i++) { pos.push(d.positions[i]); nor.push(d.normals[i]); col.push(d.colors[i]); }
-    for (let i = 0; i < d.indices.length; i++) idx.push(d.indices[i] + base);
-    base += d.positions.length / 3;
-  }
-  // ground disk
-  const G = 40, gr = Math.max(8, out.meta.radius * 4), gc = [0.86, 0.74, 0.55];
-  const g0 = pos.length / 3;
-  pos.push(0, 0, 0); nor.push(0, 1, 0); col.push(...gc);
-  for (let i = 0; i < G; i++) { const a = i / G * 6.2832; pos.push(Math.cos(a) * gr, 0, Math.sin(a) * gr); nor.push(0, 1, 0); col.push(...gc); }
-  for (let i = 0; i < G; i++) idx.push(g0, g0 + 1 + (i + 1) % G, g0 + 1 + i);
-
-  let minY = 1e9, maxY = -1e9, maxR = 0, cx = 0, cz = 0, n = 0;
-  for (let i = 0; i < g0 * 3; i += 3) { minY = Math.min(minY, pos[i + 1]); maxY = Math.max(maxY, pos[i + 1]); cx += pos[i]; cz += pos[i + 2]; n++; }
-  cx /= n; cz /= n;
-  for (let i = 0; i < g0 * 3; i += 3) maxR = Math.max(maxR, Math.hypot(pos[i] - cx, pos[i + 2] - cz));
-
-  function buf(type, data) { const b = gl.createBuffer(); gl.bindBuffer(type, b); gl.bufferData(type, data, gl.STATIC_DRAW); return b; }
-  const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
-  const attr = (loc, data) => { buf(gl.ARRAY_BUFFER, new Float32Array(data)); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0); };
-  attr(0, pos); attr(1, nor); attr(2, col);
-  buf(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(idx));
-
   function sh(src, t) { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s; }
   function prog(vs, fs) { const p = gl.createProgram(); gl.attachShader(p, sh(vs, gl.VERTEX_SHADER)); gl.attachShader(p, sh(fs, gl.FRAGMENT_SHADER));
-    gl.bindAttribLocation(p, 0, 'aP'); gl.bindAttribLocation(p, 1, 'aN'); gl.bindAttribLocation(p, 2, 'aC'); gl.linkProgram(p); return p; }
+    gl.bindAttribLocation(p, 0, 'aP'); gl.bindAttribLocation(p, 1, 'aN'); gl.bindAttribLocation(p, 2, 'aC'); gl.bindAttribLocation(p, 3, 'aU'); gl.linkProgram(p); return p; }
+  function tex(data, n, srgb) {
+    const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, srgb ? gl.SRGB8_ALPHA8 : gl.RGBA8, n, n, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    return t;
+  }
+  const white = tex(new Uint8Array([255, 255, 255, 255]), 1, true), flatN = tex(new Uint8Array([128, 128, 255, 255]), 1, false);
+
+  const draws = []; let allPos = [];
+  function addMesh(pos, nor, col, uv, idx, mat) {
+    const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+    const attr = (loc, data, k) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, k, gl.FLOAT, false, 0, 0); };
+    attr(0, pos, 3); attr(1, nor, 3); attr(2, col, 3); attr(3, uv, 2);
+    const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(idx), gl.STATIC_DRAW);
+    let alb = white, nrm = flatN, tint = mat.color || [1, 1, 1];
+    if (mat.texture) { const t = AA.texture(mat.texture, quality); alb = tex(t.albedo, t.size, true); nrm = tex(t.normal, t.size, false); }
+    draws.push({ vao, n: idx.length, alb, nrm, tint, shadow: mat.kind !== 'ground' });
+  }
+  for (const k in out.parts) {
+    const d = out.parts[k];
+    addMesh(d.positions, d.normals, d.colors, d.uvs, d.indices, d.material || {});
+    for (let i = 0; i < d.positions.length; i += 3) allPos.push([d.positions[i], d.positions[i + 1], d.positions[i + 2]]);
+  }
+  let minY = 1e9, maxY = -1e9, maxR = 0, cx = 0, cz = 0;
+  for (const q of allPos) { minY = Math.min(minY, q[1]); maxY = Math.max(maxY, q[1]); cx += q[0]; cz += q[2]; }
+  cx /= allPos.length; cz /= allPos.length;
+  for (const q of allPos) maxR = Math.max(maxR, Math.hypot(q[0] - cx, q[2] - cz));
+  { // أرض رملية
+    const G = 48, gr = Math.max(8, maxR * 4), gc = [0.86, 0.74, 0.55], pos = [0, 0, 0], nor = [0, 1, 0], col = [...gc], uv = [0, 0], idx = [];
+    for (let i = 0; i < G; i++) { const a = i / G * 6.2832; pos.push(Math.cos(a) * gr, 0, Math.sin(a) * gr); nor.push(0, 1, 0); col.push(...gc); uv.push(0, 0); }
+    for (let i = 0; i < G; i++) idx.push(0, 1 + (i + 1) % G, 1 + i);
+    addMesh(pos, nor, col, uv, idx, { kind: 'ground' });
+  }
 
   const depthP = prog(`#version 300 es
-in vec3 aP; uniform mat4 uL; void main(){ gl_Position = uL*vec4(aP,1.0); }`,
-  `#version 300 es
+in vec3 aP; uniform mat4 uL; void main(){ gl_Position = uL*vec4(aP,1.0); }`, `#version 300 es
 precision highp float; void main(){}`);
   const mainP = prog(`#version 300 es
-in vec3 aP; in vec3 aN; in vec3 aC; uniform mat4 uVP; uniform mat4 uL;
-out vec3 vN; out vec3 vC; out vec4 vL; out vec3 vW;
-void main(){ vN=aN; vC=pow(aC,vec3(2.2)); vL=uL*vec4(aP,1.0); vW=aP; gl_Position=uVP*vec4(aP,1.0);}`,
-  `#version 300 es
+in vec3 aP; in vec3 aN; in vec3 aC; in vec2 aU; uniform mat4 uVP; uniform mat4 uL;
+out vec3 vN; out vec3 vC; out vec4 vL; out vec3 vW; out vec2 vU;
+void main(){ vN=aN; vC=pow(max(aC,0.0),vec3(2.2)); vL=uL*vec4(aP,1.0); vW=aP; vU=aU; gl_Position=uVP*vec4(aP,1.0);}`, `#version 300 es
 precision highp float; precision highp sampler2DShadow;
-in vec3 vN; in vec3 vC; in vec4 vL; in vec3 vW; uniform sampler2DShadow uS; uniform vec3 uSun; uniform vec3 uEye;
+in vec3 vN; in vec3 vC; in vec4 vL; in vec3 vW; in vec2 vU;
+uniform sampler2DShadow uS; uniform sampler2D uA; uniform sampler2D uNm; uniform vec3 uSun; uniform vec3 uTint; uniform vec3 uEye;
 out vec4 o;
+vec3 perturb(vec3 n, vec3 p, vec2 uv, vec3 m){
+  vec3 dp1=dFdx(p), dp2=dFdy(p); vec2 du1=dFdx(uv), du2=dFdy(uv);
+  vec3 dp2p=cross(dp2,n), dp1p=cross(n,dp1);
+  vec3 T=dp2p*du1.x+dp1p*du2.x, B=dp2p*du1.y+dp1p*du2.y;
+  float inv=inversesqrt(max(dot(T,T),dot(B,B))+1e-12);
+  return normalize(mat3(T*inv,B*inv,n)*(m*2.0-1.0));
+}
 void main(){
   vec3 n = normalize(vN); if(!gl_FrontFacing) n=-n;
+  vec3 m = texture(uNm, vU).xyz;
+  if (abs(m.x-0.5)+abs(m.y-0.5) > 0.004 && length(fwidth(vU))>0.0) n = perturb(n, vW, vU, m);
   vec3 l = vL.xyz/vL.w*0.5+0.5; float sh=0.0; vec2 ts=vec2(1.0/2048.0);
-  for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++) sh+=texture(uS, vec3(l.xy+vec2(x,y)*ts, l.z-0.0015));
+  for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++) sh+=texture(uS, vec3(l.xy+vec2(x,y)*ts, l.z-0.0012));
   sh/=9.0;
   float d = max(dot(n,uSun),0.0);
-  vec3 hemi = mix(vec3(0.62,0.52,0.40), vec3(0.62,0.72,0.85), n.y*0.5+0.5);
-  vec3 c = vC*(hemi*0.62 + vec3(1.0,0.93,0.80)*d*sh*1.35);
+  vec3 hemi = mix(vec3(0.60,0.50,0.38), vec3(0.62,0.72,0.85), n.y*0.5+0.5);
+  vec3 alb = texture(uA, vU).rgb * vC * uTint;
+  vec3 c = alb*(hemi*0.6 + vec3(1.0,0.93,0.80)*d*sh*1.4);
   c = (c*(2.51*c+0.03))/(c*(2.43*c+0.59)+0.14);
-  float f = smoothstep(30.0, 90.0, length(vW-uEye));
-  c = mix(c, vec3(0.80,0.74,0.64), f*0.0);
   o = vec4(pow(clamp(c,0.0,1.0),vec3(1.0/2.2)),1.0);
 }`);
-
-  // math
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], nrm = a => { const l = Math.hypot(...a); return a.map(x => x / l); };
   const crs = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-  function lookAt(e, t) { const z = nrm(sub(e, t)), x = nrm(crs([0, 1, 0], z)), y = crs(z, x);
-    return [x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dot(x, e), -dot(y, e), -dot(z, e), 1]; }
+  function lookAt(e, t) { const z = nrm(sub(e, t)), x = nrm(crs([0, 1, 0], z)), y = crs(z, x); return [x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dot(x, e), -dot(y, e), -dot(z, e), 1]; }
   function persp(f, a, n, fa) { const t = 1 / Math.tan(f / 2); return [t / a, 0, 0, 0, 0, t, 0, 0, 0, 0, (fa + n) / (n - fa), -1, 0, 0, 2 * fa * n / (n - fa), 0]; }
   function ortho(l, r, b, t, n, f) { return [2 / (r - l), 0, 0, 0, 0, 2 / (t - b), 0, 0, 0, 0, -2 / (f - n), 0, -(r + l) / (r - l), -(t + b) / (t - b), -(f + n) / (f - n), 1]; }
   function mul(a, b) { const o = new Array(16).fill(0); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) for (let k = 0; k < 4; k++) o[j * 4 + i] += a[k * 4 + i] * b[j * 4 + k]; return o; }
 
-  const sun = nrm([0.55, 0.9, 0.35]);
-  const ext = Math.max(maxY, maxR) * 1.3 + 2;
-  const tgt = [cx, (minY + maxY) * 0.5, cz];
+  const sun = nrm(cam.sun || [0.45, 0.8, 0.6]);
+  const ext = Math.max(maxY, maxR) * 1.3 + 2, tgt = [cx, (minY + maxY) * 0.5, cz];
   const L = mul(ortho(-ext, ext, -ext, ext, 0.1, ext * 4), lookAt([tgt[0] + sun[0] * ext * 2, tgt[1] + sun[1] * ext * 2, tgt[2] + sun[2] * ext * 2], tgt));
-
-  // shadow map
   const st = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, st);
   gl.texStorage2D(gl.TEXTURE_2D, 1, gl.DEPTH_COMPONENT32F, 2048, 2048);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -98,23 +110,28 @@ void main(){
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, st, 0);
   gl.viewport(0, 0, 2048, 2048); gl.enable(gl.DEPTH_TEST); gl.clear(gl.DEPTH_BUFFER_BIT);
   gl.useProgram(depthP); gl.uniformMatrix4fv(gl.getUniformLocation(depthP, 'uL'), false, L);
-  gl.drawElements(gl.TRIANGLES, idx.length - G * 3, gl.UNSIGNED_INT, 0);
+  for (const d of draws) if (d.shadow) { gl.bindVertexArray(d.vao); gl.drawElements(gl.TRIANGLES, d.n, gl.UNSIGNED_INT, 0); }
 
-  // main
   gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, W, H);
   gl.clearColor(0.72, 0.82, 0.90, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  const az = cam.az || 0.7, el = cam.el == null ? 0.18 : cam.el;
+  const az = cam.az == null ? 0.7 : cam.az, el = cam.el == null ? 0.18 : cam.el;
   const size = Math.max(maxY - minY, maxR * 2);
   const dist = (cam.dist || 1) * size / (2 * Math.tan(0.35)) * 1.05 + 0.3;
   const t2 = [tgt[0], tgt[1] + (cam.dy || 0), tgt[2]];
   const eye = [t2[0] + Math.cos(az) * Math.cos(el) * dist, t2[1] + Math.sin(el) * dist, t2[2] + Math.sin(az) * Math.cos(el) * dist];
   const VP = mul(persp(0.7, W / H, 0.05, 400), lookAt(eye, t2));
   gl.useProgram(mainP);
-  gl.uniformMatrix4fv(gl.getUniformLocation(mainP, 'uVP'), false, VP);
-  gl.uniformMatrix4fv(gl.getUniformLocation(mainP, 'uL'), false, L);
-  gl.uniform3fv(gl.getUniformLocation(mainP, 'uSun'), sun); gl.uniform3fv(gl.getUniformLocation(mainP, 'uEye'), eye);
-  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, st); gl.uniform1i(gl.getUniformLocation(mainP, 'uS'), 0);
-  gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_INT, 0);
+  const U = n => gl.getUniformLocation(mainP, n);
+  gl.uniformMatrix4fv(U('uVP'), false, VP); gl.uniformMatrix4fv(U('uL'), false, L);
+  gl.uniform3fv(U('uSun'), sun); gl.uniform3fv(U('uEye'), eye);
+  gl.uniform1i(U('uS'), 0); gl.uniform1i(U('uA'), 1); gl.uniform1i(U('uNm'), 2);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, st);
+  for (const d of draws) {
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, d.alb);
+    gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, d.nrm);
+    gl.uniform3fv(U('uTint'), d.tint);
+    gl.bindVertexArray(d.vao); gl.drawElements(gl.TRIANGLES, d.n, gl.UNSIGNED_INT, 0);
+  }
   return { tris: out.triangles, h: maxY, r: maxR };
 };
 </script>

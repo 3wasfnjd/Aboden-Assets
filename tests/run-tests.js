@@ -6,11 +6,11 @@ const path = require('path');
 const vm = require('vm');
 
 const root = path.join(__dirname, '..');
-const ctx = { console, Math, Float32Array, Uint32Array, Object, Array, JSON };
+const ctx = { console, Math, Float32Array, Uint32Array, Uint8Array, Object, Array, JSON, Set };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-const order = ['core/math.js', 'core/builder.js', 'core/tree.js'];
-const assetDirs = ['plants'];
+const order = ['core/math.js', 'core/builder.js', 'core/tree.js', 'core/texture.js', 'core/mud.js'];
+const assetDirs = ['plants', 'architecture'];
 for (const f of order) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
 for (const d of assetDirs) for (const f of fs.readdirSync(path.join(root, d)).filter(x => x.endsWith('.js')).sort())
   vm.runInContext(fs.readFileSync(path.join(root, d, f), 'utf8'), ctx, { filename: d + '/' + f });
@@ -40,6 +40,8 @@ for (const id of Object.keys(AA.assets)) {
         const nv = part.positions.length / 3;
         for (const k of ['colors', 'normals']) check(part[k].length === nv * 3, `${tag}/${name}: ${k} length`);
         for (const k of ['sway', 'phase', 'flutter', 'bend']) check(part[k].length === nv, `${tag}/${name}: ${k} length`);
+        check(part.uvs.length === nv * 2, `${tag}/${name}: uvs length`);
+        if (part.material.texture) check(ctx.AA.TEXTURES.includes(part.material.texture), `${tag}/${name}: unknown texture ${part.material.texture}`);
         check(part.indices.length % 3 === 0, `${tag}/${name}: indices not triangles`);
         let maxI = 0; for (const i of part.indices) if (i > maxI) maxI = i;
         check(maxI < nv, `${tag}/${name}: index out of range`);
