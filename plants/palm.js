@@ -46,10 +46,10 @@
     }
     for (let j = 0; j < rows; j++) for (let k = 0; k < n; k++) {
       const a = rings[j][k], b = rings[j][(k + 1) % n], c = rings[j + 1][(k + 1) % n], d = rings[j + 1][k];
-      W.t(a, c, b); W.t(a, d, c);
+      W.t(a, b, c); W.t(a, c, d);
     }
     const top = pt(1), cap = W.v(V.add(top, [0, 0.25, 0]), cTop, 0.05, 0, 0);
-    for (let k = 0; k < n; k++) W.t(rings[rows][(k + 1) % n], rings[rows][k], cap);
+    for (let k = 0; k < n; k++) W.t(rings[rows][k], rings[rows][(k + 1) % n], cap);
     return V.add(top, [0, 0.12, 0]);
   }
 

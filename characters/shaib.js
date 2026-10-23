@@ -121,11 +121,11 @@
     };
     const ys = []; for (let i = 0; i <= q.ny; i++) ys.push(lerp(0.06, 1.485, Math.pow(i / q.ny, 0.92)));
     const rows = ys.slice().reverse().map(y => { const r = []; for (let j = 0; j <= q.nu; j++) r.push(thobePoint(j / q.nu * Math.PI * 2, y, true)); return r; });
-    grid(P.thobe, rows, () => [1, 1, 1], (u, v) => [u * 3.4, v * 4.6], true);
+    grid(P.thobe, rows, () => [1, 1, 1], (u, v) => [u * 3.4, v * 4.6], false);
     // الياقة والأزرار
     P.thobe.setSkin([[sk.id('neck'), 0.6], [sk.id('chest'), 0.4]]);
     const col = [[1.485, 0.064], [1.505, 0.063], [1.52, 0.061]].map(([y, r]) => { const row = []; for (let j = 0; j <= 24; j++) { const a = j / 24 * Math.PI * 2; row.push([r * Math.sin(a), y, r * 0.96 * Math.cos(a) + 0.004]); } return row; });
-    grid(P.thobe, col.reverse(), () => [0.97, 0.97, 0.97], (u, v) => [u * 2, v * 0.3], true);
+    grid(P.thobe, col.reverse(), () => [0.97, 0.97, 0.97], (u, v) => [u * 2, v * 0.3], false);
     P.dark.setSkin([[sk.id('chest'), 1]]);
     for (const y of [1.44, 1.38]) { const c = thobePoint(0, y, false); AA.blob(P.dark, V.add(c, [0, 0, 0.004]), [0.006, 0, 0], [0, 0.006, 0], [0, 0, 0.003], () => [0.75, 0.68, 0.55], 0, 0, 0, null, 0, true); }
 
@@ -250,7 +250,7 @@
         }
         bRowsB.push(row);
       }
-      grid(P.bisht, bRowsB, () => bc, (u, v) => [u * 4, v * 3], true);
+      grid(P.bisht, bRowsB, () => bc, (u, v) => [u * 4, v * 3], false);
       // أكمام البشت الواسعة حتى ما بعد المرفق
       for (const [sd, x] of [['L', 1], ['R', -1]]) {
         P.bisht.skinFn = AA.autoSkin(sk, ['clav' + sd, 'upArm' + sd, 'loArm' + sd, 'chest'], 6);
