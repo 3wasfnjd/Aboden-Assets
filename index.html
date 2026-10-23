@@ -84,6 +84,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 
   <div class="tabs" id="tabs" role="group" aria-label="الفئات">
     <button type="button" data-s="hara" aria-pressed="true">الحي النجدي</button>
+    <button type="button" data-s="souq" aria-pressed="false">السوق</button>
     <button type="button" data-s="beings" aria-pressed="false">الكائنات</button>
     <button type="button" data-s="plants" aria-pressed="false">النباتات</button>
     <button type="button" data-s="architecture" aria-pressed="false">قطع العمارة</button>
@@ -139,6 +140,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <script src="animals/sheep.js"></script>
 <script src="characters/shaib.js"></script>
 <script src="characters/people.js"></script>
+<script src="souq/souq.js"></script>
 <script src="core/viewer-three.js"></script>
 <script>
 (function(){
@@ -200,6 +202,24 @@ const SCENES = {
     { id:'arfaj',  shared:true, inst: scatter(7, 7, 20, taken) },
     { id:'thumam', shared:true, inst: scatter(14, 6, 22, taken) } ] },
   hara: { title: 'الحي النجدي', pond: false, flat: 30, overview: [10, 20, 32], target: [0, 2, 0], entries: haraEntries() },
+  souq: { title: 'السوق', pond: false, flat: 26, overview: [14, 13, 22], target: [0, 1.2, 0], entries: [
+    { id:'shop',   inst:[{ x:-9, z:-5.2, over:{ seed:1, roof:'red' } }, { x:-4.4, z:-5.2, over:{ seed:2, roof:'palm', goods:'grain' } }, { x:9.5, z:-5.2, over:{ seed:3, roof:'green', width:5 } }] },
+    { id:'kiosk',  inst:[{ x:0.6, z:-4.8, over:{ seed:4, goods:'dates', roof:'palm' } }, { x:4.6, z:-4.8, over:{ seed:5, goods:'spices', roof:'blue' } }, { x:-7, z:4.6, rot:Math.PI, over:{ seed:6, goods:'fruit', roof:'green', width:3.2 } }, { x:-2.4, z:4.6, rot:Math.PI, over:{ seed:7, goods:'spices', roof:'red' } }] },
+    { id:'cart',   inst:[{ x:2.6, z:1.6, rot:-0.5, over:{ seed:8, load:'crates' } }, { x:-11.5, z:0.8, rot:1.2, over:{ seed:9, load:'sacks' } }, { x:7, z:2.4, rot:2.6, over:{ seed:10, load:'dates' } }] },
+    { id:'sack',   inst:[{ x:-6.4, z:-3.0, over:{ seed:11, goods:'rice' } }, { x:-5.9, z:-2.7, over:{ seed:12, open:false } }, { x:-6.1, z:-3.5, over:{ seed:13, open:false, height:0.8 } }, { x:6.9, z:-3.4, over:{ seed:14, goods:'coffee' } }, { x:7.4, z:-3.1, over:{ seed:15, goods:'cardamom' } }] },
+    { id:'crate',  inst:[{ x:-4.5, z:2.8, rot:0.3, over:{ seed:16, goods:'tomatoes' } }, { x:-3.9, z:3.2, rot:-0.2, over:{ seed:17, goods:'closed', stack:3 } }, { x:12.2, z:-2.6, rot:0.6, over:{ seed:18, goods:'closed', stack:2 } }] },
+    { id:'basket', inst:[{ x:1.9, z:-2.7, over:{ seed:19, goods:'dates' } }, { x:2.4, z:-2.5, over:{ seed:20, goods:'lemons', handles:false } }, { x:-1.0, z:2.7, over:{ seed:21, shape:'tall', goods:'dates' } }] },
+    { id:'pen',    inst:[{ x:10.5, z:5.6, rot:Math.PI, over:{ seed:22, width:7, depth:5 } }] },
+    { id:'fence',  inst:[{ x:-14.5, z:-2, rot:Math.PI / 2, over:{ seed:23, style:'fronds', height:1.8, length:6 } }] },
+    { id:'sheep',  inst:[{ x:9.8, z:5.4, rot:0.6, clip:'graze', over:{ seed:24 } }, { x:11.2, z:6.4, rot:2.0, clip:'graze', over:{ seed:25, breed:'naimi' } }, { x:12.0, z:4.8, rot:-1.2, over:{ seed:26, breed:'goat' } }, { x:8.9, z:6.6, rot:-2.4, clip:'graze', over:{ seed:27 } }] },
+    { id:'camel',  inst:[{ x:-11.8, z:3.2, rot:1.4, over:{ seed:28, saddle:true } }] },
+    { id:'shaib',  inst:[{ x:0.7, z:-2.3, rot:Math.PI, over:{ seed:29, bisht:'brown' } }, { x:-13, z:0, walk:[-13, 0.2, 12, 0.2], over:{ seed:30 } }] },
+    { id:'woman',  inst:[{ x:4.4, z:-2.4, rot:Math.PI, over:{ seed:31 } }, { x:10, z:-0.6, walk:[10, -0.6, -10, -0.6], over:{ seed:32, veil:'niqab' } }] },
+    { id:'girl',   inst:[{ x:10.6, z:-0.2, walk:[10.6, -0.2, -9.4, -0.2], over:{ seed:33, dress:'purple' } }] },
+    { id:'boy',    inst:[{ x:-2.4, z:2.3, rot:0.2, clip:'wave', over:{ seed:34, headwear:'ghutra' } }] },
+    { id:'worker', inst:[{ x:-10.8, z:-2.4, rot:2.4, clip:'work', over:{ seed:35, suit:'orange', helmet:'none', tool:false, vest:false } }] },
+    { id:'palm',   inst:[{ x:-14, z:6.5, over:{ seed:36, height:8 } }, { x:16.5, z:-1.5, over:{ seed:37, height:10, lean:0.5 } }] }
+  ] },
   beings: { title: 'الكائنات', pond: false, overview: [5, 5, 15], target: [0, 1, 1], entries: [
     { id:'shaib',  inst:[{ x:0, z:1.5, over:{ seed:1 } }, { x:-1.6, z:1.2, rot:0.4, over:{ seed:2, bisht:'brown' } }] },
     { id:'camel',  inst:[{ x:4.2, z:-1.5, rot:-0.5, over:{ seed:3, saddle:true, coat:'wadh' } }, { x:-4.5, z:-2.2, rot:0.6, clip:'graze', over:{ seed:4, coat:'majaheem' } }, { x:0.5, z:-4.5, rot:2.6, over:{ seed:5, coat:'humr' } }] },
