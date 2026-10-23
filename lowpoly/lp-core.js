@@ -11,7 +11,7 @@
   LP.PAL = {
     sand: '#e8c590', sandDark: '#d9ad72', mud: '#d99b5f', mudLight: '#e8b77c', mudDark: '#b97a44',
     wood: '#8a5a34', woodLight: '#a8703f', woodDark: '#5e3b22', dark: '#3a2418',
-    palmGreen: '#5c9a3c', palmGreen2: '#7bb547', palmDry: '#b98a4a', trunk: '#8f6a43', trunk2: '#7a5735',
+    palmGreen: '#5f9f3a', palmGreen2: '#86bf45', palmGreen3: '#4a8531', palmDry: '#c49a5a', palmDry2: '#a87c45', trunk: '#a9814f', trunk2: '#8d6740', trunkTop: '#6e4f30', stalk: '#e2a23e',
     date: '#c8641f', date2: '#9a3d16', skin: '#e0a676', skinShade: '#c98d5e', white: '#f5f1e8', cream: '#efe4cf',
     red: '#d43b35', black: '#2b2726', teal: '#2e9c94', yellow: '#f0bf3a', camel: '#d9a866', camelDark: '#b98a4f', camelLight: '#ecc48c'
   };
@@ -21,14 +21,14 @@
   LP.prism = function (B, a, b, r0, r1, sides, color, o) {
     o = o || {};
     const d = V.norm(V.sub(b, a)); let [u, w] = AA.basis(d);
-    if (o.rot) { const c = Math.cos(o.rot), s = Math.sin(o.rot); const u2 = V.add(V.scale(u, c), V.scale(w, s)); w = V.cross(d, u2); u = u2; }
+    if (o.rot) { const c = Math.cos(o.rot), s = Math.sin(o.rot); const u2 = V.add(V.scale(u, c), V.scale(w, s)), w2 = V.add(V.scale(u, -s), V.scale(w, c)); u = u2; w = w2; }
     const sx = o.sx || 1, ring = (c, r) => { const out = []; for (let k = 0; k < sides; k++) { const t = k / sides * Math.PI * 2; out.push(V.madd(V.madd(c, u, Math.cos(t) * r * sx), w, Math.sin(t) * r)); } return out; };
     const R0 = ring(a, r0), R1 = ring(b, r1), col = typeof color === 'function' ? color : () => color;
     const i0 = R0.map((p, k) => B.v(p, col(0, k), o.sway ? o.sway(p) : 0, o.phase || 0, 0)), i1 = R1.map((p, k) => B.v(p, col(1, k), o.sway ? o.sway(p) : 0, o.phase || 0, 0));
     for (let k = 0; k < sides; k++) { const j = (k + 1) % sides; B.t(i0[k], i1[j], i0[j]); B.t(i0[k], i1[k], i1[j]); }
     if (!o.noCaps) {
-      if (r0 > 1e-4) { const c0 = B.v(a, col(0, 0), 0, 0, 0); for (let k = 0; k < sides; k++) B.t(c0, i0[(k + 1) % sides], i0[k]); }
-      if (r1 > 1e-4) { const c1 = B.v(b, col(1, 0), o.sway ? o.sway(b) : 0, o.phase || 0, 0); for (let k = 0; k < sides; k++) B.t(c1, i1[k], i1[(k + 1) % sides]); }
+      if (r0 > 1e-4) { const c0 = B.v(a, col(0, 0), 0, 0, 0); for (let k = 0; k < sides; k++) B.t(c0, i0[k], i0[(k + 1) % sides]); }
+      if (r1 > 1e-4) { const c1 = B.v(b, col(1, 0), o.sway ? o.sway(b) : 0, o.phase || 0, 0); for (let k = 0; k < sides; k++) B.t(c1, i1[(k + 1) % sides], i1[k]); }
     }
   };
   // سلسلة منشورات على مسار (جذع، رقبة، رجل) — كل قطعة بلونها

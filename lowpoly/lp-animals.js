@@ -29,42 +29,57 @@
 
   function camel(p, q) {
     const sk = skeleton(), id = n => sk.id(n), rng = AA.rng(p.seed), C = (COATS[p.coat] || COATS.shael).map(LP.c);
-    const Bd = new AA.Builder(), Dk = new AA.Builder(), Sd = new AA.Builder();
-    // الجسم: مقاطع مثمّنة (أعلى أقل من أسفل) من المؤخرة للصدر
-    const rows = [[-1.0, 0.12, 0.12, 0.16, 1.47], [-0.8, 0.28, 0.2, 0.32, 1.44], [-0.4, 0.33, 0.24, 0.38, 1.46], [0.0, 0.35, 0.26, 0.42, 1.5], [0.4, 0.33, 0.26, 0.45, 1.5], [0.75, 0.27, 0.24, 0.38, 1.52], [0.95, 0.13, 0.13, 0.18, 1.55]];
+    const Bd = new AA.Builder(), Dk = new AA.Builder(), Sd = new AA.Builder(), jit = c => AA.vary(c, rng, 0.07);
+    // الجسم والسنام في قطعة واحدة: مقاطع بعشرة أضلاع، نصفها العلوي يرتفع ويضيق عند السنام
+    // [z، نصف العرض، الارتفاع للأعلى، العمق للأسفل، مركز y]
+    const rows = [[-1.02, 0.1, 0.1, 0.12, 1.47], [-0.86, 0.26, 0.23, 0.3, 1.46], [-0.62, 0.33, 0.3, 0.36, 1.45], [-0.42, 0.35, 0.42, 0.38, 1.46], [-0.22, 0.36, 0.6, 0.4, 1.47],
+      [0.0, 0.36, 0.68, 0.41, 1.47], [0.18, 0.35, 0.62, 0.42, 1.48], [0.36, 0.34, 0.45, 0.44, 1.48], [0.56, 0.32, 0.32, 0.43, 1.49], [0.76, 0.28, 0.27, 0.4, 1.5], [0.95, 0.19, 0.2, 0.3, 1.53]];
     Bd.skinFn = AA.autoSkin(sk, ['root', 'rear', 'chest'], 3);
-    AA.loft(Bd, { path: rows.map(r => [0, r[4], r[0]]), sides: 8, up: () => [0, 1, 0], capStart: true, capEnd: true,
-      radius: (t, a) => { const r = rows[Math.round(t * (rows.length - 1))]; return [r[1], Math.cos(a) > 0 ? r[2] : r[3]]; }, color: (t, a) => Math.cos(a) < -0.5 ? C[2] : C[0] });
-    // السنام
-    LP.ico(Bd, [0, 1.72, -0.08], [0.27, 0.36, 0.4], 0, d => d[1] > 0.5 ? C[1] : C[0], { keep: d => d[1] > -0.35 });
-    // الرقبة والرأس
-    const nb = [['neck1', [0, 1.55, 0.78], [0, 1.38, 1.15], 0.19, 0.15], ['neck2', [0, 1.38, 1.15], [0, 1.66, 1.48], 0.14, 0.11], ['neck3', [0, 1.66, 1.48], [0, 2.12, 1.6], 0.11, 0.09]];
-    for (const [b, a, e, r0, r1] of nb) { Bd.setSkin([[id(b), 1]]); LP.prism(Bd, a, e, r0, r1, 6, C[0], { noCaps: b !== 'neck3' }); }
+    AA.loft(Bd, { path: rows.map(r => [0, r[4], r[0]]), sides: q === 'low' ? 8 : 10, up: () => [0, 1, 0], capStart: true, capEnd: true,
+      radius: (t, a) => { const r = rows[Math.round(t * (rows.length - 1))], c = Math.cos(a), hump = AA.clamp((r[2] - 0.32) / 0.36, 0, 1);
+        return [r[1] * (1 - 0.42 * hump * Math.max(0, c) ** 2), c > 0 ? r[2] : r[3]]; },
+      color: (t, a) => { const c = Math.cos(a), r = rows[Math.round(t * (rows.length - 1))]; return jit(c < -0.5 ? C[2] : c > 0.75 && r[2] > 0.45 ? C[1] : C[0]); } });
+    // الرقبة: ثلاث قطع سميكة متناقصة مع مفاصل كروية تخفي الفواصل
+    const nb = [['neck1', [0, 1.58, 0.74], [0, 1.38, 1.15], 0.2, 0.16], ['neck2', [0, 1.38, 1.15], [0, 1.66, 1.48], 0.16, 0.125], ['neck3', [0, 1.66, 1.48], [0, 2.12, 1.6], 0.12, 0.1]];
+    for (const [b, a, e, r0, r1] of nb) { Bd.setSkin([[id(b), 1]]); LP.prism(Bd, a, e, r0, r1, 6, jit(C[0]), { noCaps: true, rot: 0.26 }); }
+    Bd.setSkin([[id('neck2'), 1]]); LP.ico(Bd, [0, 1.38, 1.15], 0.158, 0, () => jit(C[0]));
+    Bd.setSkin([[id('neck3'), 1]]); LP.ico(Bd, [0, 1.66, 1.48], 0.125, 0, () => jit(C[0]));
+    // الرأس: جمجمة + خطم طويل منحدر + شفة متدلية + أذنان صغيرتان
     Bd.setSkin([[id('head'), 1]]);
-    LP.prism(Bd, [0, 2.14, 1.56], [0, 1.99, 2.12], 0.115, 0.07, 6, C[0], { sx: 0.8 });
-    LP.prism(Bd, [0, 2.0, 2.04], [0, 1.97, 2.16], 0.075, 0.055, 6, C[2], { sx: 0.9 });
-    for (const s of [1, -1]) LP.prism(Bd, [s * 0.07, 2.2, 1.6], [s * 0.1, 2.3, 1.56], 0.03, 0.0, 4, C[1]);
+    LP.ico(Bd, [0, 2.15, 1.67], [0.11, 0.115, 0.14], 0, d => jit(d[1] > 0.5 ? C[1] : C[0]));
+    LP.prism(Bd, [0, 2.13, 1.74], [0, 2.01, 2.12], 0.1, 0.075, 6, jit(C[0]), { sx: 0.82, rot: 0.26 });
+    LP.prism(Bd, [0, 2.02, 2.1], [0, 1.99, 2.17], 0.07, 0.05, 6, C[2], { sx: 0.95, rot: 0.26 });
+    LP.prism(Bd, [0, 1.985, 1.9], [0, 1.965, 2.11], 0.05, 0.045, 5, C[2], { sx: 1.2 });
+    for (const s of [1, -1]) LP.prism(Bd, [s * 0.075, 2.22, 1.62], [s * 0.11, 2.31, 1.55], 0.035, 0.0, 4, C[1]);
     Dk.setSkin([[id('head'), 1]]);
-    for (const s of [1, -1]) { AA.box(Dk, [s * 0.088, 2.13, 1.76], [0.02, 0.04, 0.05], LP.c('black'), 1, {}); AA.box(Dk, [s * 0.04, 1.97, 2.16], [0.02, 0.02, 0.02], LP.c('black'), 1, {}); }
-    // الأرجل: منشورات لكل عظمة + خف عريض
+    for (const s of [1, -1]) {
+      AA.box(Dk, [s * 0.09, 2.165, 1.76], [0.014, 0.034, 0.04], LP.c('black'), 1, {});
+      AA.box(Dk, [s * 0.035, 2.0, 2.165], [0.025, 0.018, 0.02], LP.c('black'), 1, {});
+    }
+    // الأرجل: أفخاذ عريضة تدخل الجسم، مفاصل كروية، ثفنات الركبة أغمق، وخف عريض مفلطح
+    const leg = [['upF', 'sh', 'el', 0.12, 0.092], ['lowF', 'el', 'kn', 0.09, 0.07], ['canF', 'kn', 'fe', 0.064, 0.054], ['thighB', 'hp', 'st', 0.16, 0.11], ['shankB', 'st', 'hk', 0.1, 0.07], ['canB', 'hk', 'fe', 0.064, 0.054]];
+    const balls = [['lowF', 'el', 0.098, 0], ['canF', 'kn', 0.085, 1], ['footF', 'fe', 0.06, 0], ['shankB', 'st', 0.112, 0], ['canB', 'hk', 0.08, 1], ['footB', 'fe', 0.06, 0]];
     for (const [sd, x] of [['L', 1], ['R', -1]]) {
-      const X = a => [a[0] * x, a[1], a[2]], f = J.front, h = J.hind;
-      for (const [b, a, e, r0, r1] of [['upF', f.sh, f.el, 0.12, 0.085], ['lowF', f.el, f.kn, 0.075, 0.06], ['canF', f.kn, f.fe, 0.055, 0.048], ['thighB', h.hp, h.st, 0.17, 0.1], ['shankB', h.st, h.hk, 0.085, 0.06], ['canB', h.hk, h.fe, 0.052, 0.046]]) {
-        Bd.setSkin([[id(b + sd), 1]]); LP.prism(Bd, X(a), X(e), r0, r1, 5, C[0]);
-      }
-      for (const [b, fe, ft] of [['footF', f.fe, f.ft], ['footB', h.fe, h.ft]]) {
-        Bd.setSkin([[id(b + sd), 1]]); LP.prism(Bd, X(fe), X(ft), 0.05, 0.075, 5, C[1]);
-        Dk.setSkin([[id(b + sd), 1]]); AA.box(Dk, [ft[0] * x, 0.02, ft[2] + 0.02], [0.15, 0.04, 0.2], mixc(C[1], [0, 0, 0], 0.3), 1, {});
+      const X = a => [a[0] * x, a[1], a[2]];
+      for (const [b, ja, jb, r0, r1] of leg) { const JJ = b.endsWith('F') ? J.front : J.hind; Bd.setSkin([[id(b + sd), 1]]); LP.prism(Bd, X(JJ[ja]), X(JJ[jb]), r0, r1, 6, jit(C[0]), { noCaps: true }); }
+      for (const [b, j, r, dark] of balls) { const JJ = b.endsWith('F') ? J.front : J.hind; Bd.setSkin([[id(b + sd), 1]]); LP.ico(Bd, X(JJ[j]), r, 0, () => dark ? jit(C[1]) : jit(C[0])); }
+      for (const [b, JJ] of [['footF', J.front], ['footB', J.hind]]) {
+        Bd.setSkin([[id(b + sd), 1]]); LP.prism(Bd, X(JJ.fe), [JJ.ft[0] * x, 0.07, JJ.ft[2]], 0.052, 0.08, 6, C[1], { noCaps: true });
+        Dk.setSkin([[id(b + sd), 1]]); LP.ico(Dk, [JJ.ft[0] * x, 0.05, JJ.ft[2] + 0.01], [0.105, 0.05, 0.13], 0, d => mixc(C[1], [0, 0, 0], d[1] > 0 ? 0.15 : 0.4));
       }
     }
-    // الذيل
-    Bd.setSkin([[id('tail'), 1]]); LP.prism(Bd, [0, 1.46, -1.0], [0, 0.9, -1.1], 0.035, 0.02, 4, C[1]);
-    Dk.setSkin([[id('tail'), 1]]); LP.ico(Dk, [0, 0.86, -1.1], [0.04, 0.09, 0.04], 0, () => mixc(C[1], [0, 0, 0], 0.4));
-    // الشداد (اختياري): بطانية حمراء وعودان
+    // الذيل: ذيل رفيع وخصلة شعر في طرفه
+    Bd.setSkin([[id('tail'), 1]]); LP.prism(Bd, [0, 1.48, -1.0], [0, 0.95, -1.1], 0.04, 0.022, 4, C[1]);
+    Dk.setSkin([[id('tail'), 1]]); LP.ico(Dk, [0, 0.9, -1.1], [0.05, 0.11, 0.04], 0, () => mixc(C[1], [0, 0, 0], 0.4));
+    // الشداد (اختياري): بطانية حمراء فوق السنام بأطراف صفراء، وجنبتان متدليتان، وعودان
     if (p.saddle) {
       Sd.skinFn = AA.autoSkin(sk, ['root', 'rear', 'chest'], 3);
-      LP.ico(Sd, [0, 1.84, -0.08], [0.36, 0.3, 0.46], 0, d => Math.abs(d[2]) > 0.6 ? LP.c('yellow') : d[1] > 0.6 ? LP.c('teal') : LP.c('red'), { keep: d => d[1] > -0.1 });
-      for (const z of [-0.35, 0.22]) AA.box(Sd, [0, 2.12, z], [0.06, 0.3, 0.06], LP.c('wood'), 1, {});
+      LP.ico(Sd, [0, 1.98, -0.06], [0.42, 0.31, 0.56], 1, d => Math.abs(d[2]) > 0.72 ? LP.c('yellow') : d[1] > 0.85 ? LP.c('teal') : LP.c('red'), { keep: d => d[1] > -0.05 });
+      for (const s of [1, -1]) {
+        AA.box(Sd, [s * 0.4, 1.8, -0.06], [0.03, 0.34, 0.56], LP.c('red'), 1, {});
+        AA.box(Sd, [s * 0.405, 1.61, -0.06], [0.035, 0.06, 0.58], LP.c('yellow'), 1, {});
+      }
+      for (const z of [-0.42, 0.3]) { AA.box(Sd, [0, 2.32, z], [0.06, 0.34, 0.06], LP.c('wood'), 1, {}); AA.box(Sd, [0, 2.5, z], [0.1, 0.05, 0.1], LP.c('woodDark'), 1, {}); }
     }
     // الحركة: نفس مشية الجمل (رهوان بقدم مثبّتة)
     const clips = {};

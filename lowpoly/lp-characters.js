@@ -92,7 +92,7 @@
     clips.walk = AA.gaitClip(sk, { duration: 0.8, speed: 0.55, extra: t => {
       const ph = t / 0.8 * Math.PI * 2, s = Math.sin(ph);
       return { hips: [0, 8 * s, 4 * Math.sin(ph)], chest: [0, -6 * s, 0], head: [-3, 0, -3 * Math.sin(ph)], upArmL: [26 * s, 0, 8], loArmL: [-16, 0, 0], upArmR: [-10 - 6 * s, 0, -6], loArmR: [-22, 0, 0], move: [0, 0.012 * Math.cos(ph * 2), 0] };
-    }, legs: [['L', 0], ['R', 0.5]].map(([sd, ph]) => ({ chain: ['thigh' + sd, 'shin' + sd], foot: 'foot' + sd, phase: ph, duty: 0.6, lift: 0.05, limits: [[-70, 40], [0, 120]], init: [-5, 10], footSwing: 15 })) });
+    }, legs: [['L', 0], ['R', 0.5]].map(([sd, ph]) => ({ chain: ['thigh' + sd, 'shin' + sd], foot: 'foot' + sd, phase: ph, duty: 0.6, lift: 0.085, limits: [[-70, 40], [0, 120]], init: [-5, 10], footSwing: 0 })) });
     clips.wave = AA.clip(sk, 1.4, 30, true, t => { const w = t / 1.4 * Math.PI * 2; return { upArmL: [-10, 0, 140], loArmL: [-20, 0, 30 + 25 * Math.sin(w * 2)], head: [0, 10, -6], chest: [0, 6, -3], upArmR: [-14, 0, -6], loArmR: [-24, 0, 0] }; });
     clips.sit_floor = AA.clip(sk, 4, 30, true, t => { const w = t / 4 * Math.PI * 2, b = Math.sin(w * 1.5); return { thighL: [-90, -10, 55], thighR: [-90, 10, -55], shinL: [170, 0, -30], shinR: [170, 0, 30], footL: [-30, 0, 0], footR: [-30, 0, 0], chest: [2 * b, 0, 0], head: [0, 12 * Math.sin(w), 0], upArmL: [-20, 0, 20], loArmL: [-45, 0, 0], upArmR: [-20, 0, -20], loArmR: [-45, 0, 0], handR: [60, 0, 0], move: [0, -B.hip + 0.1, -0.03] }; });
 
