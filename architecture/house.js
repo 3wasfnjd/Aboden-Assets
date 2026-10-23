@@ -19,6 +19,22 @@
     }
   }
 
+  // شُرفة مدرّجة صغيرة: قاعدة، درجة، ورأس مدوّر — لوح واحد خفيف (نحو 40 مثلثاً)
+  const CREN = (() => {
+    const half = [[0.21, 0], [0.21, 0.14], [0.14, 0.14], [0.14, 0.27]];
+    for (let k = 1; k <= 4; k++) { const a = k / 4 * Math.PI / 2; half.push([0.09 * Math.cos(a), 0.27 + 0.05 + 0.1 * Math.sin(a)]); }
+    half.splice(4, 0, [0.09, 0.27], [0.09, 0.32]);
+    const right = half, left = half.slice().reverse().map(([x, y]) => [-x, y]);
+    return right.concat(left.slice(1));
+  })();
+  function crenel(P, o, d, k) { k = k || 1; AA.profileSlab(P, o, CREN.map(([x, y]) => [x * k, y * k]), d, 2, [1.04, 1.04, 1.04], true); }
+  // شُرفة الزاوية: شُرفتان متقاطعتان بحجم أكبر فوق قاعدة مربعة
+  function cornerCrenel(P, at, k) {
+    AA.mudSolid(P, { sx: 0.62, sz: 0.62, h: 0.16, r: 0.05, topRound: 0.0, step: 0.4, disp: 0.006, seed: 11, tile: 4, at });
+    const top = V.add(at, [0, 0.15, 0]);
+    crenel(P, { at: top, rot: 0 }, 0.3, k); crenel(P, { at: top, rot: Math.PI / 2 }, 0.3, k);
+  }
+
   // جدار واحد من البيت مع كل تفاصيله. side: {L, at, rot, door, windows:[[x, floor]], beams, spout}
   function facade(P, p, q, rng, side, H, roofY) {
     const T = p.thickness, st = STEP[q];
@@ -60,7 +76,15 @@
       }
     }
     // الشُّرَف المثلثة على الدروة
-    if (p.crenels) for (let x = -side.L / 2 + 0.9; x < side.L / 2 - 0.7; x += 0.75) AA.mudTip(P, { at: AA.xform([x, 0, 0], o), rot: o.rot }, 0.34, T * 0.55, 0.38, H - 0.02, false);
+    // الشُّرَف: درجتان من الطين ورأس ناعم مدوّر (بدل المثلثات الحادة)
+    if (p.crenels) {
+      const span = side.L - 1.4, n = Math.max(1, Math.round(span / (q === 'low' ? 1.6 : 0.8)));
+      for (let k = 0; k <= n; k++) {
+        const x = -span / 2 + k * span / n;
+        if (Math.abs(x) > side.L / 2 - 0.65) continue;
+        crenel(P, { at: AA.xform([x, H - 0.02, 0], o), rot: o.rot }, T * 0.62);
+      }
+    }
     return r;
   }
 
@@ -80,11 +104,9 @@
     const ps = [[cx - hw, y, cz + hd], [cx + hw, y, cz + hd], [cx + hw, y, cz - hd], [cx - hw, y, cz - hd]];
     AA.quad(P.top, ps, ps.map(q2 => [q2[0] / 2, q2[2] / 2]), [[0.95, 0.95, 0.95]], [0, 1, 0]);
     // أبراج الزوايا الصغيرة على الدروة
-    if (p.crenels) for (const [sx, sz] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
-      const at = [cx + sx * (W / 2 - 0.32), y0 + H - 0.02, cz + sz * (D / 2 - 0.32)];
-      AA.mudSolid(P, { sx: 0.64, sz: 0.64, h: 0.3, r: 0.05, step: 0.2, disp: 0.008, topRound: 0, seed: 7, tile: 4, at });
-      AA.mudTip(P, { at: V.add(at, [0, 0.3, 0]) }, 0.5, 0.5, 0.5, 0, true);
-    }
+    // شُرف الزوايا: أكبر ومتقاطعة (مثل شرفة الزاوية في المرجع p6)
+    if (p.crenels) for (const [sx, sz] of [[1, 1], [-1, 1], [1, -1], [-1, -1]])
+      cornerCrenel(P, [cx + sx * (W / 2 - 0.3), y0 + H - 0.03, cz + sz * (D / 2 - 0.3)], 1.45);
   }
 
   function house(p, q) {

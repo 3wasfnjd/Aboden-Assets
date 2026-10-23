@@ -267,6 +267,25 @@
     }
   };
 
+  // لوح بمقطع جانبي (شُرفة مدرّجة مثلاً): مضلع في المستوى XY نجمي الشكل من نقطة المنتصف السفلي، بسماكة d
+  AA.profileSlab = function (P, o, prof, d, tile, color, smooth) {
+    tile = tile || 4; const c = color || [1, 1, 1], n = prof.length, F = smooth ? P.top : P.wall;
+    for (const sz of [1, -1]) {
+      const z = sz * d / 2, ctr = F.v(xform([0, 0, z], o), c, 0, 0, 0, [0.5, 0]);
+      const ids = prof.map(([x, y]) => F.v(xform([x, y, z], o), c, 0, 0, 0, [(sz > 0 ? x : -x) / tile + 0.5, y / tile]));
+      for (let i = 0; i < n - 1; i++) { if (sz > 0) F.t(ctr, ids[i], ids[i + 1]); else F.t(ctr, ids[i + 1], ids[i]); }
+    }
+    let run = 0;
+    for (let i = 0; i < n - 1; i++) {
+      const [x0, y0] = prof[i], [x1, y1] = prof[i + 1], len = Math.hypot(x1 - x0, y1 - y0);
+      const nrm = [y1 - y0, -(x1 - x0), 0];
+      const B = smooth || nrm[1] > Math.abs(nrm[0]) * 0.8 ? P.top : P.wall;
+      const ps = [[x0, y0, d / 2], [x1, y1, d / 2], [x1, y1, -d / 2], [x0, y0, -d / 2]];
+      quad(B, ps.map(p => xform(p, o)), [[run / tile, d / tile], [(run + len) / tile, d / tile], [(run + len) / tile, 0], [run / tile, 0]], [c], xdir(o, V.norm([nrm[0] || 1e-6, nrm[1], 0])));
+      run += len;
+    }
+  };
+
   // فتحة تهوية مثلثة: مثلث غائر داكن بإطار رفيع (على وجه أمامي عند z)
   AA.triVent = function (P, o, x, y, size, z, inverted) {
     const pts = inverted ? [[-size / 2, size * 1.1], [size / 2, size * 1.1], [0, 0]] : [[-size / 2, 0], [size / 2, 0], [0, size * 1.1]];
