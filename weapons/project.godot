@@ -1,0 +1,29 @@
+; حزمة أسلحة عبودين — Aboden Blaster Kit (Godot 4.6). A small project around the addon:
+; the demo (demo/blaster_demo.tscn) and the tests (tests/run_tests.gd).
+
+config_version=5
+
+[application]
+
+config/name="Aboden Blaster Kit — حزمة أسلحة عبودين"
+config/description="Twelve shot styles as a reusable addon (addons/aboden_blaster)."
+config/version="1.2.0"
+run/main_scene="res://demo/blaster_demo.tscn"
+run/main_scene.blaster_lab="res://demo/lab/weapon_lab.tscn"
+config/features=PackedStringArray("4.6", "GL Compatibility")
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/aboden_blaster/plugin.cfg")
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+renderer/rendering_method.web="gl_compatibility"
+anti_aliasing/quality/msaa_3d=2

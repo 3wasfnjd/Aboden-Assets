@@ -1,0 +1,1057 @@
+[
+  {
+    "code": "AB-W-001",
+    "id": "bolt",
+    "pack": "playful",
+    "ar": "برق",
+    "en": "Bolt",
+    "ar_desc": "طلقة سريعة مضيئة بذيل ووميض",
+    "en_desc": "A fast glowing bolt with a trail and a flash",
+    "delivery": "projectile",
+    "trajectory": "straight",
+    "hit": "single",
+    "role": "attack",
+    "tier": 0,
+    "tags": [
+      "direct"
+    ],
+    "icon": "icons/bolt.png",
+    "stats": {
+      "speed": 45.0,
+      "cool": 0.12,
+      "r": 0.02,
+      "life": 1.2
+    }
+  },
+  {
+    "code": "AB-W-002",
+    "id": "mini",
+    "pack": "playful",
+    "ar": "كرات صغيرة",
+    "en": "Mini Ball",
+    "ar_desc": "كرات صغيرة ملوّنة تتشقلب وترتد",
+    "en_desc": "Little tumbling balls that bounce on",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "bounce",
+    "role": "attack",
+    "tier": 0,
+    "tags": [
+      "ballistic",
+      "bouncing"
+    ],
+    "icon": "icons/mini.png",
+    "stats": {
+      "speed": 11.0,
+      "cool": 0.12,
+      "r": 0.022,
+      "life": 3.2
+    }
+  },
+  {
+    "code": "AB-W-003",
+    "id": "bubble",
+    "pack": "playful",
+    "ar": "فقاعة",
+    "en": "Bubble",
+    "ar_desc": "فقاعات صابون ملونة تتمايل ببطء",
+    "en_desc": "Slow, wobbling rainbow soap bubbles",
+    "delivery": "projectile",
+    "trajectory": "floating",
+    "hit": "single",
+    "role": "attack",
+    "tier": 0,
+    "tags": [
+      "direct"
+    ],
+    "icon": "icons/bubble.png",
+    "stats": {
+      "speed": 4.2,
+      "cool": 0.16,
+      "r": 0.06,
+      "life": 3.6
+    }
+  },
+  {
+    "code": "AB-W-004",
+    "id": "firework",
+    "pack": "playful",
+    "ar": "ألعاب نارية",
+    "en": "Firework",
+    "ar_desc": "صاروخ ناري يتفتح ويفرقع ما حوله",
+    "en_desc": "A rocket that blooms and pops all around it",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 0,
+    "tags": [
+      "ballistic",
+      "area"
+    ],
+    "icon": "icons/firework.png",
+    "stats": {
+      "speed": 20.0,
+      "cool": 0.2,
+      "r": 0.025,
+      "life": 0.85
+    }
+  },
+  {
+    "code": "AB-W-005",
+    "id": "confetti",
+    "pack": "playful",
+    "ar": "قصاصات",
+    "en": "Confetti",
+    "ar_desc": "مدفع قصاصات: خمس كرات في مخروط",
+    "en_desc": "Confetti cannon: five pellets in a cone",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "single",
+    "role": "attack",
+    "tier": 1,
+    "tags": [
+      "spray",
+      "ballistic"
+    ],
+    "icon": "icons/confetti.png",
+    "stats": {
+      "speed": 24.0,
+      "cool": 0.3,
+      "r": 0.018,
+      "life": 0.9
+    }
+  },
+  {
+    "code": "AB-W-006",
+    "id": "bouncy",
+    "pack": "playful",
+    "ar": "نطّاطة",
+    "en": "Bouncy",
+    "ar_desc": "كرة مطاطية تنطّ بالمكان عشر ثوانٍ",
+    "en_desc": "A rubber ball that bounces about for ten seconds",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "bounce",
+    "role": "attack",
+    "tier": 1,
+    "tags": [
+      "bouncing",
+      "ballistic"
+    ],
+    "icon": "icons/bouncy.png",
+    "stats": {
+      "speed": 15.0,
+      "cool": 0.22,
+      "r": 0.03,
+      "life": 10.0
+    }
+  },
+  {
+    "code": "AB-W-007",
+    "id": "laser",
+    "pack": "playful",
+    "ar": "ليزر",
+    "en": "Laser",
+    "ar_desc": "شعاع فوري يخترق حتى ٣ أهداف",
+    "en_desc": "An instant beam through up to 3 targets",
+    "delivery": "hitscan",
+    "trajectory": "straight",
+    "hit": "pierce",
+    "role": "attack",
+    "tier": 2,
+    "tags": [
+      "instant"
+    ],
+    "icon": "icons/laser.png",
+    "stats": {
+      "speed": 0.0,
+      "cool": 0.32,
+      "r": 0.015,
+      "life": 0.25
+    }
+  },
+  {
+    "code": "AB-W-008",
+    "id": "boomerang",
+    "pack": "playful",
+    "ar": "بوميرانغ",
+    "en": "Boomerang",
+    "ar_desc": "ينطلق ويلتف ويعود إلى يدك",
+    "en_desc": "Curves out and comes back to your hand",
+    "delivery": "projectile",
+    "trajectory": "returning",
+    "hit": "pierce",
+    "role": "attack",
+    "tier": 2,
+    "tags": [
+      "returning"
+    ],
+    "icon": "icons/boomerang.png",
+    "stats": {
+      "speed": 10.0,
+      "cool": 0.55,
+      "r": 0.06,
+      "life": 1.5
+    }
+  },
+  {
+    "code": "AB-W-009",
+    "id": "glob",
+    "pack": "playful",
+    "ar": "ماء",
+    "en": "Water",
+    "ar_desc": "كرة ماء تنفجر برذاذ يفرقع ما حولها",
+    "en_desc": "A water ball that bursts in a popping splash",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 3,
+    "tags": [
+      "ballistic",
+      "area"
+    ],
+    "icon": "icons/glob.png",
+    "stats": {
+      "speed": 12.0,
+      "cool": 0.35,
+      "r": 0.045,
+      "life": 2.5
+    }
+  },
+  {
+    "code": "AB-W-010",
+    "id": "rocket",
+    "pack": "playful",
+    "ar": "صاروخ",
+    "en": "Rocket",
+    "ar_desc": "صاروخ موجّه، كل صاروخ يلاحق هدفه",
+    "en_desc": "Homing rockets, each after its own target",
+    "delivery": "projectile",
+    "trajectory": "homing",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 3,
+    "tags": [
+      "homing",
+      "area"
+    ],
+    "icon": "icons/rocket.png",
+    "stats": {
+      "speed": 20.0,
+      "cool": 0.6,
+      "r": 0.03,
+      "life": 2.6
+    }
+  },
+  {
+    "code": "AB-W-011",
+    "id": "lightning",
+    "pack": "playful",
+    "ar": "صاعقة",
+    "en": "Lightning",
+    "ar_desc": "صاعقة تقفز بين ٤ أهداف",
+    "en_desc": "Lightning that chains through 4 targets",
+    "delivery": "hitscan",
+    "trajectory": "homing",
+    "hit": "chain",
+    "role": "attack",
+    "tier": 4,
+    "tags": [
+      "instant"
+    ],
+    "icon": "icons/lightning.png",
+    "stats": {
+      "speed": 0.0,
+      "cool": 0.45,
+      "r": 0.02,
+      "life": 0.32
+    }
+  },
+  {
+    "code": "AB-W-012",
+    "id": "dallah",
+    "pack": "playful",
+    "ar": "دلّة",
+    "en": "Dallah",
+    "ar_desc": "دلّة قهوة دوّارة ترش حبات البن",
+    "en_desc": "A spinning coffee pot spraying coffee beans",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "pierce",
+    "role": "attack",
+    "tier": 4,
+    "tags": [
+      "ballistic",
+      "spray"
+    ],
+    "icon": "icons/dallah.png",
+    "stats": {
+      "speed": 13.0,
+      "cool": 0.5,
+      "r": 0.05,
+      "life": 1.1
+    }
+  },
+  {
+    "code": "AB-W-013",
+    "id": "falcon",
+    "pack": "playful",
+    "ar": "الصقر",
+    "en": "Falcon",
+    "ar_desc": "صقر ينقضّ على هدف لا يلاحقه غيره ثم يعود إلى يدك",
+    "en_desc": "A falcon that stoops on a target no other falcon has, then comes back to your hand",
+    "delivery": "projectile",
+    "trajectory": "homing",
+    "hit": "single",
+    "role": "attack",
+    "tier": 3,
+    "tags": [
+      "homing",
+      "returning"
+    ],
+    "icon": "icons/falcon.png",
+    "stats": {
+      "speed": 9.0,
+      "cool": 1.2,
+      "r": 0.05,
+      "life": 4.0
+    }
+  },
+  {
+    "code": "AB-W-014",
+    "id": "freeze",
+    "pack": "playful",
+    "ar": "الثلج",
+    "en": "Freeze Ray",
+    "ar_desc": "شعاع جليدي فوري يجمّد الهدف ثلاث ثوانٍ",
+    "en_desc": "An instant icy beam that freezes a target for three seconds",
+    "delivery": "hitscan",
+    "trajectory": "straight",
+    "hit": "single",
+    "role": "support",
+    "tier": 2,
+    "tags": [
+      "instant"
+    ],
+    "icon": "icons/freeze.png",
+    "stats": {
+      "speed": 0.0,
+      "cool": 0.5,
+      "r": 0.02,
+      "life": 0.3
+    }
+  },
+  {
+    "code": "AB-W-015",
+    "id": "blackhole",
+    "pack": "playful",
+    "ar": "الثقب الأسود",
+    "en": "Black Hole",
+    "ar_desc": "دوامة تتوقف وتجذب ما حولها ثم تنفجر للداخل",
+    "en_desc": "A vortex that stops, pulls in what is near, then implodes",
+    "delivery": "projectile",
+    "trajectory": "straight",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 4,
+    "tags": [
+      "area"
+    ],
+    "icon": "icons/blackhole.png",
+    "stats": {
+      "speed": 6.0,
+      "cool": 1.5,
+      "r": 0.06,
+      "life": 0.8
+    }
+  },
+  {
+    "code": "AB-W-016",
+    "id": "dates",
+    "pack": "playful",
+    "ar": "رشاش التمر",
+    "en": "Date Blaster",
+    "ar_desc": "أسرع سلاح: حبات تمر لامعة تتفتت عند الإصابة",
+    "en_desc": "The fastest weapon: glossy dates that crumble on a hit",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "single",
+    "role": "attack",
+    "tier": 1,
+    "tags": [
+      "direct",
+      "spray"
+    ],
+    "icon": "icons/dates.png",
+    "stats": {
+      "speed": 16.0,
+      "cool": 0.1,
+      "r": 0.016,
+      "life": 1.2
+    }
+  },
+  {
+    "code": "AB-W-017",
+    "id": "bakhoor",
+    "pack": "playful",
+    "ar": "المبخرة",
+    "en": "Bakhoor",
+    "ar_desc": "مبخرة تُقذف فتترك سحابة بخور تُبطئ ما فيها",
+    "en_desc": "A lobbed incense burner that leaves a slowing cloud of bakhoor smoke",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "lingering",
+    "role": "support",
+    "tier": 2,
+    "tags": [
+      "area",
+      "ballistic"
+    ],
+    "icon": "icons/bakhoor.png",
+    "stats": {
+      "speed": 7.0,
+      "cool": 0.9,
+      "r": 0.04,
+      "life": 2.5
+    }
+  },
+  {
+    "code": "AB-W-018",
+    "id": "lasso",
+    "pack": "playful",
+    "ar": "حبل الشماغ",
+    "en": "Shemagh Lasso",
+    "ar_desc": "حبل بنقشة الشماغ يلتقط الهدف ويسحبه نحوك",
+    "en_desc": "A shemagh-patterned rope that catches a target and pulls it to you",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "single",
+    "role": "support",
+    "tier": 2,
+    "tags": [
+      "ballistic",
+      "returning"
+    ],
+    "icon": "icons/lasso.png",
+    "stats": {
+      "speed": 11.0,
+      "cool": 1.0,
+      "r": 0.07,
+      "life": 0.9
+    }
+  },
+  {
+    "code": "AB-W-019",
+    "id": "hose",
+    "pack": "playful",
+    "ar": "خرطوم الماء",
+    "en": "Water Hose",
+    "ar_desc": "تيار ماء متصل يدفع الأهداف بعيدًا",
+    "en_desc": "A steady stream of water that pushes targets away",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "single",
+    "role": "support",
+    "tier": 1,
+    "tags": [
+      "spray",
+      "ballistic"
+    ],
+    "icon": "icons/hose.png",
+    "stats": {
+      "speed": 12.0,
+      "cool": 0.12,
+      "r": 0.02,
+      "life": 0.6
+    }
+  },
+  {
+    "code": "AB-W-020",
+    "id": "cluster",
+    "pack": "playful",
+    "ar": "القنبلة العنقودية",
+    "en": "Cluster Bomb",
+    "ar_desc": "قنبلة مرحة تتفرق إلى ست قنابل صغيرة ملوّنة",
+    "en_desc": "A playful bomb that scatters into six little colourful bombs",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 3,
+    "tags": [
+      "area",
+      "spray"
+    ],
+    "icon": "icons/cluster.png",
+    "stats": {
+      "speed": 10.0,
+      "cool": 1.0,
+      "r": 0.04,
+      "life": 0.7
+    }
+  },
+  {
+    "code": "AB-W-021",
+    "id": "magnet",
+    "pack": "playful",
+    "ar": "المغناطيس",
+    "en": "Magnet",
+    "ar_desc": "مغناطيس يعلق في الهواء ويجذب المعدن والقذائف",
+    "en_desc": "A magnet that hangs in the air and pulls in metal and projectiles",
+    "delivery": "projectile",
+    "trajectory": "straight",
+    "hit": "lingering",
+    "role": "support",
+    "tier": 3,
+    "tags": [
+      "area"
+    ],
+    "icon": "icons/magnet.png",
+    "stats": {
+      "speed": 9.0,
+      "cool": 1.2,
+      "r": 0.04,
+      "life": 0.7
+    }
+  },
+  {
+    "code": "AB-W-022",
+    "id": "shield",
+    "pack": "playful",
+    "ar": "الدرع",
+    "en": "Shield Bubble",
+    "ar_desc": "فقاعة درع أمام يدك تصد القذائف ثلاث ثوانٍ",
+    "en_desc": "A shield bubble at your hand that stops projectiles for three seconds",
+    "delivery": "area",
+    "trajectory": "held",
+    "hit": "lingering",
+    "role": "defence",
+    "tier": 2,
+    "tags": [
+      "defence"
+    ],
+    "icon": "icons/shield.png",
+    "stats": {
+      "speed": 0.0,
+      "cool": 4.0,
+      "r": 0.45,
+      "life": 3.0
+    }
+  },
+  {
+    "code": "AB-W-023",
+    "id": "ballistic",
+    "pack": "military",
+    "ar": "صاروخ باليستي",
+    "en": "Ballistic missile",
+    "example": "Iskander",
+    "ar_desc": "قوس عالٍ وسقوط حاد بتوهج إعادة الدخول · انفجار قوي",
+    "en_desc": "High arc and a steep, glowing re-entry; a heavy blast",
+    "delivery": "projectile",
+    "trajectory": "lofted",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 2,
+    "icon": "icons/mil_ballistic.png",
+    "stats": {
+      "blast": 1.45,
+      "ammo": 6,
+      "cooldown": 4.0,
+      "reload": 8.0,
+      "arc": "lofted",
+      "launcher": "vls",
+      "flight": [
+        2.6,
+        3.0
+      ]
+    }
+  },
+  {
+    "code": "AB-W-024",
+    "id": "cruise",
+    "pack": "military",
+    "ar": "صاروخ كروز",
+    "en": "Cruise missile",
+    "example": "Tomahawk",
+    "ar_desc": "يطير منخفضًا ويتبع التضاريس ويصعد قبل التلال · دقيق",
+    "en_desc": "Flies low and follows the terrain, climbing before hills; precise",
+    "delivery": "projectile",
+    "trajectory": "waypoints",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 1,
+    "icon": "icons/mil_cruise.png",
+    "stats": {
+      "blast": 1.0,
+      "ammo": 8,
+      "cooldown": 3.0,
+      "reload": 6.0,
+      "arc": "cruise",
+      "launcher": "box",
+      "flight": [
+        1.5,
+        3.0
+      ],
+      "speed": 0.42
+    }
+  },
+  {
+    "code": "AB-W-025",
+    "id": "artillery",
+    "pack": "military",
+    "ar": "قذيفة مدفعية",
+    "en": "Artillery shell",
+    "example": "M777",
+    "ar_desc": "قذائف سريعة كثيرة بقوس منخفض · انفجار صغير",
+    "en_desc": "Fast, plentiful shells on a low arc; a small blast",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 0,
+    "icon": "icons/mil_artillery.png",
+    "stats": {
+      "blast": 0.6,
+      "ammo": 30,
+      "cooldown": 0.8,
+      "reload": 2.0,
+      "arc": "low",
+      "launcher": "gun",
+      "flight": [
+        1.5,
+        1.8
+      ]
+    }
+  },
+  {
+    "code": "AB-W-026",
+    "id": "mlrs",
+    "pack": "military",
+    "ar": "راجمة صواريخ",
+    "en": "MLRS rocket salvo",
+    "example": "HIMARS",
+    "ar_desc": "8 صواريخ متتالية كل 90 م.ث تتوزع حول الهدف",
+    "en_desc": "8 rockets, one every 90 ms, scattered round the target",
+    "delivery": "projectile",
+    "trajectory": "ballistic",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 1,
+    "icon": "icons/mil_mlrs.png",
+    "stats": {
+      "blast": 0.5,
+      "ammo": 4,
+      "cooldown": 6.0,
+      "reload": 9.0,
+      "arc": "low",
+      "launcher": "pod",
+      "flight": [
+        1.4,
+        1.7
+      ],
+      "salvo": 8
+    }
+  },
+  {
+    "code": "AB-W-027",
+    "id": "cluster",
+    "pack": "military",
+    "ar": "صاروخ عنقودي",
+    "en": "Cluster missile",
+    "example": "ATACMS",
+    "ar_desc": "ينفتح في الجو ويطلق 10 قنيبلات تغطي منطقة الهدف",
+    "en_desc": "Opens in the air and releases 10 bomblets over the target area",
+    "delivery": "projectile",
+    "trajectory": "lofted",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 2,
+    "icon": "icons/mil_cluster.png",
+    "stats": {
+      "blast": 0.45,
+      "ammo": 3,
+      "cooldown": 7.0,
+      "reload": 12.0,
+      "arc": "lofted",
+      "launcher": "vls",
+      "flight": [
+        2.6,
+        3.0
+      ],
+      "split": 10
+    }
+  },
+  {
+    "code": "AB-W-028",
+    "id": "hypersonic",
+    "pack": "military",
+    "ar": "صاروخ فرط صوتي",
+    "en": "Hypersonic glide missile",
+    "example": "Kinzhal",
+    "ar_desc": "يندفع إلى الأعلى ثم ينزلق منخفضًا متمايلًا يمينًا ويسارًا وينقضّ بتوهج · انفجار كبير",
+    "en_desc": "Boosts up, then a low glide weaving side to side and a glowing terminal dive; a big blast",
+    "delivery": "projectile",
+    "trajectory": "lofted",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 3,
+    "icon": "icons/mil_hypersonic.png",
+    "stats": {
+      "blast": 1.75,
+      "ammo": 3,
+      "cooldown": 8.0,
+      "reload": 14.0,
+      "arc": "glide",
+      "launcher": "vls",
+      "flight": [
+        1.1,
+        2.2
+      ],
+      "speed": 1.1
+    }
+  },
+  {
+    "code": "AB-W-029",
+    "id": "bunker",
+    "pack": "military",
+    "ar": "خارق التحصينات",
+    "en": "Bunker buster",
+    "example": "GBU-57",
+    "ar_desc": "قنبلة ثقيلة تحملها طائرة هجومية وتلقيها فوق الهدف · حفرة عميقة للمخابئ",
+    "en_desc": "A heavy bomb a strike jet carries and drops over the target; a deep crater for bunkers",
+    "delivery": "called",
+    "trajectory": "vertical",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 3,
+    "icon": "icons/mil_bunker.png",
+    "stats": {
+      "blast": 1.15,
+      "ammo": 2,
+      "cooldown": 2.0,
+      "reload": 0.0,
+      "arc": "sortie",
+      "launcher": "deck",
+      "speed": 0.14,
+      "bombs": 1,
+      "bomb": "bunkerbomb",
+      "crater_k": 2.2
+    }
+  },
+  {
+    "code": "AB-W-030",
+    "id": "drone",
+    "pack": "military",
+    "ar": "مسيّرة انتحارية",
+    "en": "Kamikaze drone",
+    "example": "Shahed-136",
+    "ar_desc": "بطيئة على ارتفاع فوق التضاريس · دقيقة · انفجار صغير",
+    "en_desc": "Slow, high over the terrain; precise, a small blast",
+    "delivery": "projectile",
+    "trajectory": "waypoints",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 1,
+    "icon": "icons/mil_drone.png",
+    "stats": {
+      "blast": 0.7,
+      "ammo": 10,
+      "cooldown": 2.5,
+      "reload": 5.0,
+      "arc": "cruise",
+      "launcher": "ramp",
+      "flight": [
+        2.5,
+        8.0
+      ],
+      "speed": 0.22
+    }
+  },
+  {
+    "code": "AB-W-031",
+    "id": "antiship",
+    "pack": "military",
+    "ar": "صاروخ مضاد للسفن",
+    "en": "Anti-ship missile",
+    "example": "Harpoon",
+    "ar_desc": "يطير ملاصقًا لسطح البحر · قوي على السفن",
+    "en_desc": "Skims the sea; strong against ships",
+    "delivery": "projectile",
+    "trajectory": "waypoints",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 2,
+    "icon": "icons/mil_antiship.png",
+    "stats": {
+      "blast": 1.3,
+      "ammo": 4,
+      "cooldown": 5.0,
+      "reload": 10.0,
+      "arc": "cruise",
+      "launcher": "box",
+      "flight": [
+        1.2,
+        3.0
+      ],
+      "speed": 0.5
+    }
+  },
+  {
+    "code": "AB-W-032",
+    "id": "jet",
+    "pack": "military",
+    "ar": "طائرة هجومية",
+    "en": "Strike jet",
+    "example": "F-15E",
+    "ar_desc": "تقلع من المنصة وتضرب الهدف بأربع قنابل ثم تعود وتهبط (الرحلة تطول)",
+    "en_desc": "Takes off, drops 4 bombs on the target, flies home and lands (a long trip)",
+    "delivery": "called",
+    "trajectory": "waypoints",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 3,
+    "icon": "icons/mil_jet.png",
+    "stats": {
+      "blast": 0.8,
+      "ammo": 2,
+      "cooldown": 2.0,
+      "reload": 0.0,
+      "arc": "sortie",
+      "launcher": "deck",
+      "speed": 0.14,
+      "bombs": 4,
+      "bomb": "jetbomb"
+    }
+  },
+  {
+    "code": "AB-W-033",
+    "id": "nuke",
+    "pack": "military",
+    "ar": "قنبلة نووية",
+    "en": "Nuclear test",
+    "example": "B61",
+    "ar_desc": "تجربة نووية: وميض وكرة نار تصعد وفطر دخان وموجة صدمة تمتد بعيدًا · يدمر كل شيء في دائرة واسعة",
+    "en_desc": "Nuclear test: flash, a rising fireball, a mushroom cloud and a shock wave running far out; destroys everything in a wide radius",
+    "delivery": "projectile",
+    "trajectory": "lofted",
+    "hit": "falloff",
+    "role": "attack",
+    "tier": 4,
+    "icon": "icons/mil_nuke.png",
+    "stats": {
+      "blast": 1.0,
+      "ammo": 1,
+      "cooldown": 30.0,
+      "reload": 90.0,
+      "arc": "lofted",
+      "launcher": "silo",
+      "flight": [
+        3.4,
+        3.8
+      ],
+      "nuke_r": 0.16,
+      "wave_k": 2.6
+    }
+  },
+  {
+    "code": "AB-W-034",
+    "id": "swarm",
+    "pack": "military",
+    "ar": "سرب مسيّرات",
+    "en": "Drone swarm",
+    "example": "Lancet",
+    "ar_desc": "6 مسيّرات صغيرة متتالية تتوزع على الهدف · دقيقة · انفجارات صغيرة",
+    "en_desc": "6 small drones one after another, spread over the target; precise, small blasts",
+    "delivery": "projectile",
+    "trajectory": "waypoints",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 2,
+    "icon": "icons/mil_swarm.png",
+    "stats": {
+      "blast": 0.35,
+      "ammo": 3,
+      "cooldown": 6.0,
+      "reload": 12.0,
+      "arc": "cruise",
+      "launcher": "ramp",
+      "flight": [
+        2.0,
+        9.0
+      ],
+      "speed": 0.26,
+      "salvo": 6
+    }
+  },
+  {
+    "code": "AB-W-035",
+    "id": "aa",
+    "pack": "military",
+    "ar": "صاروخ دفاع جوي",
+    "en": "Anti-air missile",
+    "example": "Patriot",
+    "ar_desc": "يلاحق هدفًا جويًا ويسقطه بانفجار في الجو · بلا هدف يطير إلى النقطة وينفجر هناك",
+    "en_desc": "Homes on an air target and bursts on it; with none it flies to the point and bursts there",
+    "delivery": "projectile",
+    "trajectory": "intercept",
+    "hit": "single",
+    "role": "defence",
+    "tier": 2,
+    "icon": "icons/mil_aa.png",
+    "stats": {
+      "blast": 0.4,
+      "ammo": 6,
+      "cooldown": 2.0,
+      "reload": 10.0,
+      "arc": "intercept",
+      "launcher": "vls",
+      "flight": [
+        1.0,
+        1.4
+      ],
+      "speed": 0.55
+    }
+  },
+  {
+    "code": "AB-W-036",
+    "id": "recon",
+    "pack": "military",
+    "ar": "طائرة استطلاع مسيّرة",
+    "en": "Reconnaissance drone",
+    "example": "ScanEagle",
+    "ar_desc": "تقلع وتدور فوق المنطقة دورتين وتكشف ما تحتها ثم تعود وتهبط · لا تنفجر",
+    "en_desc": "Takes off, circles the area twice reporting what it sees below, flies home and lands; no blast",
+    "delivery": "called",
+    "trajectory": "waypoints",
+    "hit": "scan",
+    "role": "support",
+    "tier": 1,
+    "icon": "icons/mil_recon.png",
+    "stats": {
+      "blast": 0.0,
+      "ammo": 1,
+      "cooldown": 2.0,
+      "reload": 0.0,
+      "arc": "sortie",
+      "launcher": "deck",
+      "speed": 0.1,
+      "bombs": 0,
+      "orbit": 0.07,
+      "scan_r": 0.075
+    }
+  },
+  {
+    "code": "AB-W-037",
+    "id": "atgm",
+    "pack": "military",
+    "ar": "صاروخ مضاد للدروع",
+    "en": "Anti-tank missile",
+    "example": "Javelin",
+    "ar_desc": "يعلو ثم ينقضّ على الدبابة من فوق · انفجار صغير قاتل للمدرعات",
+    "en_desc": "Climbs and dives onto the tank from above; a small blast, deadly to armour",
+    "delivery": "projectile",
+    "trajectory": "vertical",
+    "hit": "single",
+    "role": "attack",
+    "tier": 1,
+    "icon": "icons/mil_atgm.png",
+    "stats": {
+      "blast": 0.32,
+      "ammo": 6,
+      "cooldown": 1.5,
+      "reload": 6.0,
+      "arc": "lofted",
+      "launcher": "box",
+      "flight": [
+        1.3,
+        1.6
+      ],
+      "armor_k": 2.6
+    }
+  },
+  {
+    "code": "AB-W-038",
+    "id": "glide",
+    "pack": "military",
+    "ar": "قنابل انزلاقية",
+    "en": "Glide bombs",
+    "example": "GBU-39",
+    "ar_desc": "تطلقها طائرة من بعيد فتنزلق بأجنحتها إلى الهدف · 4 قنابل ثم تعود الطائرة",
+    "en_desc": "A jet releases 4 of them far out and they glide in on their wings; the jet flies home",
+    "delivery": "called",
+    "trajectory": "waypoints",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 2,
+    "icon": "icons/mil_glide.png",
+    "stats": {
+      "blast": 0.7,
+      "ammo": 2,
+      "cooldown": 2.0,
+      "reload": 0.0,
+      "arc": "sortie",
+      "launcher": "deck",
+      "speed": 0.15,
+      "bombs": 4,
+      "bomb": "gbomb"
+    }
+  },
+  {
+    "code": "AB-W-039",
+    "id": "torpedo",
+    "pack": "military",
+    "ar": "طوربيد",
+    "en": "Torpedo",
+    "example": "Mk 48",
+    "ar_desc": "يُلقى من جانب السفينة ويجري تحت سطح الماء إلى الهدف · يتوقف وينفجر عند الشاطئ",
+    "en_desc": "Dropped over the side, it runs under the surface to the target; stops and goes off at the shore",
+    "delivery": "projectile",
+    "trajectory": "straight",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 2,
+    "icon": "icons/mil_torpedo.png",
+    "stats": {
+      "blast": 1.35,
+      "ammo": 4,
+      "cooldown": 4.0,
+      "reload": 10.0,
+      "arc": "torpedo",
+      "launcher": "tube",
+      "flight": [
+        0.8,
+        9.0
+      ],
+      "speed": 0.16
+    }
+  },
+  {
+    "code": "AB-W-040",
+    "id": "heli",
+    "pack": "military",
+    "ar": "مروحية هجومية",
+    "en": "Attack helicopter",
+    "example": "AH-64 Apache",
+    "ar_desc": "منخفضة وبطيئة · رشقة 6 صواريخ من مسافة ثم تعود وتهبط",
+    "en_desc": "Low and slow; a volley of 6 rockets from stand-off range, then home to land",
+    "delivery": "called",
+    "trajectory": "waypoints",
+    "hit": "splash",
+    "role": "attack",
+    "tier": 3,
+    "icon": "icons/mil_heli.png",
+    "stats": {
+      "blast": 0.45,
+      "ammo": 2,
+      "cooldown": 2.0,
+      "reload": 0.0,
+      "arc": "sortie",
+      "launcher": "deck",
+      "speed": 0.09,
+      "bombs": 6,
+      "bomb": "hrocket"
+    }
+  }
+]
