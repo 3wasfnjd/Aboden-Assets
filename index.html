@@ -20,9 +20,9 @@
   --bg:#12150e; --surface:#1b1f15; --line:#2e3524; --ink:#e8ecdc; --muted:#9ca48d;
   --accent:#e39a4c; --leaf:#93b263; --chip:#22271a; color-scheme:dark}
 *{box-sizing:border-box}
-html{background:var(--bg)}
+html{background:var(--bg);overflow-x:hidden}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;direction:rtl}
-.wrap{max-width:1040px;margin:0 auto;padding-block:20px 44px;
+.wrap{max-width:1040px;min-width:0;width:100%;margin:0 auto;padding-block:20px 44px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   display:flex;flex-direction:column;gap:16px}
 header{display:flex;flex-direction:column;gap:2px}
@@ -37,8 +37,9 @@ header p{margin:4px 0 0;color:var(--muted);max-width:62ch}
 .hud span,.hint{background:rgba(20,24,14,.62);color:#f1f3e8;font-size:12px;padding:3px 9px;border-radius:7px;font-variant-numeric:tabular-nums}
 .hint{position:absolute;top:10px;right:10px;pointer-events:none;transition:opacity .6s}
 .all{position:absolute;top:10px;left:10px;font:600 13px var(--body);background:rgba(20,24,14,.62);color:#f1f3e8;border:0;border-radius:7px;padding:5px 11px;cursor:pointer}
-.tabs{display:flex;gap:6px}
-.tabs button{font:600 15px var(--display);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:10px;padding:6px 16px;cursor:pointer}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;max-width:100%}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:0 0 auto;white-space:nowrap;font:600 15px var(--display);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:10px;padding:6px 16px;cursor:pointer}
 .tabs button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
 .chip{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:0;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:11px;padding:7px 13px;cursor:pointer;font-family:var(--body);text-align:start}
@@ -59,7 +60,7 @@ header p{margin:4px 0 0;color:var(--muted);max-width:62ch}
 .ctl label{display:flex;justify-content:space-between;gap:8px;font-weight:500;font-size:14px}
 .ctl output{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:600}
 input[type=range]{width:100%;accent-color:var(--accent)}
-.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .seg button{flex:1;border:0;background:transparent;color:var(--ink);font:500 14px var(--body);padding:7px 4px;cursor:pointer}
 .seg button+button{border-inline-start:1px solid var(--line)}
 .seg button[aria-pressed=true]{background:var(--leaf);color:var(--surface)}
@@ -78,7 +79,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <div class="wrap">
   <header>
     <div class="brand">عبودين قيمز · مستودع الأصول</div>
-    <div class="titleRow"><h1 id="sceneTitle">الحي النجدي</h1><span class="ver">v0.7</span></div>
+    <div class="titleRow"><h1 id="sceneTitle">الحي النجدي</h1><span class="ver">v0.8</span></div>
     <p>كل أصل هنا مبني بالكود بالكامل، حتى الخامات. اختر أصلاً لتقرّب عليه وتعدّله، والأرقام تبيّن حمله على كرت الشاشة.</p>
   </header>
 
