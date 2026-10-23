@@ -16,6 +16,7 @@
 <script src="REPO/architecture/water.js"></script>
 <script src="REPO/animals/camel.js"></script>
 <script src="REPO/animals/sheep.js"></script>
+<script src="REPO/animals/equine.js"></script>
 <script src="REPO/characters/shaib.js"></script>
 <script src="REPO/characters/people.js"></script>
 <script src="REPO/souq/souq.js"></script>
@@ -50,6 +51,10 @@ window.render = function (assetId, quality, over, cam) {
     let alb = white, nrm = flatN, tint = mat.color || [1, 1, 1];
     if (mat.texture) { const t = AA.texture(mat.texture, quality); alb = tex(t.albedo, t.size, true); nrm = tex(t.normal, t.size, false); }
     draws.push({ vao, n: idx.length, alb, nrm, tint, shadow: mat.kind !== 'ground' });
+  }
+  if (out.meta.hitch) { // الدابة المربوطة بالعربة
+    const h = out.meta.hitch, ao = AA.assets[h.asset].generate(h.params, quality);
+    for (const k in ao.parts) { const d = ao.parts[k], pos = d.positions; for (let i = 0; i < pos.length; i += 3) { pos[i] += h.at[0]; pos[i + 1] += h.at[1]; pos[i + 2] += h.at[2]; } out.parts['hitch_' + k] = d; }
   }
   const mats = out.skeleton && cam.clip ? AA.boneMatrices(out.skeleton, out.clips[cam.clip], cam.t || 0) : null;
   for (const k in out.parts) {

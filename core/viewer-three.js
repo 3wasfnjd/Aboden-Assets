@@ -109,6 +109,8 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       if (d.uvs) geo.setAttribute('uv', new T.BufferAttribute(d.uvs, 2));
       if (d.skinIndex) { geo.setAttribute('skinIndex', new T.BufferAttribute(d.skinIndex, 4)); geo.setAttribute('skinWeight', new T.BufferAttribute(d.skinWeight, 4)); }
       geo.setIndex(new T.BufferAttribute(d.indices, 1));
+      const m0 = d.material || {};
+      if (m0.spin) geo.translate(-m0.spin.pivot[0], -m0.spin.pivot[1], -m0.spin.pivot[2]); // العجلات تدور حول محورها
       geo.computeBoundingSphere();
       geo.boundingSphere.radius += 1.2; // هامش لحركة الريح حتى لا يختفي الشكل عند حافة الشاشة
       const m = d.material || {};
@@ -122,7 +124,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       }
       if (m.opacity != null) { opts.transparent = true; opts.opacity = m.opacity; opts.depthWrite = false; opts.metalness = 0.1; }
       const mat = three.addWind(new T.MeshStandardMaterial(opts));
-      parts.push({ name, geo, mat, kind: m.kind });
+      parts.push({ name, geo, mat, kind: m.kind, spin: m.spin || null });
     }
     return { parts, triangles: out.triangles, meta: out.meta, skeleton: out.skeleton || null, clips: out.skeleton ? toClips(out) : null, clipNames: out.clips ? Object.keys(out.clips) : [] };
   };
@@ -152,16 +154,20 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       if (grp.userData.anim.current) grp.userData.anim.current.time = Math.random() * 3;
       return grp;
     }
+    grp.userData.spin = [];
     for (const p of built.parts) {
       const mesh = new T.Mesh(p.geo, p.mat);
       mesh.castShadow = p.kind !== 'water'; mesh.receiveShadow = p.kind !== 'fruit' && p.kind !== 'flower';
       mesh.customDepthMaterial = three.depthMaterial();
+      if (p.spin) { mesh.position.set(p.spin.pivot[0], p.spin.pivot[1], p.spin.pivot[2]); grp.userData.spin.push({ mesh, r: p.spin.radius }); }
       grp.add(mesh);
     }
     return grp;
   };
 
-  three.release = function (grp) { if (grp && grp.userData.anim) mixers.delete(grp.userData.anim.mixer); };
+  three.release = function (grp) { if (!grp) return; grp.traverse(o => { if (o.userData && o.userData.anim) mixers.delete(o.userData.anim.mixer); }); };
+  // تدوير العجلات بعد قطع مسافة d
+  three.roll = function (grp, d) { for (const w of grp.userData.spin || []) w.mesh.rotation.x += d / w.r; };
   three.dispose = function (built) {
     for (const p of built.parts) {
       p.geo.dispose(); p.mat.dispose();

@@ -138,6 +138,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <script src="architecture/water.js"></script>
 <script src="animals/camel.js"></script>
 <script src="animals/sheep.js"></script>
+<script src="animals/equine.js"></script>
 <script src="characters/shaib.js"></script>
 <script src="characters/people.js"></script>
 <script src="souq/souq.js"></script>
@@ -205,7 +206,7 @@ const SCENES = {
   souq: { title: 'السوق', pond: false, flat: 26, overview: [14, 13, 22], target: [0, 1.2, 0], entries: [
     { id:'shop',   inst:[{ x:-9, z:-5.2, over:{ seed:1, roof:'red' } }, { x:-4.4, z:-5.2, over:{ seed:2, roof:'palm', goods:'grain' } }, { x:9.5, z:-5.2, over:{ seed:3, roof:'green', width:5 } }] },
     { id:'kiosk',  inst:[{ x:0.6, z:-4.8, over:{ seed:4, goods:'dates', roof:'palm' } }, { x:4.6, z:-4.8, over:{ seed:5, goods:'spices', roof:'blue' } }, { x:-7, z:4.6, rot:Math.PI, over:{ seed:6, goods:'fruit', roof:'green', width:3.2 } }, { x:-2.4, z:4.6, rot:Math.PI, over:{ seed:7, goods:'spices', roof:'red' } }] },
-    { id:'cart',   inst:[{ x:2.6, z:1.6, rot:-0.5, over:{ seed:8, load:'crates' } }, { x:-11.5, z:0.8, rot:1.2, over:{ seed:9, load:'sacks' } }, { x:7, z:2.4, rot:2.6, over:{ seed:10, load:'dates' } }] },
+    { id:'cart',   inst:[{ x:2.6, z:1.6, rot:-0.5, over:{ seed:8, load:'crates' } }, { x:-14, z:1.2, walk:[-14, 1.2, 14, 1.2], over:{ seed:9, load:'sacks', animal:'donkey' } }, { x:6.8, z:2.2, rot:-1.75, over:{ seed:10, load:'dates', animal:'horse' } }] },
     { id:'sack',   inst:[{ x:-6.4, z:-3.0, over:{ seed:11, goods:'rice' } }, { x:-5.9, z:-2.7, over:{ seed:12, open:false } }, { x:-6.1, z:-3.5, over:{ seed:13, open:false, height:0.8 } }, { x:6.9, z:-3.4, over:{ seed:14, goods:'coffee' } }, { x:7.4, z:-3.1, over:{ seed:15, goods:'cardamom' } }] },
     { id:'crate',  inst:[{ x:-4.5, z:2.8, rot:0.3, over:{ seed:16, goods:'tomatoes' } }, { x:-3.9, z:3.2, rot:-0.2, over:{ seed:17, goods:'closed', stack:3 } }, { x:12.2, z:-2.6, rot:0.6, over:{ seed:18, goods:'closed', stack:2 } }] },
     { id:'basket', inst:[{ x:1.9, z:-2.7, over:{ seed:19, goods:'dates' } }, { x:2.4, z:-2.5, over:{ seed:20, goods:'lemons', handles:false } }, { x:-1.0, z:2.7, over:{ seed:21, shape:'tall', goods:'dates' } }] },
@@ -222,6 +223,9 @@ const SCENES = {
   ] },
   beings: { title: 'الكائنات', pond: false, overview: [5, 5, 15], target: [0, 1, 1], entries: [
     { id:'shaib',  inst:[{ x:0, z:1.5, over:{ seed:1 } }, { x:-1.6, z:1.2, rot:0.4, over:{ seed:2, bisht:'brown' } }] },
+    { id:'horse',  inst:[{ x:7.8, z:-3.6, rot:-2.2, over:{ seed:41 } }, { x:9.6, z:-2.4, rot:-1.6, clip:'graze', over:{ seed:42, coat:'grey' } }] },
+    { id:'donkey', inst:[{ x:-7.2, z:-3.2, rot:0.9, clip:'graze', over:{ seed:43 } }] },
+    { id:'cart',   inst:[{ x:-8.5, z:-6.2, rot:0.4, over:{ seed:44, animal:'donkey', load:'dates' } }] },
     { id:'camel',  inst:[{ x:4.2, z:-1.5, rot:-0.5, over:{ seed:3, saddle:true, coat:'wadh' } }, { x:-4.5, z:-2.2, rot:0.6, clip:'graze', over:{ seed:4, coat:'majaheem' } }, { x:0.5, z:-4.5, rot:2.6, over:{ seed:5, coat:'humr' } }] },
     { id:'woman',  inst:[{ x:-3.0, z:2.4, rot:0.3, over:{ seed:11 } }, { x:-5.2, z:0.2, rot:0.9, walk:[-8, 0.2, -2.6, 4.5], over:{ seed:12, veil:'niqab' } }] },
     { id:'girl',   inst:[{ x:-2.2, z:3.1, rot:-0.2, clip:'wave', over:{ seed:13 } }, { x:-3.8, z:3.4, rot:0.6, over:{ seed:14, scarf:true, dress:'teal' } }] },
@@ -312,18 +316,28 @@ function placeGroup(i, grp){
   scene.add(grp);
 }
 function startClip(i){
+  if (i.animal) X.play(i.animal.group, i.walk ? 'walk' : 'idle', 0);
   if (!i.group || !i.group.userData.anim) return;
   X.play(i.group, i.walk ? 'walk' : (i.clip || 'idle'), 0);
 }
+// دابة العربة: أصل متحرك مستقل يُركّب عند نقطة الربط
+function attachHitch(i, b){
+  const h = b.meta.hitch; if (!h) return;
+  const ab = X.build(A[h.asset].generate(h.params, quality), quality), ag = X.instance(ab);
+  ag.position.set(h.at[0], h.at[1], h.at[2]); i.group.add(ag); i.animal = { built: ab, group: ag };
+}
+function detachHitch(i){ if (i.animal) { X.release(i.animal.group); X.dispose(i.animal.built); i.animal = null; } }
 // المشاة: يتحركون ذهاباً وإياباً على خط
 function moveWalkers(dt){
   for (const e of ENTRIES) for (const i of e.inst) {
     if (!i.walk || !i.group) continue;
     const [x0, z0, x1, z1] = i.walk, sp = (i.group.userData.speed || 0.8) * dt;
+    if (i.group.userData.speed === 0) continue;
     if (i.dir == null) i.dir = 1;
     const tx = i.dir > 0 ? x1 : x0, tz = i.dir > 0 ? z1 : z0, dx = tx - i.x, dz = tz - i.z, d = Math.hypot(dx, dz);
     if (d < 0.05) { i.dir *= -1; continue; }
     i.x += dx / d * Math.min(sp, d); i.z += dz / d * Math.min(sp, d); i.rot = Math.atan2(dx, dz);
+    X.roll(i.group, Math.min(sp, d));
     i.group.position.set(i.x, groundH(i.x, i.z) - 0.02, i.z); i.group.rotation.y = i.rot;
   }
 }
@@ -333,23 +347,23 @@ function buildEntry(e){
     e.built = X.build(e.asset.generate(e.inst[0].params, quality), quality);
     e.inst.forEach(i => { i.group = X.instance(e.built); placeGroup(i, i.group); });
   } else {
-    e.built = e.inst.map(i => { const b = X.build(e.asset.generate(i.params, quality), quality); i.built = b; i.group = X.instance(b); placeGroup(i, i.group); return b; });
+    e.built = e.inst.map(i => { const b = X.build(e.asset.generate(i.params, quality), quality); i.built = b; i.group = X.instance(b); placeGroup(i, i.group); attachHitch(i, b); return b; });
   }
   e.inst.forEach(i => { if (i.group) { i.group.userData.speed = (i.built || e.built).meta.walkSpeed; startClip(i); } });
 }
 function clearEntry(e){
   if (e.built) [].concat(e.built).forEach(b => b && X.dispose(b));
-  e.inst.forEach(i => { if (i.group) { X.release(i.group); scene.remove(i.group); } i.group = null; });
+  e.inst.forEach(i => { detachHitch(i); if (i.group) { X.release(i.group); scene.remove(i.group); } i.group = null; });
   e.built = null;
 }
 function rebuildInstance(e, idx){
   if (e.shared) { buildEntry(e); return; }
   const i = e.inst[idx];
-  X.dispose(i.built); X.release(i.group); scene.remove(i.group);
+  detachHitch(i); X.dispose(i.built); X.release(i.group); scene.remove(i.group);
   i.built = X.build(e.asset.generate(i.params, quality), quality); e.built[idx] = i.built;
-  i.group = X.instance(i.built); placeGroup(i, i.group); i.group.userData.speed = i.built.meta.walkSpeed; startClip(i);
+  i.group = X.instance(i.built); placeGroup(i, i.group); attachHitch(i, i.built); i.group.userData.speed = i.built.meta.walkSpeed; startClip(i);
 }
-function entryTris(e){ return e.shared ? e.built.triangles * e.inst.length : e.built.reduce((s, b) => s + b.triangles, 0); }
+function entryTris(e){ return e.shared ? e.built.triangles * e.inst.length : e.built.reduce((s, b) => s + b.triangles, 0) + e.inst.reduce((s, i) => s + (i.animal ? i.animal.built.triangles : 0), 0); }
 function updateStats(){
   let tris = 0, calls = 0;
   for (const e of ENTRIES){

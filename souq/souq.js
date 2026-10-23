@@ -8,9 +8,12 @@
   const LOW = q => q === 'low';
   const SIDES = { high: 14, med: 10, low: 6 };
 
-  function kit() { return { wood: new AA.Builder(), burlap: new AA.Builder(), weave: new AA.Builder(), awning: new AA.Builder(), goods: new AA.Builder(), dark: new AA.Builder(), metal: new AA.Builder(), rope: new AA.Builder(), mud: new AA.Builder(), mudTop: new AA.Builder() }; }
+  function kit() { return { wheel: new AA.Builder(), tire: new AA.Builder(), wood: new AA.Builder(), burlap: new AA.Builder(), weave: new AA.Builder(), awning: new AA.Builder(), goods: new AA.Builder(), dark: new AA.Builder(), metal: new AA.Builder(), rope: new AA.Builder(), mud: new AA.Builder(), mudTop: new AA.Builder() }; }
   function done(id, P, meta, awningTex) {
+    const spin = meta.spin; delete meta.spin;
     return AA.finalize(id, {
+      wheel:  { builder: P.wheel,  material: { kind: 'wood', texture: 'wood', roughness: 0.82, spin } },
+      tire:   { builder: P.tire,   material: { kind: 'metal', roughness: 0.5, color: [0.16, 0.15, 0.14], spin } },
       wood:   { builder: P.wood,   material: { kind: 'wood', texture: 'wood', roughness: 0.82 } },
       burlap: { builder: P.burlap, material: { kind: 'cloth', texture: 'burlap', roughness: 0.95 } },
       weave:  { builder: P.weave,  material: { kind: 'weave', texture: 'weave', roughness: 0.9, doubleSided: true } },
@@ -117,7 +120,7 @@
         plank(P, [0, y, D / 2 - t / 2], [W - 0.012, sh, t], rng, tint); plank(P, [0, y, -D / 2 + t / 2], [W - 0.012, sh, t], rng, tint);
         plank(P, [W / 2 - t / 2, y, 0], [t, sh, D - 0.06], rng, tint); plank(P, [-W / 2 + t / 2, y, 0], [t, sh, D - 0.06], rng, tint);
       }
-      plank(P, [0, 0.012, 0], [W - 0.03, 0.024, D - 0.03], rng, mixc(tint, [0.5, 0.4, 0.3], 0.3));
+      plank(P, [0, 0.035, 0], [W - 0.03, 0.024, D - 0.03], rng, mixc(tint, [0.5, 0.4, 0.3], 0.3));
       if (c.lid) for (let k = 0; k < 4; k++) plank(P, [0, H + 0.012, -D / 2 + (k + 0.5) * D / 4], [W, 0.024, D / 4 - 0.01], rng, tint);
       else if (c.goods && c.goods !== 'empty') goods(P, [0, 0, 0], Math.min(W, D) * 0.46, H - 0.03, c.goods, rng, q, W * 0.45, D * 0.45);
     });
@@ -152,15 +155,15 @@
   }
 
   // ---------- عجلة خشب بأسلاك وطوق حديد ----------
-  function wheel(P, c, R, rng, q, axisX) {
+  function wheel(P, c, R, rng, q) {
     const n = LOW(q) ? 14 : 26, rim = [];
     for (let k = 0; k <= n; k++) { const a = k / n * Math.PI * 2; rim.push([c[0], c[1] + Math.cos(a) * R, c[2] + Math.sin(a) * R]); }
-    AA.tube(P.wood, rim, rim.map(() => 0.04), 6, () => [0.85, 0.78, 0.7], () => 0, 0, null, false);
+    AA.tube(P.wheel, rim, rim.map(() => 0.04), 6, () => [0.85, 0.78, 0.7], () => 0, 0, null, false);
     const tire = rim.map(p => [p[0], c[1] + (p[1] - c[1]) * 1.06, c[2] + (p[2] - c[2]) * 1.06]);
-    AA.tube(P.metal, tire, tire.map(() => 0.018), 5, () => [1, 1, 1], () => 0, 0, null, false);
-    AA.loft(P.wood, { path: [[c[0] - 0.09, c[1], c[2]], [c[0] + 0.09, c[1], c[2]]], sides: 8, up: () => [0, 1, 0], capStart: true, capEnd: true, radius: t => 0.075 - 0.02 * Math.abs(t - 0.5), color: () => [0.75, 0.68, 0.6] });
+    AA.tube(P.tire, tire, tire.map(() => 0.018), 5, () => [1, 1, 1], () => 0, 0, null, false);
+    AA.loft(P.wheel, { path: [[c[0] - 0.09, c[1], c[2]], [c[0] + 0.09, c[1], c[2]]], sides: 8, up: () => [0, 1, 0], capStart: true, capEnd: true, radius: t => 0.075 - 0.02 * Math.abs(t - 0.5), color: () => [0.75, 0.68, 0.6] });
     const sp = LOW(q) ? 6 : 10;
-    for (let k = 0; k < sp; k++) { const a = k / sp * Math.PI * 2; AA.tube(P.wood, [[c[0], c[1] + Math.cos(a) * 0.07, c[2] + Math.sin(a) * 0.07], [c[0], c[1] + Math.cos(a) * (R - 0.03), c[2] + Math.sin(a) * (R - 0.03)]], [0.02, 0.016], 5, () => [0.88, 0.8, 0.7], () => 0, 0, null, false); }
+    for (let k = 0; k < sp; k++) { const a = k / sp * Math.PI * 2; AA.tube(P.wheel, [[c[0], c[1] + Math.cos(a) * 0.07, c[2] + Math.sin(a) * 0.07], [c[0], c[1] + Math.cos(a) * (R - 0.03), c[2] + Math.sin(a) * (R - 0.03)]], [0.02, 0.016], 5, () => [0.88, 0.8, 0.7], () => 0, 0, null, false); }
   }
 
   // ---------- عربة خشب ----------
@@ -168,18 +171,36 @@
     const P = kit(), rng = AA.rng(p.seed), L = p.length, W = 1.15, R = p.wheel, bedY = R + 0.08;
     // المنصة: ألواح طولية
     for (let k = 0; k < 7; k++) plank(P, [-W / 2 + (k + 0.5) * W / 7, bedY, 0], [W / 7 - 0.012, 0.04, L], rng);
+    // الدابة: حمار أو حصان بين ذراعي الجر (تُركّب في المحرك كأصل متحرك مستقل عند نقطة hitch)
+    let hitch = null;
+    if (p.animal !== 'none') {
+      const ap = AA.params(AA.assets[p.animal], { seed: p.seed + 5, harness: true }), am = AA.assets[p.animal].generate(ap, 'low').meta.hitch;
+      const az = L / 2 + 0.32 - am.rump, sY = am.shaftY, hw = am.halfWidth + 0.07, zEnd = az + am.shoulder;
+      hitch = { asset: p.animal, params: ap, at: [0, 0, az] };
+      for (const s of [1, -1]) { // ذراعان يميلان من جانبي العربة إلى جنبي الدابة ويرتفعان لمستوى الكتف
+        const a0 = [s * (W / 2 - 0.05), bedY - 0.05, -L / 2 + 0.1], a1 = [s * (W / 2 - 0.05), bedY - 0.05, L / 2], a2 = [s * hw, sY, zEnd];
+        AA.box(P.wood, V.scale(V.add(a0, a1), 0.5), [0.08, 0.07, L - 0.1], vary([0.8, 0.72, 0.62], rng, 0.1), 0.6, {});
+        const d = V.sub(a2, a1), len = V.len(d), yaw = Math.atan2(d[0], d[2]), pitch = -Math.asin(d[1] / len);
+        place(P, { at: V.scale(V.add(a1, a2), 0.5), rot: yaw }, () => {
+          const n0 = P.wood.vertexCount; AA.box(P.wood, [0, 0, 0], [0.07, 0.065, len], vary([0.8, 0.72, 0.62], rng, 0.1), 0.6, {});
+          for (let i = n0; i < P.wood.vertexCount; i++) { const y = P.wood.pos[i * 3 + 1], z = P.wood.pos[i * 3 + 2]; P.wood.pos[i * 3 + 1] = y * Math.cos(pitch) - z * Math.sin(pitch); P.wood.pos[i * 3 + 2] = y * Math.sin(pitch) + z * Math.cos(pitch); }
+        });
+        AA.box(P.dark, [s * hw, sY, zEnd - 0.04], [0.09, 0.09, 0.05], [0.4, 0.25, 0.15], 0.5, {}); // رباط جلد بالطوق
+      }
+      plank(P, [0, bedY - 0.02, L / 2 + 0.04], [W - 0.1, 0.06, 0.06], rng, [0.8, 0.72, 0.62]); // عارضة أمامية
+    }
     for (const s of [1, -1]) { // العارضتان والذراعان (يد الجر)
-      plank(P, [s * (W / 2 - 0.05), bedY - 0.05, 0.3], [0.08, 0.07, L + 0.6 + p.shafts], rng, [0.8, 0.72, 0.62]);
+      if (p.animal === 'none') plank(P, [s * (W / 2 - 0.05), bedY - 0.05, 0.3], [0.08, 0.07, L + 0.6 + p.shafts], rng, [0.8, 0.72, 0.62]);
       plank(P, [s * (W / 2 - 0.01), bedY + 0.16, 0], [0.04, 0.24, L], rng); // جانب
       for (const z of [-L / 2 + 0.05, -L / 6, L / 6, L / 2 - 0.05]) plank(P, [s * (W / 2 - 0.01), bedY + 0.16, z], [0.06, 0.3, 0.06], rng, [0.8, 0.72, 0.62]);
     }
     plank(P, [0, bedY + 0.16, -L / 2 + 0.01], [W, 0.24, 0.04], rng);
-    plank(P, [0, bedY + 0.16 + 0.0, L / 2 + 0.6 + p.shafts / 2 - 0.05], [W - 0.1, 0.06, 0.06], rng, [0.8, 0.72, 0.62]); // عارضة الجر
+    if (p.animal === 'none') plank(P, [0, bedY + 0.16 + 0.0, L / 2 + 0.6 + p.shafts / 2 - 0.05], [W - 0.1, 0.06, 0.06], rng, [0.8, 0.72, 0.62]); // عارضة الجر
     // المحور والعجلتان
     AA.loft(P.metal, { path: [[-W / 2 - 0.12, R, -0.1], [W / 2 + 0.12, R, -0.1]], sides: 6, up: () => [0, 1, 0], capStart: true, capEnd: true, radius: () => 0.03, color: () => [1, 1, 1] });
     for (const s of [1, -1]) wheel(P, [s * (W / 2 + 0.1), R, -0.1], R, rng, q);
-    // دعامة أمامية تحمل العربة واقفة
-    plank(P, [0, (bedY - 0.06) / 2, L / 2 + 0.35], [0.06, bedY - 0.06, 0.06], rng, [0.7, 0.62, 0.54]);
+    // دعامة أمامية تحمل العربة واقفة (بدون دابة فقط)
+    if (p.animal === 'none') plank(P, [0, (bedY - 0.06) / 2, L / 2 + 0.35], [0.06, bedY - 0.06, 0.06], rng, [0.7, 0.62, 0.54]);
     // الحمولة
     const load = p.load;
     if (load === 'sacks') {
@@ -193,7 +214,8 @@
     } else if (load === 'dates') {
       for (let k = 0; k < 5; k++) basketInto(P, { at: [(k % 2 ? 0.27 : -0.27), bedY + 0.02, -0.45 + k * 0.24] }, { radius: 0.17, height: 0.2, flare: 1.25, goods: 'dates' }, rng, q);
     }
-    return done('cart', P, { height: bedY + 0.6, radius: (L + 1.2) / 2, collider: { type: 'box', size: [W + 0.3, bedY + 0.3, L + 0.6 + p.shafts] }, physics: { mass: 120, friction: 0.5 }, wheels: [[W / 2 + 0.1, R, -0.1], [-(W / 2 + 0.1), R, -0.1]], wheelRadius: R });
+    return done('cart', P, { height: bedY + 0.6, radius: (L + 1.2) / 2 + (hitch ? 1 : 0), collider: { type: 'box', size: [W + 0.3, bedY + 0.3, L + 0.6 + p.shafts] }, physics: { mass: 120, friction: 0.5 },
+      wheels: [[W / 2 + 0.1, R, -0.1], [-(W / 2 + 0.1), R, -0.1]], wheelRadius: R, spin: { pivot: [0, R, -0.1], axis: 'x', radius: R }, hitch, walkSpeed: hitch ? AA.assets[hitch.asset].generate(hitch.params, 'low').meta.walkSpeed * 0.8 : 0 });
   }
 
   // ---------- مظلة: قماش مخطط أو عريش سعف ----------
@@ -234,7 +256,7 @@
     for (let k = 0; k < 6; k++) plank(P, [0, 0.08 + k * 0.14, D / 2 - 0.05], [W - 0.08, 0.13, 0.03], rng);
     for (let k = 0; k < 6; k++) plank(P, [-W / 2 + (k + 0.5) * W / 6, cY + 0.02, D / 2 - 0.35], [W / 6 - 0.012, 0.035, 0.62], rng, [0.95, 0.88, 0.78], -0.0);
     // جدار خلفي من ألواح ورفّان
-    for (let k = 0; k < 12; k++) plank(P, [-W / 2 + (k + 0.5) * W / 12, (H + 0.3) / 2, -D / 2 + 0.03], [W / 12 - 0.008, H + 0.3, 0.025], rng, [0.85, 0.78, 0.68]);
+    for (let k = 0; k < 12; k++) plank(P, [-W / 2 + (k + 0.5) * W / 12, (H + 0.24) / 2 + 0.01, -D / 2 + 0.03], [W / 12 - 0.008, H + 0.24, 0.025], rng, [0.85, 0.78, 0.68]);
     for (const y of [1.2, 1.65]) plank(P, [0, y, -D / 2 + 0.2], [W - 0.12, 0.035, 0.3], rng);
     // جانبان نصفيان
     for (const s of [1, -1]) for (let k = 0; k < 5; k++) plank(P, [s * W / 2, 0.1 + k * 0.17, 0], [0.025, 0.15, D - 0.1], rng, [0.85, 0.78, 0.68]);
@@ -272,7 +294,7 @@
     AA.box(P.mudTop, [0, H - 0.1, 0], [W - 0.4, 0.12, D - 0.4], [0.95, 0.95, 0.95], 2, {});
     // ظلام الداخل
     AA.box(P.dark, [0, H / 2, -D / 2 + 0.24], [W - 0.5, H - 0.2, 0.02], [1, 1, 1], 1, {});
-    AA.box(P.dark, [0, 0.01, 0], [W - 0.5, 0.02, D - 0.5], [0.6, 0.6, 0.6], 1, {});
+    AA.box(P.dark, [0, 0.045, 0], [W - 0.5, 0.03, D - 0.5], [0.6, 0.6, 0.6], 1, {});
     // عتبة وبابان خشب مفتوحان للخارج
     plank(P, [0, dh + 0.08, D / 2 + 0.2], [dw + 0.5, 0.14, 0.12], rng, [0.8, 0.72, 0.62]);
     for (const s of [1, -1]) place(P, { at: [s * dw / 2, 0, D / 2 + 0.24], rot: s * 1.35 }, () => {
@@ -333,8 +355,8 @@
     if (p.feeder) { // معلف خشب وحوض ماء
       place(P, { at: [-W / 2 + 1.0, 0, -D / 2 + 0.5] }, () => {
         for (const s of [1, -1]) AA.box(P.wood, [0, 0.25, s * 0.22], [1.6, 0.4, 0.04], [0.8, 0.72, 0.62], 0.6, {});
-        for (const s of [1, -1]) AA.box(P.wood, [s * 0.8, 0.25, 0], [0.04, 0.4, 0.48], [0.8, 0.72, 0.62], 0.6, {});
-        AA.box(P.wood, [0, 0.07, 0], [1.6, 0.04, 0.44], [0.7, 0.62, 0.54], 0.6, {});
+        for (const s of [1, -1]) AA.box(P.wood, [s * 0.8, 0.26, 0], [0.04, 0.38, 0.4], [0.8, 0.72, 0.62], 0.6, {});
+        AA.box(P.wood, [0, 0.11, 0], [1.56, 0.04, 0.4], [0.7, 0.62, 0.54], 0.6, {});
         AA.blob(P.goods, [0, 0.38, 0], [0.75, 0, 0], [0, 0.1, 0], [0, 0, 0.18], () => vary([0.78, 0.7, 0.36], rng, 0.1), 0, 0, 0.2, rng, 0.2, LOW(q)); // برسيم/علف
       });
     }
@@ -360,8 +382,9 @@
       { key: 'length', label: 'طول المنصة', min: 1.2, max: 2.4, step: 0.1, def: 1.7, unit: 'م' },
       { key: 'wheel', label: 'قطر العجلة', min: 0.3, max: 0.6, step: 0.02, def: 0.46, unit: 'م' },
       { key: 'shafts', label: 'طول يد الجر', min: 0.2, max: 1.4, step: 0.1, def: 0.6, unit: 'م' },
-      { key: 'load', label: 'الحمولة', type: 'enum', options: [['sacks', 'أكياس'], ['crates', 'صناديق'], ['dates', 'سلال تمر'], ['none', 'فارغة']], def: 'sacks' }
-    ], presets: { 'عربة خضار': { load: 'crates' }, 'عربة تمر': { load: 'dates', length: 1.5 } }, generate: cart };
+      { key: 'load', label: 'الحمولة', type: 'enum', options: [['sacks', 'أكياس'], ['crates', 'صناديق'], ['dates', 'سلال تمر'], ['none', 'فارغة']], def: 'sacks' },
+      { key: 'animal', label: 'يجرّها', type: 'enum', options: [['none', 'بدون'], ['donkey', 'حمار'], ['horse', 'حصان']], def: 'none' }
+    ], presets: { 'عربة حمار': { animal: 'donkey', load: 'sacks' }, 'عربة حصان': { animal: 'horse', load: 'crates', length: 2.1 }, 'عربة تمر': { load: 'dates', length: 1.5 } }, generate: cart };
   A.sack = { id: 'sack', name: 'كيس خيش', nameEn: 'Burlap sack', category: 'souq',
     schema: [
       { key: 'height', label: 'الارتفاع', min: 0.3, max: 1, step: 0.05, def: 0.65, unit: 'م' },

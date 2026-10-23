@@ -239,13 +239,19 @@
     // البشت: عباءة مفتوحة من الأمام بحاشية مذهبة
     if (p.bisht !== 'none') {
       const bc = hex(p.bisht === 'black' ? '#1b1716' : p.bisht === 'cream' ? '#d9c9a8' : '#5a3d26');
-      P.bisht.skinFn = pt => pt[1] > 1.0 ? AA.autoSkin(sk, ['hips', 'spine', 'chest', 'clavL', 'clavR', 'upArmL', 'upArmR'], 4)(pt) : [[sk.id('hips'), 1]];
-      const nT = q.nu, nYb = Math.round(q.ny * 0.7), open = 0.3, bRowsB = [];
+      const bishtBody = pt => {
+        const y = pt[1];
+        if (y > 1.0) return AA.autoSkin(sk, ['hips', 'spine', 'chest', 'clavL', 'clavR', 'upArmL', 'upArmR'], 4)(pt);
+        const side = clamp(pt[0] / 0.14, -1, 1), wl = smooth(-0.6, 0.6, side), lo = smooth(1.0, 0.4, y) * 0.7, leg = y > 0.5 ? 'thigh' : 'shin';
+        return [[sk.id('hips'), 1 - lo], [sk.id(leg + 'L'), lo * wl], [sk.id(leg + 'R'), lo * (1 - wl)]];
+      };
+      P.bisht.skinFn = bishtBody;
+      const nT = q.nu, nYb = Math.round(q.ny * 0.95), open = 0.3, bRowsB = [];
       for (let i = 0; i <= nYb; i++) {
-        const y = lerp(1.475, 0.42, Math.pow(i / nYb, 0.9)), row = [];
+        const y = lerp(1.475, 0.1, Math.pow(i / nYb, 0.9)), row = [];
         for (let j = 0; j <= nT; j++) {
           const th = lerp(open, Math.PI * 2 - open, j / nT);
-          const r = thobeR(th, y) + 0.02 + 0.035 * smooth(1.25, 0.5, y) + 0.006 * Math.sin(th * 9 + y * 4) * smooth(1.1, 0.5, y);
+          const r = thobeR(th, y) + 0.02 + 0.035 * smooth(1.25, 0.5, y) + 0.012 * smooth(0.5, 0.1, y) + 0.006 * Math.sin(th * 9 + y * 4) * smooth(1.1, 0.5, y);
           row.push([Math.sin(th) * r, y, Math.cos(th) * r]);
         }
         bRowsB.push(row);
@@ -254,11 +260,13 @@
       // أكمام البشت الواسعة حتى ما بعد المرفق
       for (const [sd, x] of [['L', 1], ['R', -1]]) {
         P.bisht.skinFn = AA.autoSkin(sk, ['clav' + sd, 'upArm' + sd, 'loArm' + sd, 'chest'], 6);
-        AA.loft(P.bisht, { path: AA.bezier([[0.15 * x, 1.43, -0.01], [0.235 * x, 1.2, -0.005], [0.245 * x, 1.0, 0.015]], q.s), sides: q.s + 2, up: () => [0, 0, 1],
-          radius: t => { const r = lerp(0.09, 0.125, smooth(0, 1, t)); return [r, r * 0.95]; }, color: () => bc });
+        AA.loft(P.bisht, { path: AA.bezier([[0.15 * x, 1.43, -0.01], [0.235 * x, 1.12, -0.005], [0.252 * x, 0.9, 0.035]], q.s + 2), sides: q.s + 2, up: () => [0, 0, 1],
+          radius: t => { const r = lerp(0.09, 0.115, smooth(0, 1, t)); return [r, r * 0.95]; }, color: () => bc });
+        // حاشية ذهبية على طرف الكم
+        { const c = [0.252 * x, 0.9, 0.035], ring = []; for (let k = 0; k <= 16; k++) { const a = k / 16 * Math.PI * 2; ring.push([c[0] + Math.sin(a) * 0.116, c[1] + 0.01, c[2] + Math.cos(a) * 0.11]); } P.trim.skinFn = P.bisht.skinFn; AA.tube(P.trim, ring, ring.map(() => 0.008), 4, () => [1, 1, 1], () => 0, 0, null, false); }
       }
       // الحاشية الذهبية على الطرفين الأماميين
-      P.trim.skinFn = P.bisht.skinFn;
+      P.trim.skinFn = bishtBody;
       for (const j of [0, nT]) {
         const pts = bRowsB.map(r => V.add(r[j], [0, 0, 0.004]));
         AA.tube(P.trim, pts, pts.map(() => 0.012), 5, () => [1, 1, 1], () => 0, 0, null, false);
