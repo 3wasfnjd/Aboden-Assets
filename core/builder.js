@@ -123,6 +123,36 @@
     }
   };
 
+  // ورقة واحدة: معيّن مطوي قليلاً (مثلثان)
+  AA.leaf = function (B, base, dir, nrm, L, W, color, tipColor, sway, phase, flut, fold) {
+    const w = V.norm(V.cross(nrm, dir));
+    const mid = V.madd(V.madd(base, dir, L * 0.45), nrm, L * (fold == null ? 0.08 : fold));
+    const tip = V.madd(base, dir, L);
+    const b0 = B.v(base, color, sway, phase, flut * 0.3);
+    const m1 = B.v(V.madd(mid, w, W * 0.5), color, sway, phase, flut);
+    const tp = B.v(tip, tipColor, sway, phase, flut);
+    const m2 = B.v(V.madd(mid, w, -W * 0.5), color, sway, phase, flut);
+    B.t(b0, m1, tp); B.t(b0, tp, m2);
+  };
+
+  // ظل داخلي للتاج (Ambient occlusion مخبوز في الألوان):
+  // كل ما كانت النقطة أعمق داخل التاج كانت أغمق — هذا ما يعطي إحساس الكثافة والعمق
+  AA.crownAO = function (B, from, center, radii, minShade, topLift) {
+    for (let i = from; i < B.vertexCount; i++) {
+      const x = (B.pos[i * 3] - center[0]) / radii[0], y = (B.pos[i * 3 + 1] - center[1]) / radii[1], z = (B.pos[i * 3 + 2] - center[2]) / radii[2];
+      const d = Math.sqrt(x * x + y * y + z * z);
+      let s = AA.lerp(minShade, 1, AA.smooth(0.15, 1.0, d)) * (1 + (topLift || 0) * AA.clamp(y, -1, 1));
+      s = AA.clamp(s, 0, 1.15);
+      for (let k = 0; k < 3; k++) B.col[i * 3 + k] = AA.clamp(B.col[i * 3 + k] * s, 0, 1);
+    }
+  };
+  // حدود مجموعة نقاط (لحساب التاج)
+  AA.bounds = function (pts) {
+    const mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
+    for (const p of pts) for (let k = 0; k < 3; k++) { mn[k] = Math.min(mn[k], p[k]); mx[k] = Math.max(mx[k], p[k]); }
+    return { center: V.scale(V.add(mn, mx), 0.5), radii: [Math.max(0.2, (mx[0] - mn[0]) / 2), Math.max(0.2, (mx[1] - mn[1]) / 2), Math.max(0.2, (mx[2] - mn[2]) / 2)] };
+  };
+
   // متعامدات (Normals) — يحسبها الكود حتى لا نعتمد على المحرك
   AA.computeNormals = function (pos, idx) {
     const n = new Float32Array(pos.length);

@@ -22,14 +22,14 @@
     const off = t => p.lean * H * 0.16 * t * t;
     const pt = t => [ld[0] * off(t), H * t, ld[2] * off(t)];
     const rows = Math.max(4, Math.round(Math.max(H, 0.6) * q.ringsPerM)), n = q.radial;
-    const cDark = hex('#4a3a2a'), cMid = hex('#7a6249'), cLight = hex('#a58a68'), cTop = hex('#8a6c45');
+    const cDark = hex('#4a3a2a'), cMid = hex(p.young ? '#5e4a34' : '#7a6249'), cLight = hex(p.young ? '#8a6e4c' : '#a58a68'), cTop = hex(p.young ? '#5a4530' : '#8a6c45');
     const rings = [];
     for (let j = 0; j <= rows; j++) {
       const t = j / rows, y = t * H, c = pt(t);
       const tan = V.norm(V.sub(pt(Math.min(1, t + 0.01)), pt(Math.max(0, t - 0.01))));
       const s1 = V.norm([1 - tan[0] * tan[0], -tan[0] * tan[1], -tan[0] * tan[2]]);
       const s2 = V.norm(V.cross(tan, s1));
-      const r = (0.19 + 0.14 * Math.exp(-y / 0.35) - 0.025 * t) * (p.young ? 1.35 : 1);
+      const r = (0.19 + 0.14 * Math.exp(-y / 0.35) - 0.025 * t) * (p.young ? 1.1 : 1);
       const fade = AA.smooth(0.5, 2.2, y) + (p.young ? 1 : 0);
       const ring = [];
       for (let k = 0; k < n; k++) {

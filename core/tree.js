@@ -46,6 +46,10 @@
         let nd = [d[0] + (rng() - 0.5) * o.gnarl, d[1] + (rng() - 0.5) * o.gnarl * 0.6, d[2] + (rng() - 0.5) * o.gnarl];
         nd = V.madd(nd, AA.UP, up * 0.35);
         if (o.flatten && depth >= o.flattenFrom) nd[1] *= (1 - o.flatten);
+        if (o.ceiling && p[1] > o.ceiling) nd[1] = Math.min(nd[1], 0) * 0.3 - 0.02; // سقف مسطح (الطلح)
+        if (o.gravity) nd = V.madd(nd, AA.DOWN, o.gravity[Math.min(depth, o.gravity.length - 1)] * i / segs);
+        const floor = o.floor == null ? 0.6 : o.floor; // الفروع لا تنزل تحت هذا الارتفاع
+        if (depth > 0 && p[1] < floor) nd[1] = Math.max(nd[1], 0.35);
         d = V.norm(nd);
         p = V.madd(p, d, sl);
         pts.push(p);
