@@ -109,16 +109,12 @@
     clips.idle = AA.clip(sk, 4, 30, true, t => { const w = t / 4 * Math.PI * 2; return { move: [0, 0.004 * S * Math.sin(w * 2), 0], neck: [3 * Math.sin(w), 8 * Math.sin(w * 0.5), 0], head: [2 * Math.sin(w * 7), 0, 0], tail: [0, 0, 10 * Math.sin(w * 4)] }; });
     clips.graze = AA.clip(sk, 3, 30, true, t => { const w = t / 3 * Math.PI * 2; return { neck: [58, 6 * Math.sin(w), 0], head: [10 + 5 * Math.sin(w * 8), 0, 0], chest: [8, 0, 0], tail: [0, 0, 8 * Math.sin(w * 3)] }; });
     // مشي رباعي: يسار أمامي، يمين خلفي، يمين أمامي، يسار خلفي
-    clips.walk = AA.clip(sk, 0.9, 30, true, t => {
-      const ph = t / 0.9 * Math.PI * 2, pose = { move: [0, 0.012 * S * Math.abs(Math.sin(ph * 2)), 0], neck: [4 * Math.sin(ph * 2), 0, 0], tail: [0, 0, 8 * Math.sin(ph)] };
-      const leg = (o) => { const a = ph + o; return [Math.sin(a), Math.pow(Math.max(0, Math.sin(a + 1.3)), 1.5)]; };
-      for (const [sd, of, ob] of [['L', 0, Math.PI * 1.5], ['R', Math.PI, Math.PI * 0.5]]) {
-        const [s1, l1] = leg(of), [s2, l2] = leg(ob);
-        pose['upF' + sd] = [-22 * s1, 0, 0]; pose['lowF' + sd] = [40 * l1, 0, 0];
-        pose['thighB' + sd] = [-18 * s2, 0, 0]; pose['shankB' + sd] = [-25 * l2, 0, 0]; pose['cannonB' + sd] = [32 * l2, 0, 0];
-      }
-      return pose;
-    });
+    clips.walk = AA.gaitClip(sk, { duration: 0.9, speed: 0.8 * S, extra: t => {
+      const ph = t / 0.9 * Math.PI * 2;
+      return { move: [0, 0.008 * S * Math.cos(ph * 4), 0], neck: [4 * Math.sin(ph * 2), 0, 0], tail: [0, 0, 8 * Math.sin(ph)] };
+    }, legs: [['L', 0, 0.75], ['R', 0.5, 0.25]].flatMap(([sd, hp, fp]) => [
+      { chain: ['upF' + sd, 'lowF' + sd], foot: null, phase: fp, duty: 0.64, lift: 0.1 * S, limits: [[-40, 40], [0, 100]], init: [0, 0], pref: [0, 0], swingPref: [-10, 60] },
+      { chain: ['thighB' + sd, 'shankB' + sd, 'cannonB' + sd], foot: null, phase: hp, duty: 0.64, lift: 0.09 * S, limits: [[-40, 35], [-55, 25], [-95, 10]], init: [0, 0, 0], pref: [0, 0, 0], swingPref: [12, -10, -50] }]) });
 
     return AA.finalize('sheep', {
       body:  { builder: B, material: { kind: 'fur', texture: br.wool ? 'wool' : 'fur', roughness: 0.95 } },

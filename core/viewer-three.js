@@ -151,7 +151,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       const skel = new T.Skeleton(bones);
       if (!skinDepth) skinDepth = new T.MeshDepthMaterial({ depthPacking: T.RGBADepthPacking, skinning: true, side: T.DoubleSide });
       for (const p of built.parts) {
-        const mesh = new T.SkinnedMesh(p.geo, p.mat);
+        const mesh = new T.SkinnedMesh(p.geo, p.mat); mesh.name = p.name;
         mesh.bind(skel); mesh.castShadow = !NOSHADOW[p.kind]; mesh.receiveShadow = true;
         mesh.customDepthMaterial = skinDepth; mesh.frustumCulled = false;
         grp.add(mesh);
@@ -165,7 +165,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
     }
     grp.userData.spin = []; grp.userData.steer = []; grp.userData.hinges = {};
     for (const p of built.parts) {
-      const mesh = new T.Mesh(p.geo, p.mat);
+      const mesh = new T.Mesh(p.geo, p.mat); mesh.name = p.name;
       mesh.castShadow = !NOSHADOW[p.kind]; mesh.receiveShadow = p.kind !== 'fruit' && p.kind !== 'flower' && p.kind !== 'flame';
       mesh.customDepthMaterial = three.depthMaterial();
       if (p.spin && p.spin.steer) { // عجلة أمامية: محور توجيه عمودي، وداخله دوران العجلة

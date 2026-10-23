@@ -68,6 +68,60 @@
     return { duration, fps, loop: !!loop, frames, tracks, root };
   };
 
+  /*
+   مشية بقدم مثبّتة (بدون انزلاق): لكل رجل مسار للقدم — وقت الملامسة تثبت على الأرض وتتحرك للخلف بنفس سرعة المشي،
+   ووقت الرفع ترتفع بقوس وتتقدم — ثم تُحسب زوايا العظام بحل عكسي (IK) في المستوى الجانبي مع حدود للمفاصل.
+   o = { duration, speed, fps, extra(t)->pose (حركات ثانوية: رقبة، ذيل، ذراعان، إزاحة الجذر),
+         legs: [{ chain:[عظام من الورك للأسفل], foot: عظمة القدم/الحافر (تبقى مستوية وقت الملامسة) أو null,
+                  phase, duty, lift, limits:[[min,max]...], init:[...], footSwing }] }
+  */
+  AA.gaitClip = function (sk, o) {
+    const T = o.duration, rotYZ = (v, a) => { const r = a * Math.PI / 180, c = Math.cos(r), s = Math.sin(r); return [v[1] * c - v[2] * s, v[1] * s + v[2] * c]; }; // [y, z]
+    const legs = o.legs.map(L => {
+      const bones = L.chain.map(n => skel(n));
+      const segs = bones.map((b, k) => { const end = k < bones.length - 1 ? bones[k + 1].head : (L.foot ? skel(L.foot).head : b.tail); return V.sub(end, b.head); });
+      let eff = bones[0].head.slice(); for (const sg of segs) eff = V.add(eff, sg);
+      return Object.assign({ hip: bones[0].head, segs, eff0: eff }, L);
+    });
+    function skel(n) { const b = sk.bones[sk.id(n)]; if (!b) throw new Error('bone ' + n); return b; }
+    // خفض الجسم تلقائياً حتى تصل القدم لطرفي الخطوة بدون أن تنفرد الرجل تماماً
+    let autoDrop = 0;
+    for (const L of legs) {
+      const len = L.segs.reduce((acc, sg) => acc + Math.hypot(sg[1], sg[2]), 0), S = o.speed * T * L.duty, h0 = L.hip[1] - L.eff0[1];
+      const hmax = Math.sqrt(Math.max(0, (len * (o.reach || 0.975)) ** 2 - (S / 2 + Math.abs(L.zOff || 0)) ** 2));
+      autoDrop = Math.min(autoDrop, hmax - h0);
+    }
+    return AA.clip(sk, T, o.fps || 30, true, t => {
+      const pose = o.extra ? o.extra(t) : {}, mv0 = pose.move || [0, 0, 0], mv = [mv0[0], mv0[1] + autoDrop, mv0[2]]; pose.move = mv;
+      for (const L of legs) {
+        const u = ((t / T + L.phase) % 1 + 1) % 1, S = o.speed * T * L.duty;
+        let dz, dy, sw = 0;
+        if (u < L.duty) { dz = S / 2 - S * u / L.duty; dy = 0; }
+        else { const s = (u - L.duty) / (1 - L.duty), e = 0.5 - 0.5 * Math.cos(Math.PI * s); dz = -S / 2 + S * e; dy = L.lift * Math.pow(Math.sin(Math.PI * s), 0.8); sw = Math.sin(Math.PI * s); }
+        const hip = [L.hip[1] + mv[1], L.hip[2] + mv[2]], tgt = [L.eff0[1] + dy, L.eff0[2] + (L.zOff || 0) + dz]; // [y, z]
+        const th = (L.init || L.segs.map(() => 0)).slice(), n = th.length;
+        const chain = () => { const pts = [hip]; let w = 0, p = hip; for (let k = 0; k < n; k++) { w += th[k]; const d = rotYZ(L.segs[k], w); p = [p[0] + d[0], p[1] + d[1]]; pts.push(p); } return pts; };
+        // بحث نمطي: يقلّل بُعد القدم عن الهدف مع تفضيل خفيف لوضعية ثني طبيعية (يتجنب فخ الرجل المستقيمة)
+        const pref = L.pref || L.init || th.map(() => 0), lim = L.limits || th.map(() => [-180, 180]);
+        if (L.prev) for (let k = 0; k < n; k++) th[k] = L.prev[k];
+        const cost = () => { const e = chain()[n]; let c = ((e[0] - tgt[0]) ** 2 + (e[1] - tgt[1]) ** 2) * 1e4; for (let k = 0; k < n; k++) c += 2e-4 * (th[k] - (L.swingPref ? lerp(pref[k], L.swingPref[k], sw) : pref[k])) ** 2; return c; };
+        let best = cost(), step = 12;
+        while (step > 0.02) {
+          let moved = false;
+          for (let k = 0; k < n; k++) for (const sg of [1, -1]) {
+            const old = th[k]; th[k] = clamp(old + sg * step, lim[k][0], lim[k][1]);
+            const c = cost(); if (c < best - 1e-9) { best = c; moved = true; } else th[k] = old;
+          }
+          if (!moved) step *= 0.5;
+        }
+        L.prev = th.slice();
+        L.chain.forEach((nm, k) => { const old = pose[nm] || [0, 0, 0]; pose[nm] = [th[k], old[1], old[2]]; });
+        if (L.foot) { const tot = th.reduce((a, b) => a + b, 0), old = pose[L.foot] || [0, 0, 0]; pose[L.foot] = [-tot + (L.footSwing || 0) * sw, old[1], old[2]]; }
+      }
+      return pose;
+    });
+  };
+
   // ---------- وضعية بالمعالج (Linear blend skinning) ----------
   AA.boneMatrices = function (skeleton, clip, t) {
     const bones = skeleton.bones, out = [];

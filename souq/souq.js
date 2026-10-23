@@ -221,7 +221,7 @@
       for (let k = 0; k < 5; k++) basketInto(P, { at: [(k % 2 ? 0.27 : -0.27), bedY + 0.02, -0.45 + k * 0.24] }, { radius: 0.17, height: 0.2, flare: 1.25, goods: 'dates' }, rng, q);
     }
     return done('cart', P, { height: bedY + 0.6, radius: (L + 1.2) / 2 + (hitch ? 1 : 0), collider: { type: 'box', size: [W + 0.3, bedY + 0.3, L + 0.6 + p.shafts] }, physics: { mass: 120, friction: 0.5 },
-      wheels: [[W / 2 + 0.1, R, -0.1], [-(W / 2 + 0.1), R, -0.1]], wheelRadius: R, spin: { pivot: [0, R, -0.1], axis: 'x', radius: R }, hitch, walkSpeed: hitch ? AA.assets[hitch.asset].generate(hitch.params, 'low').meta.walkSpeed * 0.8 : 0 });
+      wheels: [[W / 2 + 0.1, R, -0.1], [-(W / 2 + 0.1), R, -0.1]], wheelRadius: R, spin: { pivot: [0, R, -0.1], axis: 'x', radius: R }, hitch, walkSpeed: hitch ? AA.assets[hitch.asset].generate(hitch.params, 'low').meta.walkSpeed : 0 });
   }
 
   // ---------- مظلة: قماش مخطط أو عريش سعف ----------

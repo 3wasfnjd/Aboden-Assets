@@ -296,33 +296,29 @@
       return pose;
     });
     // مشي بالعصا: العصا تتقدم مع الرجل اليسرى، والذراع اليسرى تتأرجح
-    clips.walk = AA.clip(sk, 1.3, 30, true, t => {
+    clips.walk = AA.gaitClip(sk, { duration: 1.3, speed: 0.8, extra: t => {
       const ph = t / 1.3 * Math.PI * 2, s = Math.sin(ph), pose = stoopPose(1.15);
-      for (const [sd, off] of [['L', 0], ['R', Math.PI]]) {
-        const a = ph + off, sw = Math.sin(a), lift = Math.pow(Math.max(0, Math.sin(a + 1.4)), 1.4);
-        pose['thigh' + sd] = [-22 * sw - 6, 0, 0]; pose['shin' + sd] = [38 * lift, 0, 0]; pose['foot' + sd] = [-14 * lift + 10 * Math.max(0, -sw), 0, 0];
-      }
       pose.hips = [0, 5 * s, 0]; pose.spine[1] = -3 * s;
       pose.upArmL = [20 * s, 0, 6]; pose.loArmL = [-12 - 8 * Math.max(0, s), 0, 0];
       pose.upArmR = [-12 - 7 * s, 0, -4]; pose.loArmR = [-22 + 4 * s, 0, 0];
-      pose.move = [0, 0.018 * Math.abs(Math.cos(ph)) - 0.012, 0];
+      pose.move = [0, 0.012 * Math.cos(ph * 2) - 0.01, 0];
       return pose;
-    });
+    }, legs: [['L', 0], ['R', 0.5]].map(([sd, ph]) => ({ chain: ['thigh' + sd, 'shin' + sd], foot: 'foot' + sd, phase: ph, duty: 0.62, lift: 0.1, limits: [[-60, 35], [0, 110]], init: [-5, 10], footSwing: 12 })) });
     // جلوس على دكّة (ارتفاع الركبة) وجلوس متربّع على الأرض
     clips.sit = AA.clip(sk, 5, 30, true, t => {
       const w = t / 5 * Math.PI * 2, b = Math.sin(w * 1.5), pose = stoopPose(0.8);
       pose.thighL = [-86, 0, 4]; pose.thighR = [-86, 0, -4]; pose.shinL = [84, 0, 0]; pose.shinR = [84, 0, 0]; pose.footL = [2, 0, 0]; pose.footR = [2, 0, 0];
       pose.chest = [pose.chest[0] + 1.2 * b, 0, 0]; pose.head = [pose.head[0], 14 * Math.sin(w), 0];
-      pose.upArmL = [-20, 0, 10]; pose.loArmL = [-52, 0, 0]; pose.upArmR = [-26, 0, -8]; pose.loArmR = [-34, 0, 0]; pose.handR = [52, 0, 0];
-      pose.move = [0, -0.43 + 0.003 * b, -0.02];
+      pose.upArmL = [-20, 0, 10]; pose.loArmL = [-52, 0, 0]; pose.upArmR = [-26, 0, -8]; pose.loArmR = [-34, 0, 0]; pose.handR = [9, 0, 0];
+      pose.move = [0, -0.405 + 0.003 * b, -0.02];
       return pose;
     });
     clips.sit_floor = AA.clip(sk, 5, 30, true, t => {
       const w = t / 5 * Math.PI * 2, b = Math.sin(w * 1.5), pose = stoopPose(0.9);
-      pose.thighL = [-80, -12, 48]; pose.thighR = [-80, 12, -48]; pose.shinL = [150, 0, -18]; pose.shinR = [150, 0, 18]; pose.footL = [-30, 0, 0]; pose.footR = [-30, 0, 0];
+      pose.thighL = [-95, -15, 50]; pose.thighR = [-95, 15, -50]; pose.shinL = [178, 0, -30]; pose.shinR = [178, 0, 30]; pose.footL = [-30, 0, 0]; pose.footR = [-30, 0, 0];
       pose.chest = [pose.chest[0] + 1.2 * b, 0, 0]; pose.head = [pose.head[0] - 4, 12 * Math.sin(w), 0];
       pose.upArmL = [-18, 0, 18]; pose.loArmL = [-50, 0, 0]; pose.upArmR = [-34, 0, -14]; pose.loArmR = [-36, 0, 0];
-      pose.move = [0, -0.8 + 0.003 * b, -0.05];
+      pose.move = [0, -0.75 + 0.003 * b, -0.05];
       return pose;
     });
 

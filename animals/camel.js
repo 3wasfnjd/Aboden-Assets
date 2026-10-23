@@ -182,18 +182,13 @@
         head: [3 * Math.sin(w * 7), 3 * Math.sin(w), 0], tail: [0, 0, 16 * Math.sin(w * 3)] };
     });
     // مشي رهوان: اليد والرجل من نفس الجنب تتحركان معاً، والجسم يتمايل جانبياً
-    clips.walk = AA.clip(sk, 1.3, 30, true, t => {
-      const ph = t / 1.3 * Math.PI * 2, pose = { move: [0, 0.025 * S * Math.abs(Math.cos(ph)), 0] };
-      for (const [sd, off] of [['L', 0], ['R', Math.PI]]) {
-        const a = ph + off, s = Math.sin(a), lift = Math.pow(Math.max(0, Math.sin(a + 1.3)), 1.5);
-        pose['upF' + sd] = [-12 * s, 0, 0]; pose['lowF' + sd] = [-10 * s - 6 * lift, 0, 0]; pose['canF' + sd] = [42 * lift, 0, 0]; pose['footF' + sd] = [-20 * lift + 8 * Math.max(0, -s), 0, 0];
-        pose['thighB' + sd] = [-14 * s, 0, 0]; pose['shankB' + sd] = [-16 * lift + 4 * s, 0, 0]; pose['canB' + sd] = [28 * lift, 0, 0]; pose['footB' + sd] = [-16 * lift + 6 * Math.max(0, -s), 0, 0];
-      }
-      pose.rear = [0, 0, 4 * Math.sin(ph)]; pose.chest = [0, 0, 4 * Math.sin(ph)];
-      pose.neck1 = [5 * Math.sin(ph * 2), 0, 0]; pose.neck3 = [-3 * Math.sin(ph * 2), 0, 0]; pose.head = [-3 * Math.sin(ph * 2), 0, 0];
-      pose.tail = [0, 0, 12 * Math.sin(ph)];
-      return pose;
-    });
+    // مشي الجمل: رهوان (الرجلان من نفس الجهة معاً تقريباً)، بقدم مثبّتة وحل عكسي للمفاصل
+    clips.walk = AA.gaitClip(sk, { duration: 1.3, speed: 1.25 * S, extra: t => {
+      const ph = t / 1.3 * Math.PI * 2;
+      return { move: [0, 0.02 * S * Math.cos(ph * 2), 0], rear: [0, 0, 4 * Math.sin(ph)], chest: [0, 0, 4 * Math.sin(ph)], neck1: [5 * Math.sin(ph * 2), 0, 0], neck3: [-3 * Math.sin(ph * 2), 0, 0], head: [-3 * Math.sin(ph * 2), 0, 0], tail: [0, 0, 12 * Math.sin(ph)] };
+    }, legs: [['L', 0, 0.94], ['R', 0.5, 0.44]].flatMap(([sd, hp, fp]) => [
+      { chain: ['upF' + sd, 'lowF' + sd, 'canF' + sd], foot: 'footF' + sd, phase: fp, duty: 0.62, lift: 0.16 * S, footSwing: 30, limits: [[-40, 40], [-40, 20], [0, 105]], init: [0, 0, 0], pref: [0, 0, 0], swingPref: [-8, -18, 75] },
+      { chain: ['thighB' + sd, 'shankB' + sd, 'canB' + sd], foot: 'footB' + sd, phase: hp, duty: 0.62, lift: 0.14 * S, footSwing: 25, limits: [[-40, 35], [-55, 25], [-95, 10]], init: [0, 0, 0], pref: [0, 0, 0], swingPref: [12, -10, -55] }]) });
     clips.graze = AA.clip(sk, 3.4, 30, true, t => {
       const w = t / 3.4 * Math.PI * 2;
       return { neck1: [58, 0, 0], neck2: [30, 0, 0], neck3: [18 + 3 * Math.sin(w * 3), 0, 0], head: [-12 + 4 * Math.sin(w * 6), 5 * Math.sin(w), 0],

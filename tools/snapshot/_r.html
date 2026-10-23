@@ -57,7 +57,7 @@ window.render = function (assetId, quality, over, cam) {
     if (mat.texture) { const t = AA.texture(mat.texture, quality); alb = tex(t.albedo, t.size, true); nrm = tex(t.normal, t.size, false); }
     draws.push({ vao, n: idx.length, alb, nrm, tint, shadow: mat.kind !== 'ground' });
   }
-  if (out.meta.hitch) { // الدابة المربوطة بالعربة
+  if (out.meta.hitch && out.meta.hitch.asset) { // الدابة المربوطة بالعربة
     const h = out.meta.hitch, ao = AA.assets[h.asset].generate(h.params, quality);
     for (const k in ao.parts) { const d = ao.parts[k], pos = d.positions; for (let i = 0; i < pos.length; i += 3) { pos[i] += h.at[0]; pos[i + 1] += h.at[1]; pos[i + 2] += h.at[2]; } out.parts['hitch_' + k] = d; }
   }

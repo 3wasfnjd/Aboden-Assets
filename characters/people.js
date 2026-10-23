@@ -187,14 +187,17 @@
     const R = (th, y) => { const [a, bf, bb, n] = prof(y), [x, z] = se(th, a, bf, bb, n); return Math.hypot(x, z); };
     return { rows, point, R, top: rows[rows.length - 1][0], hem: rows[0][0] };
   }
-  function buildLong(P, B, b, sk, q, G, color, colorFn) {
-    B.skinFn = pt => {
+  function longSkin(b, sk) {
+    return pt => {
       const y = pt[1];
       if (y > b.hipY + 0.05 * b.k) return AA.autoSkin(sk, ['hips', 'spine', 'chest', 'neck', 'clavL', 'clavR'], 4)(pt);
       const side = clamp(pt[0] / (0.12 * b.k), -1, 1), wl = smooth(-0.6, 0.6, side), lo = smooth(b.hipY + 0.05 * b.k, b.knee - 0.05, y);
       const leg = y > b.knee ? 'thigh' : 'shin';
       return [[sk.id('hips'), 1 - lo * 0.85], [sk.id(leg + 'L'), lo * 0.85 * wl], [sk.id(leg + 'R'), lo * 0.85 * (1 - wl)]];
     };
+  }
+  function buildLong(P, B, b, sk, q, G, color, colorFn) {
+    B.skinFn = longSkin(b, sk);
     const ys = []; for (let i = 0; i <= q.ny; i++) ys.push(lerp(G.hem, G.top, Math.pow(i / q.ny, 0.92)));
     const rows = ys.slice().reverse().map(y => { const r = []; for (let j = 0; j <= q.nu; j++) r.push(G.point(j / q.nu * Math.PI * 2, y, true)); return r; });
     grid(B, rows, (v, u, p) => colorFn ? colorFn(p, u) : color, (u, v) => [u * 3.4, v * 4.6]);
@@ -256,18 +259,14 @@
         upArmL: [3 + 1.5 * br, 0, 5], upArmR: [3 + 1.5 * br, 0, -5], loArmL: [-10, 0, 0], loArmR: [-10, 0, 0], hips: [0, 0, kid ? 2 * Math.sin(w * 2) : 0], move: [0, 0.003 * br, 0] };
     });
     const dur = spec.walkDur || 1.1, stride = spec.stride || 1, step = spec.female ? 0.85 : 1;
-    c.walk = AA.clip(sk, dur, 30, true, t => {
+    c.walk = AA.gaitClip(sk, { duration: dur, speed: (spec.walkSpeed || 1.1) * spec.height / 1.7, extra: t => {
       const ph = t / dur * Math.PI * 2, s = Math.sin(ph), pose = { spine: [3, 0, 0], neck: [-3, 0, 0] };
-      for (const [sd, off] of [['L', 0], ['R', Math.PI]]) {
-        const a = ph + off, sw = Math.sin(a), lift = Math.pow(Math.max(0, Math.sin(a + 1.4)), 1.4);
-        pose['thigh' + sd] = [(-24 * sw - 4) * stride * step, 0, 0]; pose['shin' + sd] = [42 * lift * stride, 0, 0]; pose['foot' + sd] = [-14 * lift + 10 * Math.max(0, -sw), 0, 0];
-      }
       pose.hips = [0, 6 * s * step, 0]; pose.chest = [0, -5 * s, 0];
       pose.upArmL = [24 * s * stride * (spec.female ? 0.6 : 1), 0, 6]; pose.upArmR = [-24 * s * stride * (spec.female ? 0.6 : 1), 0, -6];
       pose.loArmL = [-14 - 10 * Math.max(0, s), 0, 0]; pose.loArmR = [-14 - 10 * Math.max(0, -s), 0, 0];
-      pose.move = [0, (0.02 * Math.abs(Math.cos(ph)) - 0.012) * spec.height / 1.7, 0];
+      pose.move = [0, 0.012 * Math.cos(ph * 2) * spec.height / 1.7, 0];
       return pose;
-    });
+    }, legs: [['L', 0.25], ['R', 0.75]].map(([sd, ph]) => ({ chain: ['thigh' + sd, 'shin' + sd], foot: 'foot' + sd, phase: ph, duty: 0.62, lift: Math.max(0.06, 0.09 * spec.height / 1.7), limits: [[-60, 35], [0, 110]], init: [-5, 10], footSwing: 12 })) });
     if (spec.wave) c.wave = AA.clip(sk, 1.6, 30, true, t => {
       const w = t / 1.6 * Math.PI * 2;
       return { upArmR: [-15, 0, -128], loArmR: [-20, 0, -30 + 26 * Math.sin(w * 2)], handR: [0, 0, 10 * Math.sin(w * 2)], upArmL: [4, 0, 6], loArmL: [-10, 0, 0], head: [0, -8, 4], chest: [0, -4, 2] };
@@ -276,7 +275,7 @@
       const w = t / 1.1 * Math.PI * 2, hit = 0.5 - 0.5 * Math.cos(w), hard = Math.pow(hit, 2);
       return { spine: [12, 0, 0], chest: [10, -10, 0], neck: [10, 0, 0], head: [8, 0, 0],
         upArmR: [-100 + 70 * hard, 0, -10], loArmR: [-60 + 40 * hit, 0, 0], handR: [-20 + 30 * hard, 0, 0],
-        upArmL: [-45, 0, 12], loArmL: [-55, 0, 0], thighL: [-12, 0, 0], shinL: [16, 0, 0], thighR: [8, 0, 0], shinR: [10, 0, 0], move: [0, -0.03, 0] };
+        upArmL: [-45, 0, 12], loArmL: [-55, 0, 0], thighL: [-12, 0, 0], shinL: [16, 0, 0], footL: [-4, 0, 0], thighR: [8, 0, 0], shinR: [10, 0, 0], footR: [-18, 0, 0], move: [0, -0.012, 0] };
     });
     // جلوس على مقعد بارتفاع الركبة، وجلوس متربّع على الأرض (ينزل الجسم بمقدار طول الساق)
         c.sit = AA.clip(sk, 5, 30, true, t => {
@@ -286,7 +285,7 @@
     });
     c.sit_floor = AA.clip(sk, 5, 30, true, t => {
       const w = t / 5 * Math.PI * 2, br = Math.sin(w * 1.5);
-      return { thighL: [-80, -12, 48], thighR: [-80, 12, -48], shinL: [150, 0, -18], shinR: [150, 0, 18], footL: [-30, 0, 0], footR: [-30, 0, 0], spine: [5, 0, 0], chest: [1.2 * br, 0, 0], head: [-4, 12 * Math.sin(w), 0],
+      return { thighL: [-95, -15, 50], thighR: [-95, 15, -50], shinL: [178, 0, -30], shinR: [178, 0, 30], footL: [-30, 0, 0], footR: [-30, 0, 0], spine: [5, 0, 0], chest: [1.2 * br, 0, 0], head: [-4, 12 * Math.sin(w), 0],
         upArmL: [-18, 0, 18], loArmL: [-50, 0, 0], upArmR: [-18, 0, -18], loArmR: [-50, 0, 0], move: [0, -spec.floorDrop + 0.003 * br, -0.05 * spec.height / 1.7] };
     });
     return c;
@@ -295,7 +294,7 @@
   // ---------- المولّد ----------
   function person(spec, p, quality) {
     const q = Q[quality] || Q.med, rng = AA.rng(p.seed), b = body(spec), sk = skeleton(b);
-    spec.sitDrop = b.hipY - b.knee + 0.02 * b.k; spec.floorDrop = b.hipY - 0.13 * b.k;
+    spec.sitDrop = b.hipY - b.knee - 0.01 * b.k; spec.floorDrop = b.hipY - 0.17 * b.k;
     p.__q = q;
     const P = { cloth: new AA.Builder(), cover: new AA.Builder(), skin: new AA.Builder(), hair: new AA.Builder(), eye: new AA.Builder(), dark: new AA.Builder(), lip: new AA.Builder(),
       trim: new AA.Builder(), shoe: new AA.Builder(), glove: new AA.Builder(), plastic: new AA.Builder(), vest: new AA.Builder(), wood: new AA.Builder() };
@@ -319,7 +318,7 @@
         const ys = []; for (let i = 0; i <= 10; i++) ys.push(lerp(b.shY + 0.04 * b.k, lerp(b.hipY, b.shY, 0.45), i / 10));
         for (const sg of [1, -1]) AA.tube(P.trim, ys.map(y => { const th = sg * lerp(0.07, 0.3, (y - ys[10]) / (ys[0] - ys[10])), q0 = G.point(th, y, false); return V.madd(q0, V.norm([q0[0], 0, q0[2]]), 0.003); }), ys.map(() => 0.0045 * b.k), 4, () => [1, 1, 1], () => 0, 0, null, false);
         const ring = []; for (let j = 0; j <= 28; j++) ring.push(V.madd(G.point(j / 28 * Math.PI * 2, G.hem + 0.06 * b.k, false), V.norm([Math.sin(j / 28 * Math.PI * 2), 0, Math.cos(j / 28 * Math.PI * 2)]), 0.006));
-        P.trim.skinFn = null; P.trim.setSkin([[sk.id('hips'), 1]]);
+        P.trim.skinFn = longSkin(b, sk); // حاشية الذيل تتبع الثوب لا الورك
         AA.tube(P.trim, ring, ring.map(() => 0.008 * b.k), 4, () => [1, 1, 1], () => 0, 0, null, false);
       }
     } else { // أفرول: جذع + بنطلون

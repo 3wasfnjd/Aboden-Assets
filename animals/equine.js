@@ -157,16 +157,12 @@
     });
     // مشي رباعي: خلفي يسار، أمامي يسار، خلفي يمين، أمامي يمين
     const wd = donkey ? 0.85 : 1.05;
-    clips.walk = AA.clip(sk, wd, 30, true, t => {
-      const ph = t / wd * Math.PI * 2, pose = { move: [0, 0.015 * S * Math.abs(Math.sin(ph * 2)), 0], neck1: [4 * Math.sin(ph * 2), 0, 0], head: [-3 * Math.sin(ph * 2), 0, 0], tail: [0, 0, 10 * Math.sin(ph)] };
-      const leg = o => { const a = ph + o; return [Math.sin(a), Math.pow(Math.max(0, Math.sin(a + 1.3)), 1.5)]; };
-      for (const [sd, of, ob] of [['L', Math.PI * 0.5, 0], ['R', Math.PI * 1.5, Math.PI]]) {
-        const [s1, l1] = leg(of), [s2, l2] = leg(ob);
-        pose['upF' + sd] = [-16 * s1, 0, 0]; pose['lowF' + sd] = [-8 * s1, 0, 0]; pose['canF' + sd] = [50 * l1, 0, 0]; pose['hoofF' + sd] = [-25 * l1, 0, 0];
-        pose['thighB' + sd] = [-16 * s2, 0, 0]; pose['shankB' + sd] = [-20 * l2, 0, 0]; pose['canB' + sd] = [30 * l2, 0, 0]; pose['hoofB' + sd] = [-20 * l2, 0, 0];
-      }
-      return pose;
-    });
+    clips.walk = AA.gaitClip(sk, { duration: wd, speed: (donkey ? 0.95 : 1.4) * S, extra: t => {
+      const ph = t / wd * Math.PI * 2;
+      return { move: [0, 0.012 * S * Math.cos(ph * 4), 0], neck1: [4 * Math.sin(ph * 2), 0, 0], head: [-3 * Math.sin(ph * 2), 0, 0], tail: [0, 0, 10 * Math.sin(ph)] };
+    }, legs: [['L', 0, 0.75], ['R', 0.5, 0.25]].flatMap(([sd, hp, fp]) => [
+      { chain: ['upF' + sd, 'lowF' + sd, 'canF' + sd], foot: 'hoofF' + sd, phase: fp, duty: 0.64, lift: 0.13 * S, footSwing: 35, limits: [[-40, 40], [-40, 20], [0, 105]], init: [0, 0, 0], pref: [0, 0, 0], swingPref: [-8, -18, 75] },
+      { chain: ['thighB' + sd, 'shankB' + sd, 'canB' + sd], foot: 'hoofB' + sd, phase: hp, duty: 0.64, lift: 0.12 * S, footSwing: 25, limits: [[-40, 35], [-55, 25], [-95, 10]], init: [0, 0, 0], pref: [0, 0, 0], swingPref: [12, -10, -55] }]) });
     clips.graze = AA.clip(sk, 3.2, 30, true, t => {
       const w = t / 3.2 * Math.PI * 2;
       return { neck1: [55, 0, 0], neck2: [22, 4 * Math.sin(w), 0], head: [10 + 6 * Math.sin(w * 6), 0, 0], upFL: [-6, 0, 0], tail: [0, 0, 12 * Math.sin(w * 2)] };
