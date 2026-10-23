@@ -68,16 +68,40 @@
     // اللحية البيضاء الكبيرة والشارب
     LP.ico(Hr, [0, 0.86, 0.1], [0.19 * p.beard + 0.02, 0.14 * p.beard + 0.02, 0.13], 1, () => white, { keep: d => d[1] < 0.35 && d[2] > -0.15 });
     AA.box(Hr, [0, 0.92, 0.225], [0.14, 0.035, 0.04], white, 1, {});
-    // الشماغ: قبة فوق الرأس بفتحة للوجه، مربعات حمراء وبيضاء، وطرفان على الكتفين وذيل خلفي
-    Sh.setSkin([[id('head'), 1]]);
-    const shem = d => hash(d) < 0.68 ? LP.c('red') : LP.c('white');
-    LP.ico(Sh, [0, 1.0, -0.005], [B.hr + 0.025, B.hr + 0.02, B.hr + 0.03], 1, shem, { keep: d => !(d[2] > 0.4 && d[1] < 0.5) && d[1] > -0.55 });
-    Sh.skinFn = pt => pt[1] > 0.8 ? [[id('head'), 1]] : [[id('chest'), smooth(0.8, 0.6, pt[1])], [id('head'), 1 - smooth(0.8, 0.6, pt[1])]];
-    for (const s of [1, -1]) { // طرفان أماميان
-      const a = [s * 0.2, 0.9, 0.1], b = [s * 0.17, 0.58, 0.14], c = [s * 0.1, 0.6, 0.16], d = [s * 0.13, 0.9, 0.17];
-      LP.tri(Sh, a, b, c, LP.c('red')); LP.tri(Sh, a, c, d, LP.c('white'));
+    // الشماغ: قطعة قماش واحدة متصلة (شبكة صفوف × أعمدة): تغطي الرأس، تنفتح حول الوجه،
+    // وتنسدل على الكتفين والظهر، وطرفاها الأماميان على الصدر. نقشة مربعات حمراء وبيضاء وحاشية بيضاء.
+    {
+      const c0 = [0, 1.0, -0.005], R = B.hr + 0.03, nC = q === 'low' ? 12 : 18, crown = q === 'low' ? 4 : 6, drape = q === 'low' ? 4 : 6, nR = crown + drape;
+      const phiEnd = 1.72, yTop = c0[1] + R * Math.cos(phiEnd);
+      const openAt = phi => 0.9 * smooth(0.62, 1.15, phi); // نصف زاوية فتحة الوجه
+      const grid = [];
+      for (let i = 0; i <= nR; i++) {
+        const j = i - crown, row = [], inCrown = i <= crown, phi = inCrown ? lerp(0.1, phiEnd, i / crown) : phiEnd, sD = inCrown ? 0 : j === drape ? 1 : 0.93 * j / (drape - 1); // آخر صف حاشية رفيعة
+        const open = inCrown ? openAt(phi) : 0.9 + 0.1 * sD;
+        for (let k = 0; k <= nC; k++) {
+          const a = lerp(open, Math.PI * 2 - open, k / nC), sa = Math.sin(a), ca = Math.cos(a);
+          let pt;
+          if (inCrown) pt = [c0[0] + R * Math.sin(phi) * sa, c0[1] + R * Math.cos(phi), c0[2] + R * Math.sin(phi) * ca];
+          else {
+            const back = smooth(0.2, -0.9, ca), front = smooth(0.3, 0.7, ca), tip = Math.max(0, 1 - Math.abs(a - Math.PI) / 1.25); // ذيل مثلث في الظهر
+            const r0 = R * Math.sin(phiEnd), r1 = 0.275 - 0.025 * back, rr = lerp(r0, r1, Math.pow(sD, 0.6));
+            const y = lerp(yTop, 0.63 - 0.17 * tip - 0.12 * front, sD);
+            pt = [sa * rr * (1 - 0.22 * front * sD), y, ca * rr * (1 + 0.08 * back * sD) + 0.05 * front * sD + c0[2]];
+          }
+          row.push(pt);
+        }
+        grid.push(row);
+      }
+      Sh.skinFn = pt => { const w = smooth(0.84, 0.64, pt[1]); return [[id('head'), 1 - w * 0.85], [id('chest'), w * 0.85]]; };
+      const R1 = LP.c('red'), W1 = LP.c('white');
+      for (let i = 0; i < nR; i++) for (let k = 0; k < nC; k++) {
+        const hem = i === nR - 1 || k === 0 || k === nC - 1, col = hem ? W1 : ((i + k) % 3 === 0 ? W1 : R1);
+        const p00 = grid[i][k], p01 = grid[i][k + 1], p10 = grid[i + 1][k], p11 = grid[i + 1][k + 1], sw = 0.012 * smooth(0.95, 0.6, p10[1]);
+        const v = pt => Sh.v(pt, col, pt[1] < 0.9 ? sw : 0, 0.3 * k, 0);
+        const A = v(p00), Bv = v(p01), C2 = v(p11), D2 = v(p10);
+        Sh.t(A, C2, Bv); Sh.t(A, D2, C2);
+      }
     }
-    { const a = [-0.2, 0.92, -0.12], b = [0.2, 0.92, -0.12], c = [0.17, 0.58, -0.16], d = [-0.17, 0.58, -0.16]; LP.tri(Sh, a, b, c, LP.c('red')); LP.tri(Sh, a, c, d, LP.c('red')); LP.tri(Sh, [0, 0.58, -0.17], d, c, LP.c('white')); }
     // العقال: حلقتان سوداوان
     Dk.setSkin([[id('head'), 1]]);
     for (const dy of [0, 0.034]) { const ring = []; for (let k = 0; k <= 12; k++) { const a = k / 12 * Math.PI * 2, y = 1.085 + dy + 0.025 * Math.cos(a), rr = Math.sqrt(Math.max(0, (B.hr + 0.026) ** 2 - (y - 1.0) ** 2)) + 0.012; ring.push([Math.sin(a) * rr, y, Math.cos(a) * rr - 0.005]); } LP.chain(Dk, ring, ring.map(() => 0.015), 4, () => LP.c('black')); }
