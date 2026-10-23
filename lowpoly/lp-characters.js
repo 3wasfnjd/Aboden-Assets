@@ -120,7 +120,14 @@
     }
     // العقال: حلقتان سوداوان
     Dk.setSkin([[id('head'), 1]]);
-    for (const dy of [0, 0.042]) { const ring = []; for (let k = 0; k <= 14; k++) { const a = k / 14 * Math.PI * 2, y = 1.14 + dy + 0.03 * (1 - Math.cos(a)) * 0.5, rr = Math.sqrt(Math.max(0, (B.hr + 0.034) ** 2 - (y - 1.0) ** 2)) + 0.018; ring.push([Math.sin(a) * rr, y, Math.cos(a) * rr - 0.005]); } LP.chain(Dk, ring, ring.map(() => 0.022), 5, () => LP.c('black')); }
+    // حلقتان (طارة كاملة مغلقة بلا فواصل) سوداوان بالكامل، مائلتان قليلاً للخلف
+    for (const dy of [0, 0.042]) {
+      const N = q === 'low' ? 16 : 22, M = 5, tube = 0.023, ring = [];
+      for (let k = 0; k < N; k++) { const a = k / N * Math.PI * 2, y = 1.14 + dy + 0.015 * (1 - Math.cos(a)), rr = Math.sqrt(Math.max(0, (B.hr + 0.034) ** 2 - (y - 1.0) ** 2)) + 0.024; ring.push([Math.sin(a) * rr, y, Math.cos(a) * rr - 0.005]); }
+      const ids = ring.map((c, k) => { const t = V.norm(V.sub(ring[(k + 1) % N], ring[(k + N - 1) % N])), out = V.norm([c[0], 0, c[2] + 0.005]), up = V.norm(V.cross(t, out));
+        const r = []; for (let m = 0; m < M; m++) { const b = m / M * Math.PI * 2; r.push(Dk.v(V.add(c, V.add(V.scale(out, Math.cos(b) * tube), V.scale(up, Math.sin(b) * tube))), LP.c('black'), 0, 0, 0)); } return r; });
+      for (let k = 0; k < N; k++) for (let m = 0; m < M; m++) { const k2 = (k + 1) % N, m2 = (m + 1) % M; Dk.t(ids[k][m], ids[k2][m2], ids[k2][m]); Dk.t(ids[k][m], ids[k][m2], ids[k2][m2]); }
+    }
     // العصا في اليد اليمنى
     Wd.setSkin([[id('handR'), 1]]);
     const g0 = [-0.225, 0.35, 0.06];
