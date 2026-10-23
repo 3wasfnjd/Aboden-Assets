@@ -78,13 +78,14 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <div class="wrap">
   <header>
     <div class="brand">عبودين قيمز · مستودع الأصول</div>
-    <div class="titleRow"><h1 id="sceneTitle">واحة النباتات</h1><span class="ver">v0.4</span></div>
+    <div class="titleRow"><h1 id="sceneTitle">الحي النجدي</h1><span class="ver">v0.5</span></div>
     <p>كل أصل هنا مبني بالكود بالكامل، حتى الخامات. اختر أصلاً لتقرّب عليه وتعدّله، والأرقام تبيّن حمله على كرت الشاشة.</p>
   </header>
 
   <div class="tabs" id="tabs" role="group" aria-label="الفئات">
-    <button type="button" data-s="plants" aria-pressed="true">النباتات</button>
-    <button type="button" data-s="architecture" aria-pressed="false">العمارة النجدية</button>
+    <button type="button" data-s="hara" aria-pressed="true">الحي النجدي</button>
+    <button type="button" data-s="plants" aria-pressed="false">النباتات</button>
+    <button type="button" data-s="architecture" aria-pressed="false">قطع العمارة</button>
   </div>
 
   <div class="viewer" id="viewer">
@@ -129,6 +130,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <script src="plants/trees.js"></script>
 <script src="plants/shrubs.js"></script>
 <script src="architecture/najdi.js"></script>
+<script src="architecture/house.js"></script>
+<script src="architecture/water.js"></script>
 <script src="core/viewer-three.js"></script>
 <script>
 (function(){
@@ -150,6 +153,28 @@ function scatter(n, rMin, rMax, avoid){
 }
 const POND = { x: 0.5, z: 0.5, r: 2.6 };
 const taken = [[POND.x, POND.z, POND.r + 1], [-5,-1,2.5],[-2,4.5,2.5],[4.5,3,2.5],[-1.5,-3.6,1.6],[6.5,-1.5,1.6],[13,-8,4],[-13,-9,4.5],[12,10,4]];
+// حي نجدي: زقاق رئيسي (عرض 5 م) يتسع في الوسط إلى براحة فيها البئر، وحوض وساقية تسقي نخيلاً جنوب البراحة
+function haraEntries(){
+  const PI = Math.PI, houses = [];
+  const north = [[-21, 8, 7, 1, {}], [-11.5, 9, 8, 2, { roofRoom: true }], [0, 12, 10, 2, { tower: true, roofRoom: true }], [11.5, 8, 7.5, 1, { worn: true }], [21, 9, 8, 2, {}]];
+  const south = [[-20.5, 9, 8, 2, { worn: true }], [-10.5, 8, 7, 1, { roofRoom: true }], [10.5, 9, 8, 1, {}], [20.5, 8, 7, 2, { tower: true }]];
+  let sd = 100;
+  for (const [x, W, D, F, ex] of north) {
+    const back = x === 0 ? 10.5 : 2.5; // البيت الكبير مرتد خلف البراحة
+    houses.push({ x, z: -back - D / 2, rot: 0, over: Object.assign({ seed: sd++, width: W, depth: D, floors: F }, ex) });
+  }
+  for (const [x, W, D, F, ex] of south) houses.push({ x, z: 2.5 + D / 2, rot: PI, over: Object.assign({ seed: sd++, width: W, depth: D, floors: F }, ex) });
+  return [
+    { id:'najdi_house',   inst: houses },
+    { id:'well',          inst:[{ x:-2.5, z:-5.5, over:{ seed:61, trough:true, courses:3 } }] },
+    { id:'water_basin',   inst:[{ x:2.6, z:-5.8, over:{ seed:62 } }] },
+    { id:'water_channel', shared:true, inst:[{ x:2.6, z:-3.7, over:{ seed:63, length:2 } }, { x:2.6, z:-1.7 }, { x:2.6, z:0.3 }, { x:2.6, z:2.3 }, { x:2.6, z:4.3 }, { x:2.6, z:6.3 }] },
+    { id:'palm',          inst:[{ x:5.2, z:5.8, over:{ seed:64, height:8, bunches:3 } }, { x:-0.4, z:7.5, over:{ seed:65, height:10, lean:0.5 } }, { x:5.5, z:9.2, over:{ seed:66, height:6.5, bunches:4 } }] },
+    { id:'fasila',        inst:[{ x:0.2, z:4.6, over:{ seed:67 } }, { x:-3.5, z:6.4, over:{ seed:68, fronds:10, frondLen:1.4 } }] },
+    { id:'dakka',         inst:[{ x:-6, z:-3.25, over:{ seed:69, length:2.4 } }] },
+    { id:'thumam',        shared:true, inst:[{ x:-27, z:0.5 }, { x:27, z:-0.6 }, { x:-15.5, z:0.3, scale:0.6 }, { x:16.5, z:-0.4, scale:0.7 }, { x:7.2, z:3.4, scale:0.6 }] }
+  ];
+}
 const SCENES = {
   plants: { title: 'واحة النباتات', pond: true, overview: [26, 15, 26], target: [0, 3, 0], entries: [
     { id:'palm',   inst:[{x:-5,z:-1,over:{seed:11,height:9}},{x:-2,z:4.5,over:{seed:22,height:6.5,bunches:3}},{x:4.5,z:3,over:{seed:33,height:11,lean:0.6,bunches:2}}] },
@@ -159,7 +184,8 @@ const SCENES = {
     { id:'athl',   inst:[{x:12,z:10,over:{seed:71}}] },
     { id:'arfaj',  shared:true, inst: scatter(7, 7, 20, taken) },
     { id:'thumam', shared:true, inst: scatter(14, 6, 22, taken) } ] },
-  architecture: { title: 'العمارة النجدية', pond: false, overview: [4, 13, 30], target: [0, 2.5, -3], entries: [
+  hara: { title: 'الحي النجدي', pond: false, flat: 30, overview: [10, 20, 32], target: [0, 2, 0], entries: haraEntries() },
+  architecture: { title: 'قطع العمارة', pond: false, overview: [4, 13, 30], target: [0, 2.5, -3], entries: [
     { id:'wall',          inst:[{x:-10.5,z:2,over:{seed:3}}] },
     { id:'wall_corner',   inst:[{x:-5.6,z:2.2,over:{seed:4}}] },
     { id:'wall_door',     inst:[{x:-0.8,z:2,over:{seed:5}}] },
@@ -176,7 +202,7 @@ let ENTRIES = [];
 function groundH(x, z){
   const r = Math.hypot(x, z);
   const dip = SCENES[sceneId].pond ? -0.55 * (1 - AA.smooth(POND.r - 0.4, POND.r + 1.4, Math.hypot(x - POND.x, z - POND.z))) : 0;
-  const ripple = (Math.sin(x * 0.13) + Math.sin(z * 0.11 + 1.3)) * 0.22 * AA.smooth(SCENES[sceneId].pond ? 8 : 16, 30, r);
+  const ripple = (Math.sin(x * 0.13) + Math.sin(z * 0.11 + 1.3)) * 0.22 * AA.smooth(SCENES[sceneId].pond ? 8 : (SCENES[sceneId].flat || 20), (SCENES[sceneId].flat || 20) + 14, r);
   const dunes = Math.sin(x * 0.05 + z * 0.04) * 1.6 * AA.smooth(28, 60, r) + Math.max(0, Math.sin(x * 0.03 - z * 0.05)) * 2.5 * AA.smooth(35, 70, r);
   return dip + ripple + dunes;
 }
@@ -236,7 +262,7 @@ function buildGround(){
 
 // ---------- build assets ----------
 function placeGroup(i, grp){
-  grp.position.set(i.x, groundH(i.x, i.z) - 0.02, i.z);
+  grp.position.set(i.x, groundH(i.x, i.z) - 0.02 + (i.y || 0), i.z);
   grp.rotation.y = i.rot || 0; grp.scale.setScalar(i.scale || 1);
   scene.add(grp);
 }
@@ -284,7 +310,7 @@ function focus(target, dist, dir){
 function focusEntry(e){
   const i = e.inst[0], m = i.built ? i.built.meta : e.built.meta, s = i.scale || 1;
   const h = (m.height + (e.id === 'palm' ? i.params.frondLen * 0.4 : 0)) * s;
-  const arch = e.asset.category === 'architecture';
+  const arch = e.asset.category === 'architecture' && sceneId === 'architecture';
   focus(new T.Vector3(i.x, groundH(i.x, i.z) + h * 0.5, i.z), Math.max(2.4, arch ? Math.max(h * 1.7, m.radius * 2.4) : h * 1.5 + m.radius * 0.8),
     arch ? new T.Vector3(0.35, 0.3, 1) : null);
 }
@@ -395,6 +421,7 @@ const clock = new T.Clock(); let fa = 0, fn = 0;
 function loop(){
   const dt = Math.min(clock.getDelta(), 0.1);
   X.uniforms.uTime.value += reduce ? dt * 0.3 : dt;
+  X.tick(X.uniforms.uTime.value);
   if (tween){
     tween.t = Math.min(1, tween.t + dt / 0.9);
     const k = tween.t * tween.t * (3 - 2 * tween.t);
@@ -407,7 +434,7 @@ function loop(){
   requestAnimationFrame(loop);
 }
 const startTab = (location.hash || '').replace('#', '');
-loadScene(SCENES[startTab] ? startTab : 'plants');
+loadScene(SCENES[startTab] ? startTab : 'hara');
 loop();
 })();
 </script>

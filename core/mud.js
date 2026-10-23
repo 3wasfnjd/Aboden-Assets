@@ -106,6 +106,7 @@
       for (let i = 0; i < NX - 1; i++) for (let j = 0; j < NY - 1; j++) {
         const cx = (xs[i] + xs[i + 1]) / 2, cy = (yAt(i, j) + yAt(i, j + 1)) / 2;
         if (inOpen(cx, cy)) continue;
+        if (side < 0 && o.backMinY != null && cy < o.backMinY) continue; // الوجه الداخلي المخفي تحت السقف لا يُرسم
         const a = id[i][j], b = id[i + 1][j], c = id[i + 1][j + 1], d = id[i][j + 1];
         if (side > 0) { P.wall.t(a, b, c); P.wall.t(a, c, d); } else { P.wall.t(a, c, b); P.wall.t(a, d, c); }
       }
@@ -212,7 +213,7 @@
         const d = disp * (AA.fbm3(x * 1.7 + (o.at ? o.at[0] : 0), y * 1.7, z * 1.7 + (o.at ? o.at[2] : 0), s) - 0.5) * 2 * (t < 0.999 ? 1 : 0.3);
         const p = [x + q.n[0] * d, y, z + q.n[1] * d];
         const u = Math.abs(q.n[0]) > Math.abs(q.n[1]) ? p[2] * Math.sign(q.n[0]) : -p[0] * Math.sign(q.n[1]);
-        row.push(P.wall.v(xform(p, o), groundAO(y, 1), 0, 0, 0, [u / tile + 0.5, y / tile]));
+        row.push(P.wall.v(xform(p, o), groundAO(y, 1), 0, 0, 0, [u / tile + 0.5 + (o.uvOff || 0), y / tile + (o.uvOff || 0) * 0.7]));
       }
       rows.push(row);
     }

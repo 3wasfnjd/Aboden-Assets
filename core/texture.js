@@ -232,7 +232,43 @@
     return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 100), repeat: 1, aspect: [W, H] };
   }
 
-  const GEN = { mud_wall: mudWall, mud_wall_worn: (n, s) => mudWall(n, s, { exposure: 1.5 }), mud_top: mudTop, gypsum, wood, najdi_door: najdiDoor };
+  // حجر جيري/رملي مشذّب: مسامات، ضربات أزميل، بقع (منقول من sandstone() في مفاتيح)
+  function sandstone(n, seed) {
+    const rng = AA.rng(seed), big = tileNoise(n, seed, [4, 8, 16], 1.5), fine = tileNoise(n, seed + 1, [64, 128, Math.min(256, n / 2)], 1.15);
+    const chis = tileNoise(n, seed + 5, [8, 32], 1.3);
+    const rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x;
+      const stroke = 0.5 + 0.5 * Math.sin((x + y * 0.35) / n * 90 + chis[i] * 9);
+      const pore = rng() > 0.995 ? 0.55 : 1;
+      const k = (0.9 + 0.14 * big[i]) * (0.93 + 0.12 * fine[i]) * pore * (0.97 + 0.04 * stroke);
+      rgb[i * 3] = 214 * k; rgb[i * 3 + 1] = 176 * k; rgb[i * 3 + 2] = 132 * k;
+      h[i] = big[i] * 0.4 + fine[i] * 0.4 + stroke * 0.12 - (pore < 1 ? 0.4 : 0);
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 110), repeat: 1 };
+  }
+
+  // ماء صافٍ بشبكة انكسار الضوء (كاوستكس) — خلايا فورونوي قابلة للتكرار
+  function water(n, seed) {
+    const rng = AA.rng(seed), G = 6, pts = [];
+    for (let i = 0; i < G * G; i++) pts.push([rng(), rng()]);
+    const rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const u = x / n * G, v = y / n * G, cx = Math.floor(u), cy = Math.floor(v);
+      let f1 = 9, f2 = 9;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const gx = cx + dx, gy = cy + dy, p = pts[(((gy % G) + G) % G) * G + (((gx % G) + G) % G)];
+        const d = Math.hypot(gx + p[0] - u, gy + p[1] - v);
+        if (d < f1) { f2 = f1; f1 = d; } else if (d < f2) f2 = d;
+      }
+      const line = Math.exp(-Math.pow((f2 - f1) / 0.07, 2)), i = y * n + x;
+      rgb[i * 3] = 58 + 110 * line; rgb[i * 3 + 1] = 112 + 95 * line; rgb[i * 3 + 2] = 108 + 80 * line;
+      h[i] = f1 * 0.6;
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 300), repeat: 1 };
+  }
+
+  const GEN = { mud_wall: mudWall, mud_wall_worn: (n, s) => mudWall(n, s, { exposure: 1.5 }), mud_top: mudTop, gypsum, wood, najdi_door: najdiDoor, sandstone, water };
   const SIZES = { high: 1024, med: 512, low: 256 };
   const cache = {};
   // AA.texture('mud_wall', 'med') — تُبنى مرة واحدة وتُشارك

@@ -59,6 +59,12 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
     return (texCache[key] = { map: mk(t.albedo, true), normal: mk(t.normal, false) });
   };
 
+  // خامات متحركة (جريان الماء)
+  const flowing = [];
+  three.tick = function (t) {
+    for (const f of flowing) for (const m of f.maps) m.offset.set(f.v[0] * t, f.v[1] * t);
+  };
+
   three.build = function (out, quality) {
     const parts = [];
     for (const name in out.parts) {
@@ -80,7 +86,12 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       const m = d.material || {};
       const opts = { vertexColors: true, roughness: m.roughness == null ? 0.8 : m.roughness, side: m.doubleSided ? T.DoubleSide : T.FrontSide };
       if (m.color) opts.color = new T.Color(m.color[0], m.color[1], m.color[2]);
-      if (m.texture) { const tx = three.texture(m.texture, quality || 'med'); opts.map = tx.map; opts.normalMap = tx.normal; }
+      if (m.texture) {
+        const tx = three.texture(m.texture, quality || 'med');
+        opts.map = tx.map; opts.normalMap = tx.normal;
+        if (m.flow) { opts.map = tx.map.clone(); opts.normalMap = tx.normal.clone(); opts.map.needsUpdate = opts.normalMap.needsUpdate = true; flowing.push({ maps: [opts.map, opts.normalMap], v: m.flow }); }
+      }
+      if (m.opacity != null) { opts.transparent = true; opts.opacity = m.opacity; opts.depthWrite = false; opts.metalness = 0.1; }
       const mat = three.addWind(new T.MeshStandardMaterial(opts));
       parts.push({ name, geo, mat, kind: m.kind });
     }
@@ -91,7 +102,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
     const grp = new T.Group();
     for (const p of built.parts) {
       const mesh = new T.Mesh(p.geo, p.mat);
-      mesh.castShadow = true; mesh.receiveShadow = p.kind !== 'fruit' && p.kind !== 'flower';
+      mesh.castShadow = p.kind !== 'water'; mesh.receiveShadow = p.kind !== 'fruit' && p.kind !== 'flower';
       mesh.customDepthMaterial = three.depthMaterial();
       grp.add(mesh);
     }
@@ -99,6 +110,9 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
   };
 
   three.dispose = function (built) {
-    for (const p of built.parts) { p.geo.dispose(); p.mat.dispose(); }
+    for (const p of built.parts) {
+      p.geo.dispose(); p.mat.dispose();
+      for (let i = flowing.length - 1; i >= 0; i--) if (flowing[i].maps[0] === p.mat.map) flowing.splice(i, 1);
+    }
   };
 })(typeof window !== 'undefined' ? window : globalThis);
