@@ -115,6 +115,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       geo.setIndex(new T.BufferAttribute(d.indices, 1));
       const m0 = d.material || {};
       if (m0.spin) geo.translate(-m0.spin.pivot[0], -m0.spin.pivot[1], -m0.spin.pivot[2]); // العجلات تدور حول محورها
+      else if (m0.hinge) geo.translate(-m0.hinge.pivot[0], -m0.hinge.pivot[1], -m0.hinge.pivot[2]); // الأبواب تدور حول مفصّلها
       geo.computeBoundingSphere();
       geo.boundingSphere.radius += 1.2; // هامش لحركة الريح حتى لا يختفي الشكل عند حافة الشاشة
       const m = d.material || {};
@@ -131,7 +132,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       if (m.emissive) { opts.emissive = new T.Color(m.emissive[0], m.emissive[1], m.emissive[2]); opts.emissiveIntensity = three.glowLevel * (m.glow || 1); }
       const mat = three.addWind(new T.MeshStandardMaterial(opts));
       if (m.emissive) glowing.push({ mat, k: m.glow || 1 });
-      parts.push({ name, geo, mat, kind: m.kind, spin: m.spin || null });
+      parts.push({ name, geo, mat, kind: m.kind, spin: m.spin || null, hinge: m.hinge || null });
     }
     return { parts, triangles: out.triangles, meta: out.meta, skeleton: out.skeleton || null, clips: out.skeleton ? toClips(out) : null, clipNames: out.clips ? Object.keys(out.clips) : [] };
   };
@@ -162,16 +163,30 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       if (grp.userData.anim.current) grp.userData.anim.current.time = Math.random() * 3;
       return grp;
     }
-    grp.userData.spin = [];
+    grp.userData.spin = []; grp.userData.steer = []; grp.userData.hinges = {};
     for (const p of built.parts) {
       const mesh = new T.Mesh(p.geo, p.mat);
       mesh.castShadow = !NOSHADOW[p.kind]; mesh.receiveShadow = p.kind !== 'fruit' && p.kind !== 'flower' && p.kind !== 'flame';
       mesh.customDepthMaterial = three.depthMaterial();
+      if (p.spin && p.spin.steer) { // عجلة أمامية: محور توجيه عمودي، وداخله دوران العجلة
+        const k = new T.Object3D(); k.position.set(p.spin.pivot[0], p.spin.pivot[1], p.spin.pivot[2]); k.add(mesh); grp.add(k);
+        grp.userData.steer.push(k); grp.userData.spin.push({ mesh, r: p.spin.radius }); continue;
+      }
       if (p.spin) { mesh.position.set(p.spin.pivot[0], p.spin.pivot[1], p.spin.pivot[2]); grp.userData.spin.push({ mesh, r: p.spin.radius }); }
+      if (p.hinge) {
+        let h = grp.userData.hinges[p.hinge.id];
+        if (!h) { h = new T.Object3D(); h.position.set(p.hinge.pivot[0], p.hinge.pivot[1], p.hinge.pivot[2]); h.userData.hinge = p.hinge; grp.userData.hinges[p.hinge.id] = h; grp.add(h); }
+        h.add(mesh); continue;
+      }
       grp.add(mesh);
     }
+    const pose = built.meta && built.meta.pose;
+    if (pose) { three.steer(grp, pose.steer || 0); three.doors(grp, pose.doors || 0); }
     return grp;
   };
+  // لفّ الكفرات الأمامية (بالدرجات، + لليسار) وفتح الأبواب (0..1)
+  three.steer = function (grp, deg) { for (const k of grp.userData.steer || []) k.rotation.y = deg * Math.PI / 180; };
+  three.doors = function (grp, f) { for (const h of Object.values(grp.userData.hinges || {})) h.rotation.y = h.userData.hinge.sign * h.userData.hinge.max * f; };
 
   three.release = function (grp) { if (!grp) return; grp.traverse(o => { if (o.userData && o.userData.anim) mixers.delete(o.userData.anim.mixer); }); };
   // تدوير العجلات بعد قطع مسافة d

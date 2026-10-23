@@ -12,22 +12,32 @@
   const PAINT = { white: '#eeeeea', beige: '#d6c6a2', red: '#9a2620', blue: '#2a4876', black: '#1a1a1c', champagne: '#c4ae84', green: '#55603e', silver: '#b4b6b6' };
   function kit() {
     const k = {};
-    for (const n of ['paint', 'trim', 'chrome', 'glass', 'lamp', 'tail', 'amber', 'tireF', 'tireR', 'rimF', 'rimR', 'interior', 'under', 'burlap', 'rope', 'goods', 'wood', 'hay']) k[n] = new AA.Builder();
+    for (const n of ['paint', 'trim', 'chrome', 'glass', 'lamp', 'tail', 'amber', 'tireFL', 'tireFR', 'tireR', 'rimFL', 'rimFR', 'rimR', 'interior', 'under', 'burlap', 'rope', 'goods', 'wood', 'hay']) k[n] = new AA.Builder();
+    for (let d = 0; d < 2; d++) for (const sd of ['L', 'R']) { k['door' + d + sd] = new AA.Builder(); k['dglass' + d + sd] = new AA.Builder(); }
     return k;
   }
-  function done(id, P, meta, axF, axR, R) {
-    const spinF = { pivot: [0, R, axF], axis: 'x', radius: R }, spinR = { pivot: [0, R, axR], axis: 'x', radius: R };
-    return AA.finalize(id, {
-      paint:    { builder: P.paint,    material: { kind: 'paint', roughness: 0.36, metalness: 0.12 } },
+  function done(id, P, meta, axF, axR, R, ex) {
+    const spinR = { pivot: [0, R, axR], axis: 'x', radius: R }, spinFx = sx => ({ pivot: [sx * ex.wx, R, axF], axis: 'x', radius: R, steer: true });
+    const parts = {};
+    // الأبواب: كل باب جزء مستقل بمفصّل عمودي عند حافته الأمامية (يُفتح للخارج)
+    (ex.doors || []).forEach((d, k) => { for (const [sd, sx] of [['L', 1], ['R', -1]]) {
+      const hinge = { id: 'door' + k + sd, pivot: [sx * ex.W, 0, d[1]], axis: 'y', sign: -sx, max: 1.15 };
+      parts['door' + k + sd] = { builder: P['door' + k + sd], material: { kind: 'paint', roughness: 0.36, metalness: 0.12, doubleSided: true, hinge } };
+      parts['dglass' + k + sd] = { builder: P['dglass' + k + sd], material: { kind: 'glass', roughness: 0.05, opacity: 0.42, doubleSided: true, color: [0.1, 0.13, 0.15], hinge } };
+    } });
+    return AA.finalize(id, Object.assign({
+      paint:    { builder: P.paint,    material: { kind: 'paint', roughness: 0.36, metalness: 0.12, doubleSided: true } },
       trim:     { builder: P.trim,     material: { kind: 'plastic', roughness: 0.6, color: [0.07, 0.07, 0.07] } },
       chrome:   { builder: P.chrome,   material: { kind: 'metal', roughness: 0.25, metalness: 0.6, color: [0.78, 0.78, 0.78] } },
-      glass:    { builder: P.glass,    material: { kind: 'glass', roughness: 0.05, opacity: 0.55, doubleSided: true, color: [0.1, 0.13, 0.15] } },
+      glass:    { builder: P.glass,    material: { kind: 'glass', roughness: 0.05, opacity: 0.42, doubleSided: true, color: [0.1, 0.13, 0.15] } },
       lamp:     { builder: P.lamp,     material: { kind: 'lamp', roughness: 0.2, emissive: [1, 0.95, 0.82], glow: 1.1 } },
       tail:     { builder: P.tail,     material: { kind: 'lamp', roughness: 0.3, color: [0.7, 0.08, 0.06], emissive: [0.9, 0.05, 0.03], glow: 0.5 } },
       amber:    { builder: P.amber,    material: { kind: 'lamp', roughness: 0.3, color: [0.95, 0.55, 0.1], emissive: [1, 0.5, 0.05], glow: 0.3 } },
-      tireF:    { builder: P.tireF,    material: { kind: 'rubber', roughness: 0.92, color: [0.075, 0.072, 0.07], spin: spinF } },
+      tireFL:   { builder: P.tireFL,   material: { kind: 'rubber', roughness: 0.92, color: [0.075, 0.072, 0.07], spin: spinFx(1) } },
+      tireFR:   { builder: P.tireFR,   material: { kind: 'rubber', roughness: 0.92, color: [0.075, 0.072, 0.07], spin: spinFx(-1) } },
       tireR:    { builder: P.tireR,    material: { kind: 'rubber', roughness: 0.92, color: [0.075, 0.072, 0.07], spin: spinR } },
-      rimF:     { builder: P.rimF,     material: { kind: 'metal', roughness: 0.35, metalness: 0.35, spin: spinF } },
+      rimFL:    { builder: P.rimFL,    material: { kind: 'metal', roughness: 0.35, metalness: 0.35, spin: spinFx(1) } },
+      rimFR:    { builder: P.rimFR,    material: { kind: 'metal', roughness: 0.35, metalness: 0.35, spin: spinFx(-1) } },
       rimR:     { builder: P.rimR,     material: { kind: 'metal', roughness: 0.35, metalness: 0.35, spin: spinR } },
       interior: { builder: P.interior, material: { kind: 'cloth', roughness: 0.95, color: [0.2, 0.18, 0.16] } },
       under:    { builder: P.under,    material: { kind: 'dark', roughness: 0.9, color: [0.05, 0.05, 0.05] } },
@@ -36,7 +46,7 @@
       goods:    { builder: P.goods,    material: { kind: 'fruit', roughness: 0.6 } },
       wood:     { builder: P.wood,     material: { kind: 'wood', texture: 'wood', roughness: 0.82 } },
       hay:      { builder: P.hay,      material: { kind: 'hay', texture: 'weave', roughness: 1 } }
-    }, Object.assign({ stiffness: 0 }, meta));
+    }, parts), Object.assign({ stiffness: 0, pose: { steer: ex.steer || 0, doors: ex.open || 0 } }, meta));
   }
 
   // ---------- هندسة مساعدة ----------
@@ -96,14 +106,31 @@
         AA.quad(B, ps, [[0, 0], [1, 0], [1, 1], [0, 1]], ps.map(col), want);
       }
     }
-    for (const t of earclip(inset)) for (const [k, sx] of [[0, 1], [3, -1]]) { const ps = t.map(i => L[k][i]); tri3(B, ps, ps.map(col), [sx, 0, 0]); }
-    return { P, inset, layers: L };
+    if (!o.noCap) for (const t of earclip(inset)) for (const [k, sx] of [[0, 1], [3, -1]]) { const ps = t.map(i => L[k][i]); tri3(B, ps, ps.map(col), [sx, 0, 0]); }
+    return { P, inset, layers: L, en };
   }
   // قصّ مضلع بين خطّين z0 ≤ z ≤ z1 (لتقسيم الزجاج الجانبي إلى نوافذ)
   function clipZ(poly, z0, z1) {
     const clip = (pts, keep, inter) => { const out = []; for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length], ka = keep(a), kb = keep(b); if (ka) out.push(a); if (ka !== kb) out.push(inter(a, b)); } return out; };
     const at = z => (a, b) => { const t = (z - a[0]) / (b[0] - a[0]); return [z, a[1] + (b[1] - a[1]) * t]; };
     return clip(clip(poly, p => p[0] >= z0, at(z0)), p => p[0] <= z1, at(z1));
+  }
+  function clipAxis(poly, ax, lo, hi) {
+    const clip = (pts, keep, inter) => { const out = []; for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length], ka = keep(a), kb = keep(b); if (ka) out.push(a); if (ka !== kb) out.push(inter(a, b)); } return out; };
+    const at = v => (a, b) => { const t = (v - a[ax]) / (b[ax] - a[ax]), r = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; r[ax] = v; return r; };
+    let out = poly; if (lo > -1e8) out = clip(out, p => p[ax] >= lo, at(lo)); if (hi < 1e8) out = clip(out, p => p[ax] <= hi, at(hi)); return clean(out);
+  }
+  function clean(poly) { // يحذف النقاط المكررة والواقعة على خط واحد حتى ينجح التثليث
+    let P = poly.slice(), changed = true;
+    while (changed && P.length > 3) { changed = false; for (let i = 0; i < P.length; i++) { const a = P[(i + P.length - 1) % P.length], b = P[i], c = P[(i + 1) % P.length]; if (Math.hypot(b[0] - a[0], b[1] - a[1]) < 1e-6 || Math.abs(cr(a, b, c)) < 1e-9) { P.splice(i, 1); changed = true; break; } } }
+    return P.length >= 3 ? P : [];
+  }
+  // لوح باب بسماكة: وجه خارجي على x = sx·w، ووجه داخلي، وحواف
+  function slab(B, poly, sx, w, t, colOut, colIn) {
+    if (poly.length < 3) return;
+    const P = area2(poly) < 0 ? poly.slice().reverse() : poly, n = P.length, o = pt => [sx * w, pt[1], pt[0]], ii = pt => [sx * (w - t), pt[1], pt[0]];
+    for (const tr of earclip(P)) { tri3(B, tr.map(i => o(P[i])), tr.map(() => colOut), [sx, 0, 0]); tri3(B, tr.map(i => ii(P[i])), tr.map(() => colIn), [-sx, 0, 0]); }
+    for (let i = 0; i < n; i++) { const a = P[i], b = P[(i + 1) % n], du = b[0] - a[0], dv = b[1] - a[1], ps = [o(a), o(b), ii(b), ii(a)]; AA.quad(B, ps, [[0, 0], [1, 0], [1, 1], [0, 1]], [colIn], [0, -du, dv]); }
   }
   function offsetPoly(poly, d) { // إزاحة للداخل (المضلع عكس عقارب الساعة)
     const P = area2(poly) < 0 ? poly.slice().reverse() : poly, n = P.length, en = [];
@@ -161,22 +188,60 @@
     prof.push([-s.L / 2, s.belt - 0.1], [-s.L / 2 + 0.02, s.bottom + 0.05], [-s.L / 2 + 0.12, s.bottom]);
     // القاع من الخلف للأمام: فتحة العجلة الخلفية ثم الأمامية (عكس اتجاه الزاوية لأن المسار يمشي نحو +Z)
     for (const zc of [s.axR, s.axF]) for (const pt of arch(zc)) prof.push([pt[0], pt[1]]);
-    const bedSkip = s.bed ? (i, a, b) => Math.abs(a[1] - s.belt) < 0.05 && Math.abs(b[1] - s.belt) < 0.05 && Math.max(a[0], b[0]) < s.cabRear && Math.abs(a[0] - b[0]) > 1 : null;
-    const body = extrudeX(P.paint, prof, { w: wBody, r: 0.05, color: pc, skip: bedSkip });
-    // الكابينة / الجزء الزجاجي: تميل جوانبه للداخل
+    // سطح الخط العلوي (فوق الكابينة والصندوق) لا يُرسم: البدن مجوّف من الداخل
+    const topSkip = (i, a, b) => Math.abs(a[1] - s.belt) < 0.05 && Math.abs(b[1] - s.belt) < 0.05 && Math.abs(a[0] - b[0]) > 1 && Math.max(a[0], b[0]) <= s.cowlZ + 0.01;
+    const body = extrudeX(P.paint, prof, { w: wBody, r: 0.05, color: pc, skip: topSkip, noCap: true });
+    // الجانبان: قطع بين الأبواب + عتبة تحت كل باب، والأبواب أجزاء مستقلة تُفتح على مفصّلها الأمامي
+    const yDb = s.bottom + 0.1, gap = 0.006, doors = s.doors || [];
+    const cuts = [-9]; for (const d of doors) cuts.push(d[0] - gap, d[1] + gap); cuts.push(9);
+    const capPoly = (poly, sx) => { for (const t of earclip(poly)) { const ps = t.map(i => [sx * W, poly[i][1], poly[i][0]]); tri3(P.paint, ps, ps.map(pc), [sx, 0, 0]); } };
+    const insetCCW = body.inset;
+    for (const sx of [1, -1]) {
+      for (let k = 0; k < cuts.length; k += 2) capPoly(clipAxis(insetCCW, 0, cuts[k], cuts[k + 1]), sx);
+      for (const d of doors) capPoly(clipAxis(clipAxis(insetCCW, 0, d[0] - gap, d[1] + gap), 1, -1e9, yDb), sx);
+    }
+    // الكابينة / الجزء الزجاجي: تميل جوانبه للداخل، والنوافذ فتحات حقيقية
     const gW = (z, y) => W - 0.05 - 0.09 * clamp((y - s.belt) / (s.roofY - s.belt), 0, 1);
     const gh = [[s.cowlZ - 0.02, s.belt], [s.glassF, s.roofY - 0.02], [s.glassF - 0.12, s.roofY], [s.roofR + 0.1, s.roofY], [s.roofR, s.roofY - 0.05], [s.cabRear, s.belt]];
-    extrudeX(P.paint, gh, { w: gW, r: 0.045, color: pc });
-    // الزجاج الجانبي: نوافذ مفصولة بأعمدة
-    const inner = offsetPoly(gh, 0.075).filter(pt => pt[1] > s.belt + 0.03 || true).map(pt => [pt[0], Math.max(pt[1], s.belt + 0.06)]);
-    for (const [z0, z1] of s.windows) sidePoly(P.glass, clipZ(inner, z0, z1), gW, 0.004, [1, 1, 1]);
-    // الزجاج الأمامي والخلفي
-    { const a = gh[0], b = gh[1], sq = slopeQuad(P.glass, a, b, 0.07, 0.93, gW, 0.1, 0.006, [1, 1, 1]); sq.draw(V.norm([0, 0.5, 1])); }
-    { const a = gh[4], b = gh[5], sq = slopeQuad(P.glass, a, b, 0.1, 0.85, gW, 0.12, 0.006, [1, 1, 1]); sq.draw([0, 0.2, -1]); }
-    // خطوط الأبواب ومقابضها
+    const isWS = (a, b) => Math.abs(Math.min(a[1], b[1]) - s.belt) < 0.01 && Math.abs(Math.max(a[1], b[1]) - s.roofY) < 0.1 && Math.abs(a[0] - b[0]) > 0.04;
+    const cab = extrudeX(P.paint, gh, { w: gW, r: 0.045, color: pc, noCap: true, skip: (i, a, b) => isWS(a, b) || topSkip(i, a, b) });
+    const outer = cab.inset, inner = offsetPoly(outer, 0.075).map(pt => [pt[0], Math.max(pt[1], s.belt + 0.06)]);
+    const gside = (B, poly, sx, off, colFn) => { if (poly.length < 3) return; const Q = area2(poly) < 0 ? poly.slice().reverse() : poly; for (const t of earclip(Q)) { const ps = t.map(i => [sx * (gW(Q[i][0], Q[i][1]) + off), Q[i][1], Q[i][0]]); tri3(B, ps, ps.map(colFn), [sx, 0, 0]); } };
+    for (const sx of [1, -1]) {
+      for (let i = 0; i < outer.length; i++) { // إطار حول الفتحات
+        const j = (i + 1) % outer.length, q4 = [outer[i], outer[j], inner[j], inner[i]];
+        gside(P.paint, clean(q4), sx, 0, pc);
+      }
+      const wz = [-9]; for (const [z0, z1] of s.windows) wz.push(z0, z1); wz.push(9);
+      for (let k = 0; k < wz.length; k += 2) gside(P.paint, clipAxis(inner, 0, wz[k], wz[k + 1]), sx, 0, pc); // الأعمدة
+    }
+    // زجاج النوافذ: نافذة الباب تتبع الباب
+    const winOf = s.windows.map(([z0, z1]) => doors.findIndex(d => z0 < d[1] && z1 > d[0]));
+    s.windows.forEach(([z0, z1], k) => { for (const sx of [1, -1]) { const d = winOf[k], B = d >= 0 ? P['dglass' + d + (sx > 0 ? 'L' : 'R')] : P.glass; gside(B, clipAxis(inner, 0, z0, z1), sx, 0.002, () => [1, 1, 1]); } });
+    // الزجاج الأمامي والخلفي في فتحتين بإطار
+    const winFrame = (a, b, t0, t1, inX, want) => {
+      const mk = (t, x) => { const pz = lerp(a[0], b[0], t), py = lerp(a[1], b[1], t); return [x * (gW(pz, py) - 0.045), py, pz]; };
+      const mkI = (t, x) => { const pz = lerp(a[0], b[0], t), py = lerp(a[1], b[1], t); return [x * (gW(pz, py) - inX), py, pz]; };
+      const Q = (ps) => AA.quad(P.paint, ps, [[0, 0], [1, 0], [1, 1], [0, 1]], ps.map(pc), want);
+      Q([mk(0, 1), mk(0, -1), mk(t0, -1), mk(t0, 1)]); Q([mk(t1, 1), mk(t1, -1), mk(1, -1), mk(1, 1)]);
+      for (const x of [1, -1]) Q([mk(t0, x), mkI(t0, x), mkI(t1, x), mk(t1, x)]);
+      slopeQuad(P.glass, a, b, t0, t1, gW, inX, 0.0, [1, 1, 1]).draw(want);
+    };
+    winFrame(gh[0], gh[1], 0.06, 0.94, 0.1, V.norm([0, 0.5, 1]));
+    winFrame(gh[4], gh[5], 0.08, 0.88, 0.12, [0, 0.2, -1]);
+    // الأبواب: لوح سفلي بسماكة + مقبض، تُركّب على مفصّل
+    const paintC = hex(PAINT[p.color] || PAINT.white), inC = mixc(paintC, [0.25, 0.22, 0.2], 0.55);
+    doors.forEach((d, k) => { for (const sx of [1, -1]) {
+      const B = P['door' + k + (sx > 0 ? 'L' : 'R')], poly = clipAxis(clipAxis(insetCCW, 0, d[0] + gap, d[1] - gap), 1, yDb, 1e9);
+      const st = B.vertexCount; slab(B, poly, sx, W, 0.07, paintC, inC);
+      for (let i = st; i < B.vertexCount; i++) { const c = pc([0, B.pos[i * 3 + 1], 0]), out = Math.abs(B.pos[i * 3]) > W - 0.01; if (out) { B.col[i * 3] = c[0]; B.col[i * 3 + 1] = c[1]; B.col[i * 3 + 2] = c[2]; } }
+      AA.box(B, [sx * (W + 0.012), s.belt - 0.13, d[0] + 0.14], [0.025, 0.035, 0.16], [0.08, 0.08, 0.08], 1, {});
+    } });
+    // أرضية الكابينة، الجدار الأمامي، والجدار الخلفي للكابينة (الوانيت)
+    AA.quad(P.interior, [[-W + 0.06, s.floorY, s.cabRear + 0.03], [W - 0.06, s.floorY, s.cabRear + 0.03], [W - 0.06, s.floorY, s.cowlZ - 0.1], [-W + 0.06, s.floorY, s.cowlZ - 0.1]], [[0, 0], [1, 0], [1, 1], [0, 1]], [[0.55, 0.5, 0.45]], [0, 1, 0]);
+    AA.quad(P.interior, [[-W + 0.06, s.floorY, s.cowlZ - 0.1], [W - 0.06, s.floorY, s.cowlZ - 0.1], [W - 0.06, s.belt, s.cowlZ - 0.1], [-W + 0.06, s.belt, s.cowlZ - 0.1]], [[0, 0], [1, 0], [1, 1], [0, 1]], [[0.6, 0.55, 0.5]], [0, 0, -1]);
+    if (s.bed) AA.quad(P.interior, [[-W + 0.06, s.floorY, s.cabRear + 0.03], [W - 0.06, s.floorY, s.cabRear + 0.03], [W - 0.06, s.belt, s.cabRear + 0.03], [-W + 0.06, s.belt, s.cabRear + 0.03]], [[0, 0], [1, 0], [1, 1], [0, 1]], [[0.6, 0.55, 0.5]], [0, 0, 1]);
     const archTop = z => { let y = s.bottom + 0.1; for (const zc of [s.axF, s.axR]) if (Math.abs(z - zc) < Ra) y = Math.max(y, s.R + Math.sqrt(Ra * Ra - (z - zc) * (z - zc)) + 0.06); return y; };
-    for (const z of s.seams) { const y0 = archTop(z); sidePoly(P.trim, [[z - 0.006, y0], [z + 0.006, y0], [z + 0.006, s.belt - 0.04], [z - 0.006, s.belt - 0.04]], wBody, 0.003, [1, 1, 1]); }
-    for (const z of s.handles) AA.box(P.trim, [W + 0.012, s.belt - 0.13, z], [0.025, 0.035, 0.16], [1, 1, 1], 1, {}), AA.box(P.trim, [-W - 0.012, s.belt - 0.13, z], [0.025, 0.035, 0.16], [1, 1, 1], 1, {});
     if (p.stripe) for (const [y0, y1] of [[s.belt - 0.24, s.belt - 0.2], [s.belt - 0.18, s.belt - 0.165]]) sidePoly(P.trim, clipZ([[-s.L / 2 + 0.15, y0], [s.L / 2 - 0.2, y0], [s.L / 2 - 0.2, y1], [-s.L / 2 + 0.15, y1]], -9, 9), wBody, 0.004, [1, 1, 1]);
     // شريط بلاستيك سفلي وحواف فتحات العجلات
     for (const zc of [s.axF, s.axR]) for (const sx of [1, -1]) {
@@ -221,11 +286,11 @@
   function jeep(p, q) {
     const P = kit(), rng = AA.rng(p.seed), R = 0.39 * p.tire, L = 4.85, W = 0.9;
     const s = { L, W, R, axF: 1.3, axR: -1.43, bottom: 0.44 + (R - 0.39), bumperY: 0.55 + (R - 0.39) * 0.8, hoodY: 1.13, belt: 1.1, cowlZ: 1.15, glassF: 0.72, roofY: 1.92, roofR: -2.32, cabRear: -2.42,
-      floorY: 0.55, seatF: 0.2, seatR: -0.85, windows: [[0.02, 0.95], [-1.05, -0.08], [-2.28, -1.15]], seams: [1.0, -0.03, -1.1], handles: [0.05, -1.0], roundLamps: true };
+      floorY: 0.55, seatF: 0.2, seatR: -0.85, windows: [[0.02, 0.95], [-1.05, -0.08], [-2.28, -1.15]], doors: [[-0.04, 0.98], [-1.08, -0.06]], roundLamps: true };
     s.hoodY += (R - 0.39); s.belt += (R - 0.39); s.roofY += (R - 0.39) * 0.9; s.floorY += R - 0.39;
     bodyInto(P, s, p, q, rng);
     const rimCol = p.rims === 'black' ? [0.18, 0.18, 0.18] : p.rims === 'steel' ? [0.92, 0.92, 0.9] : [0.72, 0.73, 0.74];
-    for (const sx of [1, -1]) { wheelInto(P.tireF, P.rimF, [sx * 0.79, R, s.axF], R, 0.27, sx, q, rimCol); wheelInto(P.tireR, P.rimR, [sx * 0.79, R, s.axR], R, 0.27, sx, q, rimCol); }
+    for (const sx of [1, -1]) { wheelInto(P[sx > 0 ? 'tireFL' : 'tireFR'], P[sx > 0 ? 'rimFL' : 'rimFR'], [sx * 0.79, R, s.axF], R, 0.27, sx, q, rimCol); wheelInto(P.tireR, P.rimR, [sx * 0.79, R, s.axR], R, 0.27, sx, q, rimCol); }
     // إطار احتياطي على الباب الخلفي
     if (p.spare) { const a = P.trim.vertexCount; wheelInto(P.trim, P.chrome, [0.25, s.belt - 0.12, -L / 2 - 0.16], R * 0.98, 0.25, 1, q, rimCol, 'z'); }
     // شنكل (سنوركل) على الجهة اليمنى
@@ -244,14 +309,14 @@
     return done('jeep', P, { height: s.roofY + (p.rack ? 0.5 : 0.05), radius: L / 2 + 0.3, collider: { type: 'box', size: [W * 2 + 0.2, s.roofY, L] },
       physics: { mass: 2200, centerOfMass: [0, 0.75, -0.05], wheelbase: s.axF - s.axR, track: 1.58, wheelRadius: R, suspension: { travel: 0.24, stiffness: 42000, damping: 3800 }, maxSteer: 34, drive: '4x4' },
       wheels: [[0.79, R, s.axF], [-0.79, R, s.axF], [0.79, R, s.axR], [-0.79, R, s.axR]], seats: [{ at: [0.4, s.floorY + 0.28, s.seatF], driver: true }, { at: [-0.4, s.floorY + 0.28, s.seatF] }, { at: [0.4, s.floorY + 0.28, s.seatR] }, { at: [-0.4, s.floorY + 0.28, s.seatR] }],
-      light: lights, walkSpeed: 3.2 }, s.axF, s.axR, R);
+      light: lights, walkSpeed: 3.2 }, s.axF, s.axR, R, { wx: 0.79, W, doors: s.doors, steer: p.steer, open: p.doors });
   }
 
   // ---------- وانيت ----------
   function pickup(p, q) {
     const P = kit(), rng = AA.rng(p.seed), R = 0.37 * p.tire, L = 5.1, W = 0.88;
     const s = { L, W, R, axF: 1.55, axR: -1.5, bottom: 0.42 + (R - 0.37), bumperY: 0.52 + (R - 0.37) * 0.8, hoodY: 1.06, belt: 1.04, cowlZ: 1.3, glassF: 0.85, roofY: 1.78, roofR: -0.5, cabRear: -0.62,
-      floorY: 0.5, seatF: 0.0, seatR: null, windows: [[-0.5, 1.1]], seams: [1.15, -0.55], handles: [-0.4], roundLamps: false, bed: true };
+      floorY: 0.5, seatF: 0.0, seatR: null, windows: [[-0.47, 1.1]], doors: [[-0.52, 1.12]], roundLamps: false, bed: true };
     s.hoodY += (R - 0.37); s.belt += (R - 0.37); s.roofY += (R - 0.37) * 0.9; s.floorY += R - 0.37;
     bodyInto(P, s, p, q, rng);
     // الصندوق: أرضية وجدران داخلية وحافة علوية وأقواس العجلات من الداخل
@@ -278,11 +343,11 @@
     else if (ld === 'sheep') { riders = []; for (let k = 0; k < 3; k++) riders.push({ asset: 'sheep', params: { seed: p.seed + k, breed: k === 1 ? 'naimi' : 'najdi' }, at: [(k - 1) * 0.42, fy - 0.01, lerp(zb0, zb1, 0.35 + 0.15 * (k % 2))], rot: Math.PI / 2 + (k - 1) * 0.4 }); }
     else if (ld === 'water') { for (let k = 0; k < 2; k++) AA.loft(P.paint, { path: [[(k ? 0.32 : -0.32), fy + 0.02, lerp(zb0, zb1, 0.5)], [(k ? 0.32 : -0.32), fy + 0.6, lerp(zb0, zb1, 0.5)]], sides: LOW(q) ? 10 : 20, up: () => [0, 0, 1], capEnd: true, uvU: 1, radius: () => 0.36, color: () => [0.86, 0.86, 0.82] }); }
     const rimCol = p.rims === 'black' ? [0.18, 0.18, 0.18] : p.rims === 'steel' ? [0.92, 0.92, 0.9] : [0.72, 0.73, 0.74];
-    for (const sx of [1, -1]) { wheelInto(P.tireF, P.rimF, [sx * 0.78, R, s.axF], R, 0.25, sx, q, rimCol); wheelInto(P.tireR, P.rimR, [sx * 0.78, R, s.axR], R, 0.25, sx, q, rimCol); }
+    for (const sx of [1, -1]) { wheelInto(P[sx > 0 ? 'tireFL' : 'tireFR'], P[sx > 0 ? 'rimFL' : 'rimFR'], [sx * 0.78, R, s.axF], R, 0.25, sx, q, rimCol); wheelInto(P.tireR, P.rimR, [sx * 0.78, R, s.axR], R, 0.25, sx, q, rimCol); }
     return done('pickup', P, { height: s.roofY + (p.cage ? 0 : 0.05), radius: L / 2 + 0.3, collider: { type: 'box', size: [W * 2 + 0.2, s.roofY, L] },
       physics: { mass: 1650, centerOfMass: [0, 0.7, 0.2], wheelbase: s.axF - s.axR, track: 1.54, wheelRadius: R, suspension: { travel: 0.22, stiffness: 36000, damping: 3200 }, maxSteer: 36, drive: '4x2' },
       wheels: [[0.78, R, s.axF], [-0.78, R, s.axF], [0.78, R, s.axR], [-0.78, R, s.axR]], seats: [{ at: [0.4, s.floorY + 0.28, s.seatF], driver: true }, { at: [-0.4, s.floorY + 0.28, s.seatF] }],
-      bed: { floorY: fy, z0: zb1, z1: zb0, halfWidth: wi }, riders, light: { at: [0, s.hoodY - 0.17, L / 2 + 0.4], color: [1, 0.95, 0.82], intensity: 2.2, distance: 14 }, walkSpeed: 3.6 }, s.axF, s.axR, R);
+      bed: { floorY: fy, z0: zb1, z1: zb0, halfWidth: wi }, riders, light: { at: [0, s.hoodY - 0.17, L / 2 + 0.4], color: [1, 0.95, 0.82], intensity: 2.2, distance: 14 }, walkSpeed: 3.6 }, s.axF, s.axR, R, { wx: 0.78, W, doors: s.doors, steer: p.steer, open: p.doors });
   }
 
   const A = AA.assets;
@@ -291,7 +356,9 @@
     { key: 'dirt', label: 'غبار', min: 0, max: 1, step: 0.05, def: 0.35, pct: true },
     { key: 'tire', label: 'حجم الكفرات', min: 0.9, max: 1.25, step: 0.01, def: 1, pct: true },
     { key: 'rims', label: 'الجنوط', type: 'enum', options: [['silver', 'فضية'], ['steel', 'حديد أبيض'], ['black', 'سوداء']], def: 'silver' },
-    { key: 'bumper', label: 'الصدام', type: 'enum', options: [['black', 'أسود'], ['chrome', 'كروم']], def: 'black' }
+    { key: 'bumper', label: 'الصدام', type: 'enum', options: [['black', 'أسود'], ['chrome', 'كروم']], def: 'black' },
+    { key: 'steer', label: 'لفّة الكفرات', min: -34, max: 34, step: 1, def: 0, unit: '°' },
+    { key: 'doors', label: 'فتح الأبواب', min: 0, max: 1, step: 0.05, def: 0, pct: true }
   ];
   A.jeep = { id: 'jeep', name: 'جيب صحراوي', nameEn: 'Desert 4x4', category: 'vehicles',
     schema: [colorOpt('beige')].concat(common, [

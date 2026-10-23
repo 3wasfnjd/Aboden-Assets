@@ -60,6 +60,15 @@ window.render = function (assetId, quality, over, cam) {
     const h = out.meta.hitch, ao = AA.assets[h.asset].generate(h.params, quality);
     for (const k in ao.parts) { const d = ao.parts[k], pos = d.positions; for (let i = 0; i < pos.length; i += 3) { pos[i] += h.at[0]; pos[i + 1] += h.at[1]; pos[i + 2] += h.at[2]; } out.parts['hitch_' + k] = d; }
   }
+  { // وضعية المركبات: لفّ الكفرات وفتح الأبواب حول محاورها
+    const pose = out.meta.pose || {};
+    for (const k in out.parts) { const d = out.parts[k], m = d.material || {}; let piv = null, ang = 0;
+      if (m.hinge) { piv = m.hinge.pivot; ang = m.hinge.sign * m.hinge.max * (cam.doors != null ? cam.doors : pose.doors || 0); }
+      else if (m.spin && m.spin.steer) { piv = m.spin.pivot; ang = (cam.steer != null ? cam.steer : pose.steer || 0) * Math.PI / 180; }
+      if (!piv || !ang) continue; const c = Math.cos(ang), sn = Math.sin(ang);
+      for (const arr of [d.positions, d.normals]) for (let i = 0; i < arr.length; i += 3) { const o = arr === d.positions ? piv : [0, 0, 0], x = arr[i] - o[0], z = arr[i + 2] - o[2]; arr[i] = o[0] + x * c + z * sn; arr[i + 2] = o[2] - x * sn + z * c; }
+    }
+  }
   const mats = out.skeleton && cam.clip ? AA.boneMatrices(out.skeleton, out.clips[cam.clip], cam.t || 0) : null;
   for (const k in out.parts) {
     const d = out.parts[k];

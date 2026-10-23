@@ -312,18 +312,18 @@ const SCENES = {
     paint: (x, z) => ({ packed: Math.max(rect(x, z, -31, 31, -2.6, 2.6, 0.6), rect(x, z, -7, 7.5, -6.6, 2.6, 0.6), 0.75 * rect(x, z, -27, 27, -12.2, -10.4, 0.4), 0.85 * rect(x, z, -6.2, 6.2, -12.4, -6.6, 0.3), 0.6 * rect(x, z, -60, -29, -1.8, 1.8, 1.2) * (1 - AA.smooth(-60, -40, -x) * 0)), wet: rect(x, z, -6, 5.5, 5, 19, 1) }) },
   souq: { title: 'السوق', pond: false, flat: 28, overview: [6, 22, 25], target: [1, 0.5, 0], entries: souqEntries(),
     paint: (x, z) => ({ packed: Math.max(rect(x, z, -16, 16, -2.6, 2.6, 0.5), 0.7 * rect(x, z, 15, 27, -8, 7, 1.5), 0.6 * rect(x, z, -40, -16, -1.8, 1.8, 1)), wet: 0 }) },
-  vehicles: { title: 'المركبات', pond: false, flat: 30, overview: [12, 7, 15], target: [0, 1, 0], entries: [
-    { id:'jeep',   inst:[{ x:-14, z:3.2, walk:[-26, 3.2, 26, 3.2], over:{ seed:1 } }, { x:-1.5, z:-2.2, rot:0.5, over:{ seed:2, color:'white', rack:true, tire:1.12, dirt:0.6, rims:'steel' } }, { x:8.5, z:-6.5, rot:-2.4, over:{ seed:3, color:'black', dirt:0.1, stripe:false, snorkel:false, bumper:'chrome' } }] },
-    { id:'pickup', inst:[{ x:4.4, z:-1.2, rot:-0.4, over:{ seed:4, load:'sheep', cage:true, dirt:0.5 } }, { x:-6.8, z:-3.6, rot:1.9, over:{ seed:5, load:'hay', color:'red' } }, { x:3, z:7.6, rot:2.9, over:{ seed:6, load:'water', color:'blue', rims:'steel' } }, { x:14, z:-0.4, walk:[30, -0.4, -30, -0.4], over:{ seed:7, color:'champagne', load:'crates' } }] },
+  vehicles: { title: 'المركبات', pond: false, flat: 34, overview: [16, 11, 24], target: [0, 1, 0], entries: [
+    { id:'jeep',   inst:[{ x:19, z:0, loop:[0, 0, 19, 12], over:{ seed:1 } }, { x:-1.5, z:-2.2, rot:0.5, over:{ seed:2, color:'white', rack:true, tire:1.12, dirt:0.6, rims:'steel', doors:0.85, steer:-18 } }, { x:8.5, z:-6.5, rot:-2.4, over:{ seed:3, color:'black', dirt:0.1, stripe:false, snorkel:false, bumper:'chrome', steer:22 } }] },
+    { id:'pickup', inst:[{ x:4.4, z:-1.2, rot:-0.4, over:{ seed:4, load:'sheep', cage:true, dirt:0.5 } }, { x:-6.8, z:-3.6, rot:1.9, over:{ seed:5, load:'hay', color:'red', doors:0.6 } }, { x:3, z:7.2, rot:2.9, over:{ seed:6, load:'water', color:'blue', rims:'steel' } }, { x:-30, z:17, walk:[-34, 17, 34, 17], over:{ seed:7, color:'champagne', load:'crates' } }] },
     { id:'shaib',  inst:[{ x:2.6, z:-0.3, rot:-1.9, over:{ seed:8, bisht:'brown' } }] },
     { id:'boy',    inst:[{ x:-0.5, z:-0.4, rot:2.6, clip:'wave', over:{ seed:9, headwear:'shemagh', agal:true } }] },
-    { id:'camel',  inst:[{ x:-10, z:-9, rot:0.8, clip:'graze', over:{ seed:10 } }, { x:-12.5, z:-7.6, rot:1.9, over:{ seed:11, coat:'majaheem' } }] },
+    { id:'camel',  inst:[{ x:-7, z:-7.6, rot:0.8, clip:'graze', over:{ seed:10 } }, { x:-9.4, z:-6.2, rot:1.9, over:{ seed:11, coat:'majaheem' } }] },
     { id:'carpet', inst:[{ x:-3.4, z:-6.4, rot:0.3, over:{ seed:12, length:2.6, width:1.8 } }] },
     { id:'fire_pit', inst:[{ x:-3.4, z:-6.4, over:{ seed:13, radius:0.3 } }] },
-    { id:'rocks',  shared:true, inst:[{ x:10, z:4, over:{ seed:14, size:1.1 } }, { x:-17, z:-4, rot:2, scale:1.5 }, { x:18, z:-9, rot:4, scale:0.8 }] },
-    { id:'arfaj',  shared:true, inst:[{ x:6, z:10 }, { x:-9, z:9, scale:1.2 }, { x:-18, z:7, scale:0.8 }, { x:16, z:6, scale:1.1 }, { x:0, z:-12 }] },
-    { id:'talh',   inst:[{ x:-8, z:-12, over:{ seed:15 } }] }
-  ], paint: (x, z) => ({ packed: Math.max(rect(x, z, -60, 60, 2.1, 4.3, 0.8), rect(x, z, -60, 60, -1.5, 0.7, 0.8)) * (0.7 + 0.3 * Math.sin(x * 0.7) * Math.sin(z * 3.1)), wet: 0 }) },
+    { id:'rocks',  shared:true, inst:[{ x:9.5, z:3.5, over:{ seed:14, size:1.1 } }, { x:-24, z:-4, rot:2, scale:1.5 }, { x:23, z:-12, rot:4, scale:0.8 }] },
+    { id:'arfaj',  shared:true, inst:[{ x:6, z:22 }, { x:-9, z:4, scale:1.2 }, { x:-20, z:22, scale:0.8 }, { x:24, z:7, scale:1.1 }, { x:0, z:-17 }] },
+    { id:'talh',   inst:[{ x:-9, z:-17, over:{ seed:15 } }] }
+  ], paint: (x, z) => { const e = Math.hypot(x / 19, z / 12), ring = 1 - AA.smooth(0.03, 0.09, Math.abs(e - 1)); return { packed: Math.max(ring, rect(x, z, -60, 60, 16.2, 17.8, 0.6)) * (0.75 + 0.25 * Math.sin(x * 0.7) * Math.sin(z * 3.1)), wet: 0 }; } },
   beings: { title: 'الكائنات', pond: false, overview: [5, 5, 15], target: [0, 1, 1], entries: [
     { id:'shaib',  inst:[{ x:0, z:1.5, over:{ seed:1 } }, { x:-1.6, z:1.2, rot:0.4, over:{ seed:2, bisht:'brown' } }] },
     { id:'horse',  inst:[{ x:7.8, z:-3.6, rot:-2.2, over:{ seed:41 } }, { x:9.6, z:-2.4, rot:-1.6, clip:'graze', over:{ seed:42, coat:'grey' } }] },
@@ -461,7 +461,7 @@ function placeGroup(i, grp){
   scene.add(grp);
 }
 function startClip(i){
-  if (i.animal) X.play(i.animal.group, i.walk ? 'walk' : 'idle', 0);
+  if (i.animal) X.play(i.animal.group, i.walk || i.loop ? 'walk' : 'idle', 0);
   if (!i.group || !i.group.userData.anim) return;
   X.play(i.group, i.walk ? 'walk' : (i.clip || 'idle'), 0);
 }
@@ -485,6 +485,16 @@ function detachHitch(i){
 // المشاة: يتحركون ذهاباً وإياباً على خط
 function moveWalkers(dt){
   for (const e of ENTRIES) for (const i of e.inst) {
+    if (i.loop && i.group) { // دوران على مسار بيضاوي: الاتجاه مماس للمسار، والكفرات الأمامية تلف حسب الانحناء
+      const [cx, cz, rx, rz] = i.loop, sp = (i.group.userData.speed || 3) * dt;
+      if (i.t == null) i.t = Math.atan2((i.z - cz) / rz, (i.x - cx) / rx);
+      const sn = Math.sin(i.t), cs = Math.cos(i.t), sl = Math.hypot(rx * sn, rz * cs);
+      i.t += sp / sl; i.x = cx + rx * Math.cos(i.t); i.z = cz + rz * Math.sin(i.t);
+      const dx = -rx * Math.sin(i.t), dz = rz * Math.cos(i.t); i.rot = Math.atan2(dx, dz);
+      const k = rx * rz / Math.pow(rx * rx * Math.sin(i.t) ** 2 + rz * rz * Math.cos(i.t) ** 2, 1.5), wb = ((i.built || e.built).meta.physics || {}).wheelbase || 2.6;
+      X.steer(i.group, -Math.atan(wb * k) * 180 / Math.PI); X.roll(i.group, sp);
+      i.group.position.set(i.x, groundH(i.x, i.z) - 0.02, i.z); i.group.rotation.y = i.rot; continue;
+    }
     if (!i.walk || !i.group) continue;
     const [x0, z0, x1, z1] = i.walk, sp = (i.group.userData.speed || 0.8) * dt;
     if (i.group.userData.speed === 0) continue;
