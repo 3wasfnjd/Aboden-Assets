@@ -24,7 +24,7 @@ jobs:
       - name: الاختبارات قبل النشر
         run: node tests/run-tests.js
       - name: تجهيز الملفات
-        run: mkdir -p _site && cp -r index.html core plants architecture _site/
+        run: mkdir -p _site && cp -r index.html core plants architecture animals characters _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

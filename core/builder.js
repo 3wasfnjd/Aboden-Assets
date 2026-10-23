@@ -15,8 +15,17 @@
   const V = AA.v;
 
   class Builder {
-    constructor() { this.pos = []; this.col = []; this.sway = []; this.phase = []; this.flut = []; this.idx = []; this.uv = []; }
+    constructor() { this.pos = []; this.col = []; this.sway = []; this.phase = []; this.flut = []; this.idx = []; this.uv = []; this.sk = []; this.skinFn = null; this.skinned = false; }
+    // ربط النقاط بالعظام: skinFn(p) -> [[عظمة, وزن], ...] (حتى 4)، أو setSkin لقيمة ثابتة
+    setSkin(list) { this.skinFn = list ? () => list : null; }
     v(p, c, sway, phase, flut, uv) {
+      if (this.skinFn) {
+        this.skinned = true;
+        const w = this.skinFn(p).slice().sort((a, b) => b[1] - a[1]).slice(0, 4);
+        let sum = 0; for (const [, x] of w) sum += x;
+        for (let k = 0; k < 4; k++) { this.sk.push(w[k] ? w[k][0] : 0); }
+        for (let k = 0; k < 4; k++) { this.sk.push(w[k] ? w[k][1] / (sum || 1) : (k === 0 && !w.length ? 1 : 0)); }
+      } else this.sk.push(0, 0, 0, 0, 1, 0, 0, 0);
       this.pos.push(p[0], p[1], p[2]); this.col.push(c[0], c[1], c[2]);
       this.uv.push(uv ? uv[0] : 0, uv ? uv[1] : 0);
       this.sway.push(sway || 0); this.phase.push(phase || 0); this.flut.push(flut || 0);
@@ -196,8 +205,14 @@
         uvs: new Float32Array(B.uv),
         material
       };
+      if (meta.skeleton) {
+        const n = B.vertexCount, si = new Uint16Array(n * 4), sw = new Float32Array(n * 4);
+        for (let i = 0; i < n; i++) for (let k = 0; k < 4; k++) { si[i * 4 + k] = B.sk[i * 8 + k]; sw[i * 4 + k] = B.sk[i * 8 + 4 + k]; }
+        out.parts[name].skinIndex = si; out.parts[name].skinWeight = sw;
+      }
       out.triangles += B.triangles; out.vertices += B.vertexCount;
     }
+    if (meta.skeleton) { out.skeleton = meta.skeleton; out.clips = meta.clips || {}; delete meta.skeleton; delete meta.clips; }
     return out;
   };
 })(typeof window !== 'undefined' ? window : globalThis);

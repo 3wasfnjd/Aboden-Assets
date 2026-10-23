@@ -78,12 +78,13 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <div class="wrap">
   <header>
     <div class="brand">عبودين قيمز · مستودع الأصول</div>
-    <div class="titleRow"><h1 id="sceneTitle">الحي النجدي</h1><span class="ver">v0.5</span></div>
+    <div class="titleRow"><h1 id="sceneTitle">الحي النجدي</h1><span class="ver">v0.6</span></div>
     <p>كل أصل هنا مبني بالكود بالكامل، حتى الخامات. اختر أصلاً لتقرّب عليه وتعدّله، والأرقام تبيّن حمله على كرت الشاشة.</p>
   </header>
 
   <div class="tabs" id="tabs" role="group" aria-label="الفئات">
     <button type="button" data-s="hara" aria-pressed="true">الحي النجدي</button>
+    <button type="button" data-s="beings" aria-pressed="false">الكائنات</button>
     <button type="button" data-s="plants" aria-pressed="false">النباتات</button>
     <button type="button" data-s="architecture" aria-pressed="false">قطع العمارة</button>
   </div>
@@ -99,6 +100,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   <section class="panel" id="editor" aria-live="polite">
     <div class="phead"><h2 id="eName">—</h2><span class="tri" id="eTris"></span></div>
     <div class="presets" id="ePresets"></div>
+    <div class="ctl" id="eClipsWrap" hidden><label>الحركة</label><div class="seg" id="eClips"></div></div>
     <div class="grid" id="eGrid"></div>
     <div class="actions">
       <button class="btn" id="reseed" type="button">شكل جديد</button>
@@ -126,12 +128,16 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <script src="core/tree.js"></script>
 <script src="core/texture.js"></script>
 <script src="core/mud.js"></script>
+<script src="core/skeleton.js"></script>
 <script src="plants/palm.js"></script>
 <script src="plants/trees.js"></script>
 <script src="plants/shrubs.js"></script>
 <script src="architecture/najdi.js"></script>
 <script src="architecture/house.js"></script>
 <script src="architecture/water.js"></script>
+<script src="animals/camel.js"></script>
+<script src="animals/sheep.js"></script>
+<script src="characters/shaib.js"></script>
 <script src="core/viewer-three.js"></script>
 <script>
 (function(){
@@ -172,6 +178,9 @@ function haraEntries(){
     { id:'palm',          inst:[{ x:5.2, z:5.8, over:{ seed:64, height:8, bunches:3 } }, { x:-0.4, z:7.5, over:{ seed:65, height:10, lean:0.5 } }, { x:5.5, z:9.2, over:{ seed:66, height:6.5, bunches:4 } }] },
     { id:'fasila',        inst:[{ x:0.2, z:4.6, over:{ seed:67 } }, { x:-3.5, z:6.4, over:{ seed:68, fronds:10, frondLen:1.4 } }] },
     { id:'dakka',         inst:[{ x:-6, z:-3.25, over:{ seed:69, length:2.4 } }] },
+    { id:'shaib',         inst:[{ x:-14, z:0.4, walk:[-22, 0.4, 14, 0.4], over:{ seed:71 } }, { x:-4.9, z:-3.4, rot:0.9, over:{ seed:72, bisht:'brown', stoop:0.5 } }] },
+    { id:'camel',         inst:[{ x:-1.2, z:-8.6, rot:1.3, over:{ seed:73, saddle:true, coat:'wadh' } }, { x:3.4, z:9.5, rot:-2.3, clip:'graze', over:{ seed:74 } }, { x:-2.8, z:10.4, rot:2.8, clip:'graze', over:{ seed:75, coat:'majaheem' } }] },
+    { id:'sheep',         inst:[{ x:1.5, z:12.2, rot:0.4, clip:'graze', over:{ seed:76 } }, { x:2.4, z:12.9, rot:1.4, clip:'graze', over:{ seed:77, breed:'naimi' } }, { x:0.4, z:13.2, rot:-0.7, over:{ seed:78 } }, { x:3.1, z:11.6, rot:2.2, clip:'graze', over:{ seed:79, breed:'goat' } }, { x:-0.6, z:12.4, rot:0.9, clip:'graze', over:{ seed:80, size:0.65 } }] },
     { id:'thumam',        shared:true, inst:[{ x:-27, z:0.5 }, { x:27, z:-0.6 }, { x:-15.5, z:0.3, scale:0.6 }, { x:16.5, z:-0.4, scale:0.7 }, { x:7.2, z:3.4, scale:0.6 }] }
   ];
 }
@@ -185,6 +194,11 @@ const SCENES = {
     { id:'arfaj',  shared:true, inst: scatter(7, 7, 20, taken) },
     { id:'thumam', shared:true, inst: scatter(14, 6, 22, taken) } ] },
   hara: { title: 'الحي النجدي', pond: false, flat: 30, overview: [10, 20, 32], target: [0, 2, 0], entries: haraEntries() },
+  beings: { title: 'الكائنات', pond: false, overview: [6, 4.5, 13], target: [0, 1, 0], entries: [
+    { id:'shaib',  inst:[{ x:0, z:1.5, over:{ seed:1 } }, { x:-1.6, z:1.2, rot:0.4, over:{ seed:2, bisht:'brown' } }] },
+    { id:'camel',  inst:[{ x:4.2, z:-1.5, rot:-0.5, over:{ seed:3, saddle:true, coat:'wadh' } }, { x:-4.5, z:-2.2, rot:0.6, clip:'graze', over:{ seed:4, coat:'majaheem' } }, { x:0.5, z:-4.5, rot:2.6, over:{ seed:5, coat:'humr' } }] },
+    { id:'sheep',  inst:[{ x:2.2, z:2.6, rot:-1.2, clip:'graze', over:{ seed:6 } }, { x:2.9, z:3.4, rot:-2.0, over:{ seed:7, breed:'naimi' } }, { x:1.6, z:3.8, rot:-0.6, clip:'graze', over:{ seed:8, breed:'goat' } }, { x:3.6, z:2.2, rot:-1.6, clip:'graze', over:{ seed:9, breed:'najdi', size:0.65 } }] }
+  ] },
   architecture: { title: 'قطع العمارة', pond: false, overview: [4, 13, 30], target: [0, 2.5, -3], entries: [
     { id:'wall',          inst:[{x:-10.5,z:2,over:{seed:3}}] },
     { id:'wall_corner',   inst:[{x:-5.6,z:2.2,over:{seed:4}}] },
@@ -266,6 +280,22 @@ function placeGroup(i, grp){
   grp.rotation.y = i.rot || 0; grp.scale.setScalar(i.scale || 1);
   scene.add(grp);
 }
+function startClip(i){
+  if (!i.group || !i.group.userData.anim) return;
+  X.play(i.group, i.walk ? 'walk' : (i.clip || 'idle'), 0);
+}
+// المشاة: يتحركون ذهاباً وإياباً على خط
+function moveWalkers(dt){
+  for (const e of ENTRIES) for (const i of e.inst) {
+    if (!i.walk || !i.group) continue;
+    const [x0, z0, x1, z1] = i.walk, sp = (i.group.userData.speed || 0.8) * dt;
+    if (i.dir == null) i.dir = 1;
+    const tx = i.dir > 0 ? x1 : x0, tz = i.dir > 0 ? z1 : z0, dx = tx - i.x, dz = tz - i.z, d = Math.hypot(dx, dz);
+    if (d < 0.05) { i.dir *= -1; continue; }
+    i.x += dx / d * Math.min(sp, d); i.z += dz / d * Math.min(sp, d); i.rot = Math.atan2(dx, dz);
+    i.group.position.set(i.x, groundH(i.x, i.z) - 0.02, i.z); i.group.rotation.y = i.rot;
+  }
+}
 function buildEntry(e){
   clearEntry(e);
   if (e.shared){
@@ -274,18 +304,19 @@ function buildEntry(e){
   } else {
     e.built = e.inst.map(i => { const b = X.build(e.asset.generate(i.params, quality), quality); i.built = b; i.group = X.instance(b); placeGroup(i, i.group); return b; });
   }
+  e.inst.forEach(i => { if (i.group) { i.group.userData.speed = (i.built || e.built).meta.walkSpeed; startClip(i); } });
 }
 function clearEntry(e){
   if (e.built) [].concat(e.built).forEach(b => b && X.dispose(b));
-  e.inst.forEach(i => { if (i.group) scene.remove(i.group); i.group = null; });
+  e.inst.forEach(i => { if (i.group) { X.release(i.group); scene.remove(i.group); } i.group = null; });
   e.built = null;
 }
 function rebuildInstance(e, idx){
   if (e.shared) { buildEntry(e); return; }
   const i = e.inst[idx];
-  X.dispose(i.built); scene.remove(i.group);
+  X.dispose(i.built); X.release(i.group); scene.remove(i.group);
   i.built = X.build(e.asset.generate(i.params, quality), quality); e.built[idx] = i.built;
-  i.group = X.instance(i.built); placeGroup(i, i.group);
+  i.group = X.instance(i.built); placeGroup(i, i.group); i.group.userData.speed = i.built.meta.walkSpeed; startClip(i);
 }
 function entryTris(e){ return e.shared ? e.built.triangles * e.inst.length : e.built.reduce((s, b) => s + b.triangles, 0); }
 function updateStats(){
@@ -363,6 +394,17 @@ function select(e, move){
     b.addEventListener('click', () => { Object.assign(p, AA.params(e.asset, Object.assign({ seed: p.seed }, over))); renderControls(e); apply(e); });
     pr.appendChild(b);
   }
+  const cw = $('eClipsWrap'), cs = $('eClips'); cs.innerHTML = '';
+  cw.hidden = !e.asset.clips;
+  if (e.asset.clips) for (const [cid, lab] of e.asset.clips) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = lab;
+    b.setAttribute('aria-pressed', String((e.inst[0].clip || 'idle') === cid && !e.inst[0].walk));
+    b.addEventListener('click', () => {
+      cs.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      e.inst.forEach(i => { if (!i.walk) { i.clip = cid; if (i.group) X.play(i.group, cid); } });
+    });
+    cs.appendChild(b);
+  }
   renderControls(e); updateTri(e);
   if (move) focusEntry(e);
 }
@@ -421,7 +463,8 @@ const clock = new T.Clock(); let fa = 0, fn = 0;
 function loop(){
   const dt = Math.min(clock.getDelta(), 0.1);
   X.uniforms.uTime.value += reduce ? dt * 0.3 : dt;
-  X.tick(X.uniforms.uTime.value);
+  X.tick(X.uniforms.uTime.value, reduce ? dt * 0.3 : dt);
+  moveWalkers(dt);
   if (tween){
     tween.t = Math.min(1, tween.t + dt / 0.9);
     const k = tween.t * tween.t * (3 - 2 * tween.t);

@@ -7,12 +7,16 @@
 <script src="REPO/core/tree.js"></script>
 <script src="REPO/core/texture.js"></script>
 <script src="REPO/core/mud.js"></script>
+<script src="REPO/core/skeleton.js"></script>
 <script src="REPO/plants/palm.js"></script>
 <script src="REPO/plants/trees.js"></script>
 <script src="REPO/plants/shrubs.js"></script>
 <script src="REPO/architecture/najdi.js"></script>
 <script src="REPO/architecture/house.js"></script>
 <script src="REPO/architecture/water.js"></script>
+<script src="REPO/animals/camel.js"></script>
+<script src="REPO/animals/sheep.js"></script>
+<script src="REPO/characters/shaib.js"></script>
 <script>
 // عارض صور معاينة بـ WebGL2 مباشرة (بدون three.js): ألوان النقاط، خامات + خرائط اتجاه، شمس وسماء، ظلال.
 window.render = function (assetId, quality, over, cam) {
@@ -45,8 +49,10 @@ window.render = function (assetId, quality, over, cam) {
     if (mat.texture) { const t = AA.texture(mat.texture, quality); alb = tex(t.albedo, t.size, true); nrm = tex(t.normal, t.size, false); }
     draws.push({ vao, n: idx.length, alb, nrm, tint, shadow: mat.kind !== 'ground' });
   }
+  const mats = out.skeleton && cam.clip ? AA.boneMatrices(out.skeleton, out.clips[cam.clip], cam.t || 0) : null;
   for (const k in out.parts) {
     const d = out.parts[k];
+    if (mats) d.positions = AA.posePart(out.skeleton, d, mats);
     addMesh(d.positions, d.normals, d.colors, d.uvs, d.indices, d.material || {});
     for (let i = 0; i < d.positions.length; i += 3) allPos.push([d.positions[i], d.positions[i + 1], d.positions[i + 2]]);
   }

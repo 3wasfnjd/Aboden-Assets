@@ -268,7 +268,79 @@
     return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 300), repeat: 1 };
   }
 
-  const GEN = { mud_wall: mudWall, mud_wall_worn: (n, s) => mudWall(n, s, { exposure: 1.5 }), mud_top: mudTop, gypsum, wood, najdi_door: najdiDoor, sandstone, water };
+  // شعر/وبر: خطوط دقيقة باتجاه v — فاتحة لتلوّنها ألوان النقاط (جمال، ماعز)
+  function fur(n, seed) {
+    const a = tileNoise(n, seed, [8, 16, Math.min(256, n / 2)], 1.2), b = tileNoise(n, seed + 1, [32, 64], 1.3);
+    const rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x, st = 0.5 + 0.5 * Math.sin(x / n * Math.PI * 2 * 70 + a[i] * 14 + y / n * 6);
+      const k = 0.82 + 0.16 * st + 0.08 * b[i];
+      rgb[i * 3] = rgb[i * 3 + 1] = rgb[i * 3 + 2] = 230 * k; h[i] = st * 0.5 + b[i] * 0.5;
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 260), repeat: 1 };
+  }
+  // صوف مجعّد (أغنام)
+  function wool(n, seed) {
+    const rng = AA.rng(seed), h = new Float32Array(n * n), base = tileNoise(n, seed, [8, 16, 32], 1.3);
+    const r = Math.max(2, Math.round(n / 40));
+    for (let c = 0; c < n * n / (r * r) * 1.6; c++) {
+      const cx = rng() * n, cy = rng() * n, rr = r * (0.7 + rng() * 0.6);
+      for (let y = -rr; y <= rr; y++) for (let x = -rr; x <= rr; x++) {
+        const d = Math.hypot(x, y) / rr; if (d > 1) continue;
+        const i = ((((Math.round(cy + y)) % n) + n) % n) * n + ((((Math.round(cx + x)) % n) + n) % n);
+        h[i] = Math.max(h[i], Math.sqrt(1 - d * d));
+      }
+    }
+    const rgb = new Float32Array(n * n * 3);
+    for (let i = 0; i < n * n; i++) { const k = 0.62 + 0.38 * h[i] * (0.85 + 0.15 * base[i]); rgb[i * 3] = rgb[i * 3 + 1] = rgb[i * 3 + 2] = 240 * k; }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 90), repeat: 1 };
+  }
+  // سدو: خطوط حمراء وسوداء وبيضاء بمثلثات ومعيّنات (الخامة تغطي البطانية كاملة عرضاً)
+  function sadu(n, seed) {
+    const rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n), nz = tileNoise(n, seed, [16, 64], 1.3);
+    const RED = [168, 34, 30], BLK = [32, 24, 22], WHT = [236, 226, 206], ORG = [214, 120, 40];
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x, v = y / n, u = x / n;
+      const band = Math.floor(v * 10), bv = v * 10 - band;
+      let c;
+      if (band % 5 === 0) c = bv < 0.18 || bv > 0.82 ? WHT : BLK;
+      else if (band % 5 === 2) { // شريط مثلثات
+        const tu = (u * 16) % 1, tri = bv < (1 - Math.abs(tu - 0.5) * 2);
+        c = tri ? WHT : BLK;
+      } else if (band % 5 === 3) { const tu = (u * 10) % 1; c = Math.abs(tu - 0.5) + Math.abs(bv - 0.5) < 0.32 ? ORG : RED; }
+      else c = (Math.floor(u * 64) % 2 === 0 && bv > 0.45 && bv < 0.55) ? WHT : RED;
+      const k = 0.9 + 0.12 * nz[i] + 0.06 * ((x + y) % 2);
+      rgb[i * 3] = c[0] * k; rgb[i * 3 + 1] = c[1] * k; rgb[i * 3 + 2] = c[2] * k;
+      h[i] = 0.5 + 0.5 * Math.sin(x / n * Math.PI * 2 * 96) * Math.sin(y / n * Math.PI * 2 * 96);
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 220), repeat: 1 };
+  }
+  // شماغ أحمر بمربعات بيضاء صغيرة (نقشة الشماغ)
+  function shemagh(n, seed) {
+    const rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n), nz = tileNoise(n, seed, [8, 32], 1.4);
+    const cells = 24;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x, u = x / n * cells, v = y / n * cells, cu = u % 1, cv = v % 1;
+      const diamond = Math.abs(cu - 0.5) + Math.abs(cv - 0.5) < 0.36, white = diamond && ((Math.floor(u) + Math.floor(v)) % 2 === 0);
+      const k = 0.92 + 0.1 * nz[i];
+      if (white) { rgb[i * 3] = 238 * k; rgb[i * 3 + 1] = 232 * k; rgb[i * 3 + 2] = 228 * k; } else { rgb[i * 3] = 196 * k; rgb[i * 3 + 1] = 26 * k; rgb[i * 3 + 2] = 34 * k; }
+      h[i] = 0.5 + 0.5 * Math.sin(x / n * Math.PI * 2 * 128) * Math.sin(y / n * Math.PI * 2 * 128) * 0.6 + nz[i] * 0.4;
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 300), repeat: 1 };
+  }
+  // قماش الثوب: نسيج ناعم مع ثنيات خفيفة طولية
+  function cloth(n, seed) {
+    const a = tileNoise(n, seed, [4, 8, 16], 1.5), rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x, weave = 0.5 + 0.5 * Math.sin(x / n * Math.PI * 2 * 160) * Math.sin(y / n * Math.PI * 2 * 160);
+      const fold = 0.5 + 0.5 * Math.sin(x / n * Math.PI * 2 * 9 + a[i] * 4);
+      const k = 0.9 + 0.06 * weave + 0.06 * fold;
+      rgb[i * 3] = rgb[i * 3 + 1] = rgb[i * 3 + 2] = 245 * k; h[i] = weave * 0.15 + fold * 0.85;
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 300), repeat: 1 };
+  }
+
+  const GEN = { mud_wall: mudWall, mud_wall_worn: (n, s) => mudWall(n, s, { exposure: 1.5 }), mud_top: mudTop, gypsum, wood, najdi_door: najdiDoor, sandstone, water, fur, wool, sadu, shemagh, cloth };
   const SIZES = { high: 1024, med: 512, low: 256 };
   const cache = {};
   // AA.texture('mud_wall', 'med') — تُبنى مرة واحدة وتُشارك

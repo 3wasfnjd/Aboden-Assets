@@ -9,8 +9,8 @@ const root = path.join(__dirname, '..');
 const ctx = { console, Math, Float32Array, Uint32Array, Uint8Array, Object, Array, JSON, Set };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-const order = ['core/math.js', 'core/builder.js', 'core/tree.js', 'core/texture.js', 'core/mud.js'];
-const assetDirs = ['plants', 'architecture'];
+const order = ['core/math.js', 'core/builder.js', 'core/tree.js', 'core/texture.js', 'core/mud.js', 'core/skeleton.js'];
+const assetDirs = ['plants', 'architecture', 'animals', 'characters'].filter(d => fs.existsSync(path.join(root, d)));
 for (const f of order) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
 for (const d of assetDirs) for (const f of fs.readdirSync(path.join(root, d)).filter(x => x.endsWith('.js')).sort())
   vm.runInContext(fs.readFileSync(path.join(root, d, f), 'utf8'), ctx, { filename: d + '/' + f });

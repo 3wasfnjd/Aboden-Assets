@@ -61,8 +61,35 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
 
   // خامات متحركة (جريان الماء)
   const flowing = [];
-  three.tick = function (t) {
+  const mixers = new Set();
+  three.tick = function (t, dt) {
     for (const f of flowing) for (const m of f.maps) m.offset.set(f.v[0] * t, f.v[1] * t);
+    if (dt) for (const m of mixers) m.update(dt);
+  };
+  // مقاطع الحركة → AnimationClip (مرة لكل شكل)
+  function toClips(out) {
+    const res = {};
+    if (!out.clips) return res;
+    const root = out.skeleton.bones.find(b => b.parent < 0);
+    for (const [name, c] of Object.entries(out.clips)) {
+      const times = new Float32Array(c.frames); for (let f = 0; f < c.frames; f++) times[f] = f / (c.frames - 1) * c.duration;
+      const tracks = [];
+      for (const [bn, tr] of Object.entries(c.tracks)) tracks.push(new T.QuaternionKeyframeTrack(bn + '.quaternion', times, tr.rot));
+      const pos = new Float32Array(c.frames * 3);
+      for (let f = 0; f < c.frames; f++) for (let k = 0; k < 3; k++) pos[f * 3 + k] = root.head[k] + c.root[f * 3 + k];
+      tracks.push(new T.VectorKeyframeTrack(root.name + '.position', times, pos));
+      res[name] = new T.AnimationClip(name, c.duration, tracks);
+    }
+    return res;
+  }
+  // يشغّل حركة على نسخة (مع مزج ناعم)
+  three.play = function (grp, name, fade) {
+    const st = grp.userData.anim; if (!st || !st.clips[name]) return;
+    const next = st.mixer.clipAction(st.clips[name]);
+    if (st.current === next) return;
+    next.reset().play();
+    if (st.current) st.current.crossFadeTo(next, fade == null ? 0.35 : fade, false);
+    st.current = next; st.name = name;
   };
 
   three.build = function (out, quality) {
@@ -80,11 +107,13 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       geo.setAttribute('aFlutter', new T.BufferAttribute(d.flutter, 1));
       geo.setAttribute('aBend', new T.BufferAttribute(d.bend, 1));
       if (d.uvs) geo.setAttribute('uv', new T.BufferAttribute(d.uvs, 2));
+      if (d.skinIndex) { geo.setAttribute('skinIndex', new T.BufferAttribute(d.skinIndex, 4)); geo.setAttribute('skinWeight', new T.BufferAttribute(d.skinWeight, 4)); }
       geo.setIndex(new T.BufferAttribute(d.indices, 1));
       geo.computeBoundingSphere();
       geo.boundingSphere.radius += 1.2; // هامش لحركة الريح حتى لا يختفي الشكل عند حافة الشاشة
       const m = d.material || {};
       const opts = { vertexColors: true, roughness: m.roughness == null ? 0.8 : m.roughness, side: m.doubleSided ? T.DoubleSide : T.FrontSide };
+      if (d.skinIndex) opts.skinning = true;
       if (m.color) opts.color = new T.Color(m.color[0], m.color[1], m.color[2]);
       if (m.texture) {
         const tx = three.texture(m.texture, quality || 'med');
@@ -95,11 +124,34 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
       const mat = three.addWind(new T.MeshStandardMaterial(opts));
       parts.push({ name, geo, mat, kind: m.kind });
     }
-    return { parts, triangles: out.triangles, meta: out.meta };
+    return { parts, triangles: out.triangles, meta: out.meta, skeleton: out.skeleton || null, clips: out.skeleton ? toClips(out) : null, clipNames: out.clips ? Object.keys(out.clips) : [] };
   };
+  let skinDepth = null;
 
   three.instance = function (built) {
     const grp = new T.Group();
+    if (built.skeleton) { // هيكل عظمي خاص بكل نسخة حتى تتحرك كل واحدة وحدها
+      const bones = built.skeleton.bones.map(b => { const o = new T.Bone(); o.name = b.name; return o; });
+      built.skeleton.bones.forEach((b, i) => {
+        if (b.parent < 0) { bones[i].position.set(b.head[0], b.head[1], b.head[2]); grp.add(bones[i]); }
+        else { const P = built.skeleton.bones[b.parent]; bones[i].position.set(b.head[0] - P.head[0], b.head[1] - P.head[1], b.head[2] - P.head[2]); bones[b.parent].add(bones[i]); }
+      });
+      grp.updateMatrixWorld(true);
+      const skel = new T.Skeleton(bones);
+      if (!skinDepth) skinDepth = new T.MeshDepthMaterial({ depthPacking: T.RGBADepthPacking, skinning: true, side: T.DoubleSide });
+      for (const p of built.parts) {
+        const mesh = new T.SkinnedMesh(p.geo, p.mat);
+        mesh.bind(skel); mesh.castShadow = p.kind !== 'water'; mesh.receiveShadow = true;
+        mesh.customDepthMaterial = skinDepth; mesh.frustumCulled = false;
+        grp.add(mesh);
+      }
+      const mixer = new T.AnimationMixer(grp);
+      grp.userData.anim = { mixer, clips: built.clips, current: null };
+      mixers.add(mixer);
+      three.play(grp, built.clipNames.includes('idle') ? 'idle' : built.clipNames[0], 0);
+      if (grp.userData.anim.current) grp.userData.anim.current.time = Math.random() * 3;
+      return grp;
+    }
     for (const p of built.parts) {
       const mesh = new T.Mesh(p.geo, p.mat);
       mesh.castShadow = p.kind !== 'water'; mesh.receiveShadow = p.kind !== 'fruit' && p.kind !== 'flower';
@@ -109,6 +161,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
     return grp;
   };
 
+  three.release = function (grp) { if (grp && grp.userData.anim) mixers.delete(grp.userData.anim.mixer); };
   three.dispose = function (built) {
     for (const p of built.parts) {
       p.geo.dispose(); p.mat.dispose();
