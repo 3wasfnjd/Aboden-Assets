@@ -455,4 +455,5 @@
       { key: 'gate', label: 'فتح الباب', min: 0, max: 1, step: 0.05, def: 0.5, pct: true },
       { key: 'feeder', label: 'معلف', type: 'bool', def: true }
     ], presets: { 'حظيرة سعف': { style: 'fronds', height: 1.6 } }, generate: pen };
+  AA.souq = { sackInto, crateInto, basketInto, place };
 })(typeof window !== 'undefined' ? window : globalThis);

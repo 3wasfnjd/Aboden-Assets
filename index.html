@@ -86,6 +86,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
     <button type="button" data-s="hara" aria-pressed="true">الحي النجدي</button>
     <button type="button" data-s="souq" aria-pressed="false">السوق</button>
     <button type="button" data-s="beings" aria-pressed="false">الكائنات</button>
+    <button type="button" data-s="vehicles" aria-pressed="false">المركبات</button>
     <button type="button" data-s="plants" aria-pressed="false">النباتات</button>
     <button type="button" data-s="architecture" aria-pressed="false">قطع العمارة</button>
   </div>
@@ -147,6 +148,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <script src="souq/souq.js"></script>
 <script src="majlis/majlis.js"></script>
 <script src="terrain/rocks.js"></script>
+<script src="vehicles/vehicles.js"></script>
 <script src="core/viewer-three.js"></script>
 <script>
 (function(){
@@ -241,6 +243,7 @@ function haraEntries(){
     { id:'worker',        inst:[{ x:16.5, z:-1.6, rot:3.0, clip:'work', over:{ seed:76, suit:'khaki', helmet:'white' } }] },
     { id:'camel',         inst:[{ x:-40, z:-0.9, walk:[-40, -0.9, -24, -0.9], over:{ seed:77, saddle:true, coat:'wadh' } }, { x:3.4, z:10.2, rot:-2.3, clip:'graze', over:{ seed:78 } }, { x:-2.8, z:9.8, rot:2.8, clip:'graze', over:{ seed:79, coat:'majaheem' } }] },
     { id:'sheep',         inst:[{ x:-19.5, z:14.4, rot:0.4, clip:'graze', over:{ seed:200 } }, { x:-17.8, z:15.8, rot:1.4, clip:'graze', over:{ seed:201, breed:'naimi' } }, { x:-16.6, z:14.2, rot:-0.7, over:{ seed:202 } }, { x:-20.6, z:16.2, rot:2.2, clip:'graze', over:{ seed:203, breed:'goat' } }, { x:-15.6, z:16.3, rot:0.9, clip:'graze', over:{ seed:204, size:0.65 } }, { x:1.2, z:14.6, rot:-1.1, clip:'graze', over:{ seed:205, breed:'goat' } }] },
+    { id:'jeep',          inst:[{ x:-37, z:5.5, rot:2.1, over:{ seed:210, color:'white', rack:true, tire:1.1, dirt:0.6, rims:'steel' } }] },
     { id:'donkey',        inst:[{ x:-12.5, z:16.8, rot:1.2, clip:'graze', over:{ seed:206 } }] },
     { id:'thumam',        shared:true, lod:'low', inst:[{ x:-34, z:2.5 }, { x:33, z:-3.6 }, { x:-32, z:-6.5, scale:0.6 }, { x:31.5, z:4.4, scale:0.7 }, { x:-8, z:17.5, scale:0.6 }, { x:9, z:17.2, scale:0.7 }] }
   ];
@@ -280,6 +283,7 @@ function souqEntries(){
     { id:'sheep',  inst:[{ x:20.2, z:-5.0, rot:0.6, clip:'graze', over:{ seed:76 } }, { x:21.8, z:-3.9, rot:2.0, clip:'graze', over:{ seed:77, breed:'naimi' } }, { x:22.6, z:-5.6, rot:-1.2, over:{ seed:78, breed:'goat' } }, { x:19.4, z:-3.8, rot:-2.4, clip:'graze', over:{ seed:79 } }] },
     { id:'camel',  inst:[{ x:20.5, z:3.6, rot:-1.4, over:{ seed:80, saddle:true } }, { x:23.5, z:1.2, rot:-2.0, clip:'graze', over:{ seed:81, coat:'humr' } }] },
     { id:'horse',  inst:[{ x:23.2, z:4.6, rot:-2.6, over:{ seed:82 } }] },
+    { id:'pickup', inst:[{ x:27.2, z:-3.4, rot:-0.15, over:{ seed:83, load:'sheep', cage:true, dirt:0.55 } }] },
     // البائعون والناس
     { id:'shaib',  inst:[sl[0], sl[1], sl[5]].map((p2, k) => Object.assign({}, p2, { over:{ seed:90 + k, bisht: k === 2 ? 'cream' : 'none', stoop: 0.5 } }))
         .concat([{ x:ss[0].x, z:ss[0].z, y:0.05, rot:ss[0].rot, clip:'sit_floor', over:{ seed:93, bisht:'brown' } }, { x:ss[1].x, z:ss[1].z, y:0.05, rot:ss[1].rot, clip:'sit_floor', over:{ seed:94 } },
@@ -308,6 +312,18 @@ const SCENES = {
     paint: (x, z) => ({ packed: Math.max(rect(x, z, -31, 31, -2.6, 2.6, 0.6), rect(x, z, -7, 7.5, -6.6, 2.6, 0.6), 0.75 * rect(x, z, -27, 27, -12.2, -10.4, 0.4), 0.85 * rect(x, z, -6.2, 6.2, -12.4, -6.6, 0.3), 0.6 * rect(x, z, -60, -29, -1.8, 1.8, 1.2) * (1 - AA.smooth(-60, -40, -x) * 0)), wet: rect(x, z, -6, 5.5, 5, 19, 1) }) },
   souq: { title: 'السوق', pond: false, flat: 28, overview: [6, 22, 25], target: [1, 0.5, 0], entries: souqEntries(),
     paint: (x, z) => ({ packed: Math.max(rect(x, z, -16, 16, -2.6, 2.6, 0.5), 0.7 * rect(x, z, 15, 27, -8, 7, 1.5), 0.6 * rect(x, z, -40, -16, -1.8, 1.8, 1)), wet: 0 }) },
+  vehicles: { title: 'المركبات', pond: false, flat: 30, overview: [12, 7, 15], target: [0, 1, 0], entries: [
+    { id:'jeep',   inst:[{ x:-14, z:3.2, walk:[-26, 3.2, 26, 3.2], over:{ seed:1 } }, { x:-1.5, z:-2.2, rot:0.5, over:{ seed:2, color:'white', rack:true, tire:1.12, dirt:0.6, rims:'steel' } }, { x:8.5, z:-6.5, rot:-2.4, over:{ seed:3, color:'black', dirt:0.1, stripe:false, snorkel:false, bumper:'chrome' } }] },
+    { id:'pickup', inst:[{ x:4.4, z:-1.2, rot:-0.4, over:{ seed:4, load:'sheep', cage:true, dirt:0.5 } }, { x:-6.8, z:-3.6, rot:1.9, over:{ seed:5, load:'hay', color:'red' } }, { x:3, z:7.6, rot:2.9, over:{ seed:6, load:'water', color:'blue', rims:'steel' } }, { x:14, z:-0.4, walk:[30, -0.4, -30, -0.4], over:{ seed:7, color:'champagne', load:'crates' } }] },
+    { id:'shaib',  inst:[{ x:2.6, z:-0.3, rot:-1.9, over:{ seed:8, bisht:'brown' } }] },
+    { id:'boy',    inst:[{ x:-0.5, z:-0.4, rot:2.6, clip:'wave', over:{ seed:9, headwear:'shemagh', agal:true } }] },
+    { id:'camel',  inst:[{ x:-10, z:-9, rot:0.8, clip:'graze', over:{ seed:10 } }, { x:-12.5, z:-7.6, rot:1.9, over:{ seed:11, coat:'majaheem' } }] },
+    { id:'carpet', inst:[{ x:-3.4, z:-6.4, rot:0.3, over:{ seed:12, length:2.6, width:1.8 } }] },
+    { id:'fire_pit', inst:[{ x:-3.4, z:-6.4, over:{ seed:13, radius:0.3 } }] },
+    { id:'rocks',  shared:true, inst:[{ x:10, z:4, over:{ seed:14, size:1.1 } }, { x:-17, z:-4, rot:2, scale:1.5 }, { x:18, z:-9, rot:4, scale:0.8 }] },
+    { id:'arfaj',  shared:true, inst:[{ x:6, z:10 }, { x:-9, z:9, scale:1.2 }, { x:-18, z:7, scale:0.8 }, { x:16, z:6, scale:1.1 }, { x:0, z:-12 }] },
+    { id:'talh',   inst:[{ x:-8, z:-12, over:{ seed:15 } }] }
+  ], paint: (x, z) => ({ packed: Math.max(rect(x, z, -60, 60, 2.1, 4.3, 0.8), rect(x, z, -60, 60, -1.5, 0.7, 0.8)) * (0.7 + 0.3 * Math.sin(x * 0.7) * Math.sin(z * 3.1)), wet: 0 }) },
   beings: { title: 'الكائنات', pond: false, overview: [5, 5, 15], target: [0, 1, 1], entries: [
     { id:'shaib',  inst:[{ x:0, z:1.5, over:{ seed:1 } }, { x:-1.6, z:1.2, rot:0.4, over:{ seed:2, bisht:'brown' } }] },
     { id:'horse',  inst:[{ x:7.8, z:-3.6, rot:-2.2, over:{ seed:41 } }, { x:9.6, z:-2.4, rot:-1.6, clip:'graze', over:{ seed:42, coat:'grey' } }] },
@@ -451,11 +467,21 @@ function startClip(i){
 }
 // دابة العربة: أصل متحرك مستقل يُركّب عند نقطة الربط
 function attachHitch(i, b){
-  const h = b.meta.hitch; if (!h || !h.asset) return;
-  const ab = X.build(A[h.asset].generate(h.params, quality), quality), ag = X.instance(ab);
-  ag.position.set(h.at[0], h.at[1], h.at[2]); i.group.add(ag); i.animal = { built: ab, group: ag };
+  const h = b.meta.hitch;
+  if (h && h.asset) {
+    const ab = X.build(A[h.asset].generate(h.params, quality), quality), ag = X.instance(ab);
+    ag.position.set(h.at[0], h.at[1], h.at[2]); i.group.add(ag); i.animal = { built: ab, group: ag };
+  }
+  // ركّاب الصندوق (غنم في الوانيت مثلاً): أصول متحركة مستقلة مربوطة بالمركبة
+  if (b.meta.riders) i.riders = b.meta.riders.map(r => {
+    const rb = X.build(A[r.asset].generate(AA.params(A[r.asset], r.params), quality), quality), rg = X.instance(rb);
+    rg.position.set(r.at[0], r.at[1], r.at[2]); rg.rotation.y = r.rot || 0; i.group.add(rg); return { built: rb, group: rg };
+  });
 }
-function detachHitch(i){ if (i.animal) { X.release(i.animal.group); X.dispose(i.animal.built); i.animal = null; } }
+function detachHitch(i){
+  if (i.animal) { X.release(i.animal.group); X.dispose(i.animal.built); i.animal = null; }
+  if (i.riders) { for (const r of i.riders) { X.release(r.group); X.dispose(r.built); } i.riders = null; }
+}
 // المشاة: يتحركون ذهاباً وإياباً على خط
 function moveWalkers(dt){
   for (const e of ENTRIES) for (const i of e.inst) {
@@ -493,7 +519,7 @@ function rebuildInstance(e, idx){
   i.built = X.build(e.asset.generate(i.params, lodQ(e)), quality); e.built[idx] = i.built;
   i.group = X.instance(i.built); placeGroup(i, i.group); attachHitch(i, i.built); i.group.userData.speed = i.built.meta.walkSpeed; startClip(i);
 }
-function entryTris(e){ return e.shared ? e.built.triangles * e.inst.length : e.built.reduce((s, b) => s + b.triangles, 0) + e.inst.reduce((s, i) => s + (i.animal ? i.animal.built.triangles : 0), 0); }
+function entryTris(e){ return e.shared ? e.built.triangles * e.inst.length : e.built.reduce((s, b) => s + b.triangles, 0) + e.inst.reduce((s, i) => s + (i.animal ? i.animal.built.triangles : 0) + (i.riders ? i.riders.reduce((t, r) => t + r.built.triangles, 0) : 0), 0); }
 function updateStats(){
   let tris = 0, calls = 0;
   for (const e of ENTRIES){
