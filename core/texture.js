@@ -329,6 +329,17 @@
     }
     return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 300), repeat: 1 };
   }
+  // شماغ فاتح (للحزمة اللو-بولي): أرضية بيضاء ومعيّنات حمراء صغيرة متقاربة — يقرأ من بعيد أحمر وأبيض بالتساوي
+  function shemaghLight(n, seed) {
+    const rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n), nz = tileNoise(n, seed, [8, 32], 1.4), cells = 24;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x, u = x / n * cells, v = y / n * cells, cu = u % 1, cv = v % 1, k = 0.94 + 0.08 * nz[i];
+      const red = Math.abs(cu - 0.5) + Math.abs(cv - 0.5) < 0.4 || (Math.abs(cu - 0.5) < 0.1 && cv > 0.5) || (Math.abs(cv - 0.5) < 0.1 && cu > 0.5);
+      if (red) { rgb[i * 3] = 200 * k; rgb[i * 3 + 1] = 30 * k; rgb[i * 3 + 2] = 40 * k; } else { rgb[i * 3] = 244 * k; rgb[i * 3 + 1] = 240 * k; rgb[i * 3 + 2] = 236 * k; }
+      h[i] = 0.5 + 0.3 * Math.sin(x / n * Math.PI * 2 * 128) * Math.sin(y / n * Math.PI * 2 * 128) + nz[i] * 0.4;
+    }
+    return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 300), repeat: 1 };
+  }
   // قماش الثوب: نسيج ناعم مع ثنيات خفيفة طولية
   function cloth(n, seed) {
     const a = tileNoise(n, seed, [4, 8, 16], 1.5), rgb = new Float32Array(n * n * 3), h = new Float32Array(n * n);
@@ -449,7 +460,7 @@
     return { size: n, albedo: pack(rgb, n), normal: normalFrom(h, n, n / 300), repeat: 2 };
   }
 
-  const GEN = { hair_tent: hairTent, canvas, sand, clay, rug, mud_wall: mudWall, mud_wall_worn: (n, s) => mudWall(n, s, { exposure: 1.5 }), mud_top: mudTop, gypsum, wood, najdi_door: najdiDoor, sandstone, water, fur, wool, sadu, shemagh, cloth, burlap, weave, stripes_red: (n, s) => stripes(n, s, [176, 44, 36], [236, 224, 196]), stripes_green: (n, s) => stripes(n, s, [46, 110, 74], [236, 224, 196]), stripes_blue: (n, s) => stripes(n, s, [40, 84, 140], [236, 224, 196]) };
+  const GEN = { hair_tent: hairTent, canvas, sand, clay, rug, mud_wall: mudWall, mud_wall_worn: (n, s) => mudWall(n, s, { exposure: 1.5 }), mud_top: mudTop, gypsum, wood, najdi_door: najdiDoor, sandstone, water, fur, wool, sadu, shemagh, shemagh_light: shemaghLight, cloth, burlap, weave, stripes_red: (n, s) => stripes(n, s, [176, 44, 36], [236, 224, 196]), stripes_green: (n, s) => stripes(n, s, [46, 110, 74], [236, 224, 196]), stripes_blue: (n, s) => stripes(n, s, [40, 84, 140], [236, 224, 196]) };
   const SIZES = { high: 1024, med: 512, low: 256 };
   const cache = {};
   // AA.texture('mud_wall', 'med') — تُبنى مرة واحدة وتُشارك

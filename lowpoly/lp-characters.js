@@ -68,43 +68,59 @@
     // اللحية البيضاء الكبيرة والشارب
     LP.ico(Hr, [0, 0.86, 0.1], [0.19 * p.beard + 0.02, 0.14 * p.beard + 0.02, 0.13], 1, () => white, { keep: d => d[1] < 0.35 && d[2] > -0.15 });
     AA.box(Hr, [0, 0.92, 0.225], [0.14, 0.035, 0.04], white, 1, {});
-    // الشماغ: قطعة قماش واحدة متصلة (شبكة صفوف × أعمدة): تغطي الرأس، تنفتح حول الوجه،
-    // وتنسدل على الكتفين والظهر، وطرفاها الأماميان على الصدر. نقشة مربعات حمراء وبيضاء وحاشية بيضاء.
+    // الشماغ: قطعة قماش واحدة متصلة (شبكة صفوف × أعمدة) بنقشة الشماغ الدقيقة (أحمر على أبيض):
+    // يغطي الرأس حتى فوق الحواجب بثنية متموّجة، وينسدل بمحاذاة الخدين على الكتفين،
+    // طرفاه طويلان أمام الصدر، وذيله مثلث في الظهر، وحواشيه بيضاء بخط أحمر.
+    const Sb = new AA.Builder();
     {
-      const c0 = [0, 1.0, -0.005], R = B.hr + 0.03, nC = q === 'low' ? 12 : 18, crown = q === 'low' ? 4 : 6, drape = q === 'low' ? 4 : 6, nR = crown + drape;
-      const phiEnd = 1.72, yTop = c0[1] + R * Math.cos(phiEnd);
-      const openAt = phi => 0.9 * smooth(0.62, 1.15, phi); // نصف زاوية فتحة الوجه
-      const grid = [];
+      const c0 = [0, 1.0, -0.005], R = B.hr + 0.032, nC = q === 'low' ? 14 : 20, phiEnd = 1.72, yTop = c0[1] + R * Math.cos(phiEnd), TILE = 0.55;
+      // صفوف التاج: صف حافة الجبهة (مغلق) يليه مباشرة صف مفتوح حتى تكون حافة الوجه أفقية تقريباً
+      const PH = q === 'low' ? [0.08, 0.6, 1.2, 1.24, 1.5, phiEnd] : [0.08, 0.34, 0.62, 0.92, 1.2, 1.24, 1.48, phiEnd], OP = PH.map(f => f > 1.22 ? 0.82 : 0), iEdge = PH.indexOf(1.2), crown = PH.length - 1;
+      const DS = [0, 0.3, 0.58, 0.84, 0.895, 0.935, 1], drape = DS.length - 1, nR = crown + drape;
+      const CF = [0, 0.035, 0.055, 0.09]; // أعمدة الحاشية عند طرفي فتحة الوجه
+      const colF = k => { const m = CF.length - 1; if (k <= m) return CF[k] * 0.5; if (k >= nC - m) return 1 - CF[nC - k] * 0.5; return lerp(CF[m] * 0.5, 1 - CF[m] * 0.5, (k - m) / (nC - 2 * m)); };
+            const grid = [];
       for (let i = 0; i <= nR; i++) {
-        const j = i - crown, row = [], inCrown = i <= crown, phi = inCrown ? lerp(0.1, phiEnd, i / crown) : phiEnd, sD = inCrown ? 0 : j === drape ? 1 : 0.93 * j / (drape - 1); // آخر صف حاشية رفيعة
-        const open = inCrown ? openAt(phi) : 0.9 + 0.1 * sD;
+        const j = i - crown, inCrown = i <= crown, phi = inCrown ? PH[i] : phiEnd, sD = inCrown ? 0 : DS[j], row = [];
+        const open = inCrown ? OP[i] : 0.82 + 0.1 * sD;
         for (let k = 0; k <= nC; k++) {
-          const a = lerp(open, Math.PI * 2 - open, k / nC), sa = Math.sin(a), ca = Math.cos(a);
-          let pt;
-          if (inCrown) pt = [c0[0] + R * Math.sin(phi) * sa, c0[1] + R * Math.cos(phi), c0[2] + R * Math.sin(phi) * ca];
-          else {
-            const back = smooth(0.2, -0.9, ca), front = smooth(0.3, 0.7, ca), tip = Math.max(0, 1 - Math.abs(a - Math.PI) / 1.25); // ذيل مثلث في الظهر
-            const r0 = R * Math.sin(phiEnd), r1 = 0.275 - 0.025 * back, rr = lerp(r0, r1, Math.pow(sD, 0.6));
-            const y = lerp(yTop, 0.63 - 0.17 * tip - 0.12 * front, sD);
-            pt = [sa * rr * (1 - 0.22 * front * sD), y, ca * rr * (1 + 0.08 * back * sD) + 0.05 * front * sD + c0[2]];
+          const a = lerp(open, Math.PI * 2 - open, colF(k)), sa = Math.sin(a), ca = Math.cos(a);
+          let pt, rr;
+          if (inCrown) { // انتفاخ خفيف ومقدّمة مرفوعة فوق الجبهة
+            const puff = 1 + 0.06 * Math.sin(Math.PI * Math.min(1, phi / 1.2)) + 0.1 * Math.max(0, ca) ** 4 * smooth(0.25, 0.7, phi) * (1 - smooth(0.7, 1.0, phi));
+            rr = R * Math.sin(phi) * puff; pt = [c0[0] + rr * sa, c0[1] + R * Math.cos(phi) * (1 + 0.04 * Math.max(0, ca) ** 4), c0[2] + rr * ca];
+          } else {
+            const back = smooth(0.2, -0.9, ca), front = smooth(0.3, 0.68, ca), tip = Math.max(0, 1 - Math.abs(a - Math.PI) / 1.25);
+            rr = lerp(R * Math.sin(phiEnd), 0.275 - 0.025 * back, Math.pow(sD, 0.6));
+            const y = lerp(yTop, 0.63 - 0.16 * tip - 0.2 * front, sD);
+            pt = [sa * rr * (1 - 0.2 * front * sD), y, ca * rr * (1 + 0.08 * back * sD) + 0.06 * front * sD + c0[2]];
           }
-          row.push(pt);
+          row.push({ p: pt, uv: [a * 0.25 / TILE, (1.26 - pt[1]) / TILE] });
         }
         grid.push(row);
       }
-      Sh.skinFn = pt => { const w = smooth(0.84, 0.64, pt[1]); return [[id('head'), 1 - w * 0.85], [id('chest'), w * 0.85]]; };
-      const R1 = LP.c('red'), W1 = LP.c('white');
+      const skinF = pt => { const w = smooth(0.84, 0.64, pt[1]); return [[id('head'), 1 - w * 0.85], [id('chest'), w * 0.85]]; };
+      Sh.skinFn = Sb.skinFn = skinF;
+      const W1 = LP.c('white'), R1 = LP.c('red'), m = CF.length - 1;
+      const quad = (Bq, P, col) => { const ids = P.map(g => Bq.v(g.p, col, g.p[1] < 0.9 ? 0.01 : 0, 0.4, 0, g.uv)); Bq.t(ids[0], ids[2], ids[1]); Bq.t(ids[0], ids[3], ids[2]); };
       for (let i = 0; i < nR; i++) for (let k = 0; k < nC; k++) {
-        const hem = i === nR - 1 || k === 0 || k === nC - 1, col = hem ? W1 : ((i + k) % 3 === 0 ? W1 : R1);
-        const p00 = grid[i][k], p01 = grid[i][k + 1], p10 = grid[i + 1][k], p11 = grid[i + 1][k + 1], sw = 0.012 * smooth(0.95, 0.6, p10[1]);
-        const v = pt => Sh.v(pt, col, pt[1] < 0.9 ? sw : 0, 0.3 * k, 0);
-        const A = v(p00), Bv = v(p01), C2 = v(p11), D2 = v(p10);
-        Sh.t(A, C2, Bv); Sh.t(A, D2, C2);
+        const j = i - crown, P = [grid[i][k], grid[i][k + 1], grid[i + 1][k + 1], grid[i + 1][k]];
+        const hemRow = j >= drape - 3 ? j - (drape - 3) : -1, edge = k < m ? k : k >= nC - m ? nC - 1 - k : -1, sideBorder = edge >= 0 && j >= 0;
+        if (hemRow >= 0 || sideBorder) Sb && quad(Sb, P, (hemRow === 1 && edge !== 0) || (edge === 1 && hemRow !== 0 && hemRow !== 2) ? R1 : W1);
+        else quad(Sh, P, W1);
+      }
+      // ثنية الجبهة: حافة ملفوفة متموّجة على طول فتحة الوجه فوق الحواجب
+      const edgePts = [];
+      for (let k = 0; k <= nC; k++) { const g = grid[iEdge][k], a = Math.atan2(g.p[0], g.p[2] - c0[2]); if (Math.abs(a) < 0.86) edgePts.push(Object.assign({ a }, g)); }
+      edgePts.sort((x, y) => x.a - y.a);
+      for (let e = 0; e < edgePts.length - 1; e++) {
+        const A = edgePts[e], Bq = edgePts[e + 1], out = g => { const d = V.norm(V.sub(g.p, c0)), w = 0.024 + 0.014 * Math.abs(Math.sin(g.a * 5.5)); return { p: V.add(g.p, V.add(V.scale(d, w), [0, -0.012, 0])), uv: [g.uv[0], g.uv[1] + 0.08] }; };
+        quad(Sh, [A, Bq, out(Bq), out(A)], W1);
       }
     }
     // العقال: حلقتان سوداوان
     Dk.setSkin([[id('head'), 1]]);
-    for (const dy of [0, 0.034]) { const ring = []; for (let k = 0; k <= 12; k++) { const a = k / 12 * Math.PI * 2, y = 1.085 + dy + 0.025 * Math.cos(a), rr = Math.sqrt(Math.max(0, (B.hr + 0.026) ** 2 - (y - 1.0) ** 2)) + 0.012; ring.push([Math.sin(a) * rr, y, Math.cos(a) * rr - 0.005]); } LP.chain(Dk, ring, ring.map(() => 0.015), 4, () => LP.c('black')); }
+    for (const dy of [0, 0.042]) { const ring = []; for (let k = 0; k <= 14; k++) { const a = k / 14 * Math.PI * 2, y = 1.14 + dy + 0.03 * (1 - Math.cos(a)) * 0.5, rr = Math.sqrt(Math.max(0, (B.hr + 0.034) ** 2 - (y - 1.0) ** 2)) + 0.018; ring.push([Math.sin(a) * rr, y, Math.cos(a) * rr - 0.005]); } LP.chain(Dk, ring, ring.map(() => 0.022), 5, () => LP.c('black')); }
     // العصا في اليد اليمنى
     Wd.setSkin([[id('handR'), 1]]);
     const g0 = [-0.225, 0.35, 0.06];
@@ -124,7 +140,8 @@
       cloth: { builder: Cl, material: LP.mat('cloth') },
       skin:  { builder: Sk, material: LP.mat('skin') },
       hair:  { builder: Hr, material: LP.mat('hair') },
-      shem:  { builder: Sh, material: LP.mat('cloth', { doubleSided: true }) },
+      shem:  { builder: Sh, material: LP.mat('cloth', { doubleSided: true, texture: 'shemagh_light' }) },
+      shemHem: { builder: Sb, material: LP.mat('cloth', { doubleSided: true }) },
       dark:  { builder: Dk, material: LP.mat('dark') },
       wood:  { builder: Wd, material: LP.mat('wood') }
     }, { stiffness: 0, height: 1.25, radius: 0.3, collider: { type: 'capsule', radius: 0.22, height: 1.25, axis: 'y' }, skeleton: sk.toJSON(), clips, walkSpeed: 0.55 });

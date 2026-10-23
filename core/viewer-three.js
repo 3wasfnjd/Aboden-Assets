@@ -99,7 +99,7 @@ transformed.y += aFlutter*w*0.035*sin(uTime*9.0 + aPhase*5.0 + position.x*4.0 + 
   // ---------- الأسلوب الكرتوني ----------
   // three.style = 'toon': تظليل بطبقات (MeshToonMaterial)، ألوان مسطحة بدل الخامات المزدحمة، وخط داكن حول الحواف بعرض ثابت بالبكسل
   three.style = 'real';
-  const PATTERN = { sadu: 1, rug: 1, stripes_red: 1, stripes_green: 1, stripes_blue: 1, najdi_door: 1, shemagh: 1, water: 1 }; // خامات نقوش تبقى
+  const PATTERN = { sadu: 1, rug: 1, stripes_red: 1, stripes_green: 1, stripes_blue: 1, najdi_door: 1, shemagh: 1, shemagh_light: 1, water: 1 }; // خامات نقوش تبقى
   let gradTex = null;
   three.toonGradient = function () {
     if (gradTex) return gradTex;
