@@ -1,0 +1,374 @@
+<!doctype html>
+<title>مستودع عبودين — النباتات</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column — oasis viewer, plant chips, editor for the selected plant, library status */
+:root{
+  --bg:#e9ece2; --surface:#f8f9f4; --line:#d3d8c6; --ink:#1d2216; --muted:#5b6450;
+  --accent:#b0621a; --leaf:#4c6a2c; --chip:#eef1e6;
+  --display:"Baloo Bhaijaan 2","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12150e; --surface:#1b1f15; --line:#2e3524; --ink:#e8ecdc; --muted:#9ca48d;
+  --accent:#e39a4c; --leaf:#93b263; --chip:#22271a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12150e; --surface:#1b1f15; --line:#2e3524; --ink:#e8ecdc; --muted:#9ca48d;
+  --accent:#e39a4c; --leaf:#93b263; --chip:#22271a; color-scheme:dark}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;direction:rtl}
+.wrap{max-width:1040px;margin:0 auto;padding-block:20px 44px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-direction:column;gap:2px}
+.brand{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.04em;color:var(--muted)}
+.titleRow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(32px,7vw,50px);line-height:1.05;margin:0;color:var(--leaf);text-wrap:balance}
+.ver{font-size:12px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 9px}
+header p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.viewer{position:relative;height:clamp(340px,60vh,640px);border-radius:14px;overflow:hidden;background:#cfe0ea;touch-action:none}
+.viewer canvas{display:block;width:100%;height:100%}
+.hud{position:absolute;inset:auto 10px 10px 10px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.hud span,.hint{background:rgba(20,24,14,.62);color:#f1f3e8;font-size:12px;padding:3px 9px;border-radius:7px;font-variant-numeric:tabular-nums}
+.hint{position:absolute;top:10px;right:10px;pointer-events:none;transition:opacity .6s}
+.all{position:absolute;top:10px;left:10px;font:600 13px var(--body);background:rgba(20,24,14,.62);color:#f1f3e8;border:0;border-radius:7px;padding:5px 11px;cursor:pointer}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.chip{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:0;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:11px;padding:7px 13px;cursor:pointer;font-family:var(--body);text-align:start}
+.chip b{font-family:var(--display);font-size:17px;font-weight:600;line-height:1.2}
+.chip small{color:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
+.chip[aria-pressed=true]{border-color:var(--leaf);background:var(--leaf);color:var(--surface)}
+.chip[aria-pressed=true] small{color:inherit;opacity:.8}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.phead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.phead h2{font-family:var(--display);font-size:24px;margin:0}
+.phead h2 span{font-family:var(--body);font-size:13px;color:var(--muted);font-weight:500;margin-inline-start:8px}
+.phead .tri{color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;font-size:14px}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.presets button{font:500 13px var(--body);border:1px dashed var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:3px 11px;cursor:pointer}
+.presets button:hover{border-color:var(--accent);color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 22px}
+.ctl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-weight:500;font-size:14px}
+.ctl output{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;color:var(--ink);font:500 14px var(--body);padding:7px 4px;cursor:pointer}
+.seg button+button{border-inline-start:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--leaf);color:var(--surface)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:600 14px var(--body);border-radius:9px;padding:8px 15px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#fff}
+.btn.ghost{background:transparent;color:var(--accent)}
+.toast{color:var(--muted);font-size:13px;word-break:break-all}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.note{color:var(--muted);font-size:13px;margin:0}
+.section-title{font-family:var(--display);font-size:20px;margin:0}
+.status{display:flex;flex-wrap:wrap;gap:6px}
+.status span{font-size:12px;border-radius:999px;padding:2px 10px;border:1px solid var(--line);color:var(--muted)}
+.status span.ok{border-color:var(--leaf);color:var(--leaf)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">عبودين قيمز · مستودع الأصول</div>
+    <div class="titleRow"><h1>واحة النباتات</h1><span class="ver">v0.2</span></div>
+    <p>كل نبتة هنا مبنية بالكود بدون ملفات موديلات. اختر نبتة لتقرّب عليها وتعدّلها، والأرقام تبيّن حملها على كرت الشاشة.</p>
+  </header>
+
+  <div class="viewer" id="viewer">
+    <div class="hint" id="hint">اسحب للتدوير · قرّب بإصبعين</div>
+    <button class="all" id="showAll" type="button">عرض الواحة كاملة</button>
+    <div class="hud"><span id="sTris">—</span><span id="sCalls">—</span><span id="sFps">—</span></div>
+  </div>
+
+  <nav class="chips" id="chips" aria-label="النباتات"></nav>
+
+  <section class="panel" id="editor" aria-live="polite">
+    <div class="phead"><h2 id="eName">—</h2><span class="tri" id="eTris"></span></div>
+    <div class="presets" id="ePresets"></div>
+    <div class="grid" id="eGrid"></div>
+    <div class="actions">
+      <button class="btn" id="reseed" type="button">شكل جديد</button>
+      <button class="btn ghost" id="copy" type="button">نسخ الإعدادات</button>
+      <span class="toast" id="toast"></span>
+    </div>
+    <p class="note" id="eNote"></p>
+  </section>
+
+  <section class="panel">
+    <h3 class="section-title">المشهد</h3>
+    <div class="grid">
+      <div class="ctl"><label for="wind">قوة الرياح <output id="o-wind">55%</output></label><input type="range" id="wind" min="0" max="1.5" step="0.05" value="0.55"></div>
+      <div class="ctl"><label>الجودة</label>
+        <div class="seg" id="quality"><button type="button" data-v="high" aria-pressed="false">عالية</button><button type="button" data-v="med" aria-pressed="true">متوسطة</button><button type="button" data-v="low" aria-pressed="false">خفيفة</button></div></div>
+    </div>
+    <div class="status"><span class="ok">نجحت الاختبارات الآلية للأشكال</span><span class="ok">يعمل في المتصفح</span><span>لم يُنقل لمحرك بعد</span><span>لم تجرّبه في لعبة</span></div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="core/math.js"></script>
+<script src="core/builder.js"></script>
+<script src="core/tree.js"></script>
+<script src="plants/palm.js"></script>
+<script src="plants/trees.js"></script>
+<script src="plants/shrubs.js"></script>
+<script src="core/viewer-three.js"></script>
+<script>
+(function(){
+'use strict';
+const T = THREE, A = AA.assets, X = AA.three;
+const $ = id => document.getElementById(id);
+let quality = 'med';
+
+// ---------- the oasis layout ----------
+const POND = { x: 0.5, z: 0.5, r: 2.6 };
+function groundH(x, z){
+  const d = Math.hypot(x - POND.x, z - POND.z), r = Math.hypot(x, z);
+  const dip = -0.55 * (1 - AA.smooth(POND.r - 0.4, POND.r + 1.4, d));
+  const ripple = (Math.sin(x * 0.13) + Math.sin(z * 0.11 + 1.3)) * 0.22 * AA.smooth(8, 26, r);
+  const dunes = Math.sin(x * 0.05 + z * 0.04) * 1.6 * AA.smooth(24, 60, r) + Math.max(0, Math.sin(x * 0.03 - z * 0.05)) * 2.5 * AA.smooth(35, 70, r);
+  return dip + ripple + dunes;
+}
+// كل مدخل = نوع نبتة. shared = كل النسخ تتشارك نفس الشكل (أرخص على كرت الشاشة)
+const R = AA.rng(7);
+function scatter(n, rMin, rMax, avoid){
+  const out = [];
+  let guard = 0;
+  while (out.length < n && guard++ < 500){
+    const a = R() * 6.283, r = rMin + R() * (rMax - rMin), x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (avoid.some(p => Math.hypot(p[0] - x, p[1] - z) < p[2])) continue;
+    out.push({ x, z, rot: R() * 6.283, scale: 0.8 + R() * 0.45 });
+    avoid.push([x, z, 1.4]);
+  }
+  return out;
+}
+const taken = [[POND.x, POND.z, POND.r + 1], [-5,-1,2.5],[-2,4.5,2.5],[4.5,3,2.5],[-1.5,-3.6,1.6],[6.5,-1.5,1.6],[13,-8,4],[-13,-9,4.5],[12,10,4]];
+const ENTRIES = [
+  { id:'palm',   inst:[{x:-5,z:-1,over:{seed:11,height:9}},{x:-2,z:4.5,over:{seed:22,height:6.5,bunches:3}},{x:4.5,z:3,over:{seed:33,height:11,lean:0.6,bunches:2}}] },
+  { id:'fasila', inst:[{x:-1.5,z:-3.6,over:{seed:44}},{x:6.5,z:-1.5,over:{seed:45,fronds:10,frondLen:1.3}}] },
+  { id:'sidr',   inst:[{x:13,z:-8,over:{seed:51}}] },
+  { id:'talh',   inst:[{x:-13,z:-9,over:{seed:61}}] },
+  { id:'athl',   inst:[{x:12,z:10,over:{seed:71}}] },
+  { id:'arfaj',  shared:true, inst: scatter(7, 7, 20, taken) },
+  { id:'thumam', shared:true, inst: scatter(14, 6, 22, taken) }
+];
+
+// ---------- renderer ----------
+const host = $('viewer');
+let renderer;
+try { renderer = new T.WebGLRenderer({ antialias: true }); }
+catch(e){ host.insertAdjacentHTML('beforeend','<p style="padding:20px">جهازك لا يدعم WebGL في هذا العرض.</p>'); return; }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputEncoding = T.sRGBEncoding;
+renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
+host.prepend(renderer.domElement);
+
+const scene = new T.Scene();
+(function sky(){ const c=document.createElement('canvas'); c.width=2; c.height=256; const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,0,256); gr.addColorStop(0,'#6fa3cf'); gr.addColorStop(0.55,'#b9d3e2'); gr.addColorStop(1,'#efdcbc');
+  g.fillStyle=gr; g.fillRect(0,0,2,256); const tx=new T.CanvasTexture(c); tx.encoding=T.sRGBEncoding; scene.background=tx; })();
+scene.fog = new T.Fog(new T.Color('#e6d6bb'), 45, 120);
+
+const camera = new T.PerspectiveCamera(42, 1, 0.1, 400);
+const controls = new T.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = 0.35;
+controls.maxPolarAngle = Math.PI * 0.49; controls.minDistance = 1.5; controls.maxDistance = 90;
+controls.addEventListener('start', () => { controls.autoRotate = false; tween = null; $('hint').style.opacity = 0; });
+
+scene.add(new T.HemisphereLight(0xd6e6f2, 0xc9a77a, 0.7));
+const sun = new T.DirectionalLight(0xfff0d4, 1.35);
+sun.position.set(18, 30, 12); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.02;
+Object.assign(sun.shadow.camera, { left:-26, right:26, top:26, bottom:-26, near:1, far:90 }); sun.shadow.camera.updateProjectionMatrix();
+scene.add(sun, sun.target);
+
+(function ground(){
+  const g = new T.PlaneGeometry(160, 160, 140, 140); g.rotateX(-Math.PI / 2);
+  const pos = g.attributes.position, cols = [];
+  const lin = h => new T.Color(h).convertSRGBToLinear();
+  const a = lin('#dcbc8c'), b = lin('#c9a36e'), wet = lin('#9c8159');
+  for (let i = 0; i < pos.count; i++){
+    const x = pos.getX(i), z = pos.getZ(i);
+    pos.setY(i, groundH(x, z));
+    const d = Math.hypot(x - POND.x, z - POND.z);
+    const c = a.clone().lerp(b, 0.5 + 0.5 * Math.sin(x * 1.7 + z * 2.3) * Math.sin(x * 0.6 - z * 0.9));
+    c.lerp(wet, 1 - AA.smooth(POND.r - 0.2, POND.r + 1.6, d));
+    cols.push(c.r, c.g, c.b);
+  }
+  g.setAttribute('color', new T.Float32BufferAttribute(cols, 3)); g.computeVertexNormals();
+  const m = new T.Mesh(g, new T.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
+  m.receiveShadow = true; scene.add(m);
+  const water = new T.Mesh(new T.CircleGeometry(POND.r + 0.5, 48),
+    new T.MeshStandardMaterial({ color: new T.Color('#3e7a7e'), roughness: 0.06, metalness: 0.1, transparent: true, opacity: 0.88 }));
+  water.rotation.x = -Math.PI / 2; water.position.set(POND.x, -0.22, POND.z); scene.add(water);
+})();
+
+// ---------- build plants ----------
+// لكل نسخة: params + built (أشكال) + group (موضع في المشهد)
+for (const e of ENTRIES){
+  e.asset = A[e.id];
+  e.inst.forEach(i => { i.params = AA.params(e.asset, Object.assign({ seed: Math.round(i.x * 1000 + i.z * 7) }, i.over)); });
+}
+function placeGroup(i, grp){
+  grp.position.set(i.x, groundH(i.x, i.z) - 0.02, i.z);
+  grp.rotation.y = i.rot || 0; grp.scale.setScalar(i.scale || 1);
+  scene.add(grp);
+}
+function buildEntry(e){
+  if (e.built) [].concat(e.built).forEach(b => b && X.dispose(b));
+  e.inst.forEach(i => { if (i.group) scene.remove(i.group); });
+  if (e.shared){
+    e.built = X.build(e.asset.generate(e.inst[0].params, quality));
+    e.inst.forEach(i => { i.group = X.instance(e.built); placeGroup(i, i.group); });
+  } else {
+    e.built = e.inst.map(i => { const b = X.build(e.asset.generate(i.params, quality)); i.built = b; i.group = X.instance(b); placeGroup(i, i.group); return b; });
+  }
+}
+function rebuildInstance(e, idx){
+  if (e.shared) { buildEntry(e); return; }
+  const i = e.inst[idx];
+  X.dispose(i.built); scene.remove(i.group);
+  i.built = X.build(e.asset.generate(i.params, quality)); e.built[idx] = i.built;
+  i.group = X.instance(i.built); placeGroup(i, i.group);
+}
+function entryTris(e){ return e.shared ? e.built.triangles * e.inst.length : e.built.reduce((s, b) => s + b.triangles, 0); }
+function updateStats(){
+  let tris = 0, calls = 0;
+  for (const e of ENTRIES){
+    tris += entryTris(e);
+    const parts = e.shared ? e.built.parts.length * e.inst.length : e.built.reduce((s, b) => s + b.parts.length, 0);
+    calls += parts;
+  }
+  $('sTris').textContent = tris.toLocaleString('ar-SA') + ' مثلث في المشهد';
+  $('sCalls').textContent = calls.toLocaleString('ar-SA') + ' أمر رسم';
+  for (const e of ENTRIES) if (e.chipSmall) e.chipSmall.textContent = (e.inst.length > 1 ? e.inst.length + ' نسخ · ' : '') + entryTris(e).toLocaleString('ar-SA') + ' مثلث';
+}
+function buildAll(){ ENTRIES.forEach(buildEntry); updateStats(); }
+
+// ---------- camera focus ----------
+let tween = null;
+function focus(target, dist){
+  const dir = camera.position.clone().sub(controls.target); dir.y = Math.max(dir.y, dir.length() * 0.25);
+  dir.normalize();
+  tween = { t: 0, fromP: camera.position.clone(), fromT: controls.target.clone(),
+    toT: target.clone(), toP: target.clone().addScaledVector(dir, dist) };
+  controls.autoRotate = false;
+}
+function focusEntry(e){
+  const i = e.inst[0], m = i.built ? i.built.meta : e.built.meta, s = i.scale || 1;
+  const h = (m.height + (e.id === 'palm' ? i.params.frondLen * 0.4 : 0)) * s;
+  focus(new T.Vector3(i.x, groundH(i.x, i.z) + h * 0.55, i.z), Math.max(2.6, h * 1.5 + m.radius * 0.8));
+}
+$('showAll').addEventListener('click', () => { focus(new T.Vector3(0, 3, 0), 38); setTimeout(() => { controls.autoRotate = true; }, 900); });
+
+// ---------- UI: chips + editor ----------
+let current = null;
+const chips = $('chips');
+for (const e of ENTRIES){
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', 'false');
+  b.innerHTML = `<b>${e.asset.name}</b><small></small>`;
+  e.chip = b; e.chipSmall = b.querySelector('small');
+  b.addEventListener('click', () => select(e, true));
+  chips.appendChild(b);
+}
+const fmtVal = (s, v) => s.pct ? Math.round(v * 100) + '%' : (s.unit ? v + ' ' + s.unit : String(v));
+function select(e, move){
+  current = e;
+  for (const x of ENTRIES) x.chip.setAttribute('aria-pressed', String(x === e));
+  const inst = e.inst[0], p = inst.params;
+  $('eName').innerHTML = `${e.asset.name}<span>${e.asset.nameEn}</span>`;
+  $('eNote').textContent = e.shared ? `التعديل يطبّق على كل النسخ الـ${e.inst.length} في المشهد لأنها تتشارك نفس الشكل.` :
+    (e.inst.length > 1 ? 'التعديل على النسخة الأولى فقط، والباقي يبقى كما هو.' : '');
+  const pr = $('ePresets'); pr.innerHTML = '';
+  for (const [name, over] of Object.entries(e.asset.presets || {})){
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = name;
+    b.addEventListener('click', () => { Object.assign(p, AA.params(e.asset, Object.assign({ seed: p.seed }, over))); renderControls(e); apply(e); });
+    pr.appendChild(b);
+  }
+  renderControls(e);
+  updateTri(e);
+  if (move) focusEntry(e);
+}
+function renderControls(e){
+  const p = e.inst[0].params, grid = $('eGrid'); grid.innerHTML = '';
+  for (const s of e.asset.schema){
+    const id = 'p-' + s.key;
+    const wrap = document.createElement('div'); wrap.className = 'ctl';
+    if (s.type === 'enum' || s.type === 'bool'){
+      const opts = s.type === 'bool' ? [[true, 'نعم'], [false, 'لا']] : s.options;
+      wrap.innerHTML = `<label>${s.label}</label><div class="seg"></div>`;
+      const seg = wrap.querySelector('.seg');
+      for (const [v, lab] of opts){
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = lab; b.setAttribute('aria-pressed', String(p[s.key] === v));
+        b.addEventListener('click', () => { p[s.key] = v; seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); schedule(e); });
+        seg.appendChild(b);
+      }
+    } else {
+      wrap.innerHTML = `<label for="${id}">${s.label} <output>${fmtVal(s, p[s.key])}</output></label><input type="range" id="${id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${p[s.key]}">`;
+      const inp = wrap.querySelector('input'), out = wrap.querySelector('output');
+      inp.addEventListener('input', () => { p[s.key] = parseFloat(inp.value); out.textContent = fmtVal(s, p[s.key]); schedule(e); });
+    }
+    grid.appendChild(wrap);
+  }
+}
+function updateTri(e){
+  const t = e.shared ? e.built.triangles : e.inst[0].built.triangles;
+  $('eTris').textContent = t.toLocaleString('ar-SA') + ' مثلث' + (e.shared ? ' للنسخة' : '');
+}
+let pending = null;
+function schedule(e){ if (pending) return; pending = requestAnimationFrame(() => { pending = null; apply(e); }); }
+function apply(e){ rebuildInstance(e, 0); updateStats(); updateTri(e); }
+
+$('reseed').addEventListener('click', () => { if (!current) return; current.inst[0].params.seed = (Math.random() * 1e9) | 0; apply(current); });
+$('copy').addEventListener('click', () => {
+  if (!current) return;
+  const txt = JSON.stringify({ asset: current.id, quality, params: current.inst[0].params });
+  const t = $('toast');
+  const done = () => { t.textContent = 'نُسخت الإعدادات'; setTimeout(() => t.textContent = '', 2500); };
+  try { navigator.clipboard.writeText(txt).then(done, () => { t.textContent = txt; }); } catch(err){ t.textContent = txt; }
+});
+
+$('wind').addEventListener('input', ev => { X.uniforms.uWind.value = parseFloat(ev.target.value); $('o-wind').textContent = Math.round(ev.target.value * 100) + '%'; });
+$('quality').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  $('quality').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  quality = b.dataset.v;
+  renderer.shadowMap.enabled = quality !== 'low'; sun.castShadow = quality !== 'low';
+  scene.traverse(o => { if (o.material) o.material.needsUpdate = true; });
+  buildAll(); if (current) select(current, false);
+});
+
+// ---------- loop ----------
+function resize(){ const w = host.clientWidth, h = host.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(host); resize();
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (reduce) controls.autoRotate = false;
+const clock = new T.Clock(); let fa = 0, fn = 0;
+function loop(){
+  const dt = Math.min(clock.getDelta(), 0.1);
+  X.uniforms.uTime.value += reduce ? dt * 0.3 : dt;
+  if (tween){
+    tween.t = Math.min(1, tween.t + dt / 0.9);
+    const k = tween.t * tween.t * (3 - 2 * tween.t);
+    camera.position.lerpVectors(tween.fromP, tween.toP, k); controls.target.lerpVectors(tween.fromT, tween.toT, k);
+    if (tween.t >= 1) tween = null;
+  }
+  controls.update(); renderer.render(scene, camera);
+  fa += dt; fn++;
+  if (fa > 0.5){ $('sFps').textContent = Math.round(fn / fa).toLocaleString('ar-SA') + ' إطار/ث'; fa = 0; fn = 0; }
+  requestAnimationFrame(loop);
+}
+
+camera.position.set(26, 15, 26); controls.target.set(0, 3, 0);
+buildAll();
+select(ENTRIES[0], false);
+loop();
+})();
+</script>
