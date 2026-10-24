@@ -47,7 +47,7 @@
     place(P, o, () => {
       const { w, d, h } = s;
       AA.box(P.wood, [0, 0.015, 0], [w, 0.03, d], LP.c('wood'), 1, {});
-      for (const [y, hh] of [[0.03, h * 0.42], [h * 0.52, h * 0.42]]) for (const [x, z, sx, sz] of [[0, d / 2, w, 0.02], [0, -d / 2, w, 0.02], [w / 2, 0, 0.02, d], [-w / 2, 0, 0.02, d]]) AA.box(P.wood, [x, y + hh / 2, z], [sx, hh, sz], vary(LP.c('woodLight'), rng, 0.1), 1, {});
+      for (const [y, hh] of [[0.03, h * 0.42], [h * 0.52, h * 0.42]]) for (const [x, z, sx, sz] of [[0, d / 2, w, 0.02], [0, -d / 2, w, 0.02], [w / 2, 0, 0.02, d - 0.04], [-w / 2, 0, 0.02, d - 0.04]]) AA.box(P.wood, [x, y + hh / 2, z], [sx, hh, sz], vary(LP.c('woodLight'), rng, 0.1), 1, {});
       if (s.lid || s.goods === 'closed') AA.box(P.wood, [0, h, 0], [w + 0.02, 0.03, d + 0.02], vary(LP.c('woodLight'), rng, 0.1), 1, {});
       else if (s.goods && s.goods !== 'empty') mound(P, [0, h * 0.85, 0], Math.min(w, d) * 0.45, h * 0.3, s.goods, rng);
     });
@@ -88,7 +88,7 @@
     if (g2 === 'spices' || g2 === 'dates') {
       const types = g2 === 'dates' ? ['dates'] : ['spice_red', 'spice_yellow', 'spice_green', 'coffee', 'cardamom', 'rice'], n = Math.max(3, Math.round(W / 0.38));
       for (let k = 0; k < n; k++) basketInto(P, { at: [-W / 2 + 0.25 + k * (W - 0.5) / Math.max(1, n - 1), cY + 0.04, D / 2 - 0.35] }, { radius: 0.14, height: 0.12, flare: 1.3, goods: types[k % types.length] }, rng);
-      for (let k = 0; k < 3; k++) sackInto(P, { at: [-W / 2 + 0.35 + k * 0.45, 0, D / 2 + 0.35], rot: rng() * 6 }, { height: 0.6, radius: 0.24, open: true, goods: types[(k + 2) % types.length] }, rng);
+      for (let k = 0; k < 3; k++) sackInto(P, { at: [-W / 2 + 0.35 + k * 0.45, 0, D / 2 + 0.35], rot: rng() * 6 }, { height: 0.6, radius: 0.2, open: true, goods: types[(k + 2) % types.length] }, rng);
       for (const y of [1.22, 1.67]) for (let k = 0; k < Math.round(W / 0.4); k++) LP.prism(P.glass, [-W / 2 + 0.25 + k * 0.4, y + 0.02, -D / 2 + 0.2], [-W / 2 + 0.25 + k * 0.4, y + 0.2, -D / 2 + 0.2], 0.06, 0.06, 6, LP.c('#e8e2d0'));
     } else if (g2 === 'fruit') {
       const types = ['oranges', 'lemons', 'tomatoes'], n = Math.max(2, Math.round(W / 0.55));
@@ -117,7 +117,7 @@
     const P = kit(), rng = AA.rng(p.seed), W = p.width, D = 3, H = 3.1, dw = Math.min(2.2, W - 1.2), dh = 2.2;
     const MP = { wall: P.mud, top: P.mudTop, dark: P.dark, wood: P.wood, door: P.wood }, opt = { taper: 0.03, Href: H, rng };
     LP.panelOpen(MP, { at: [0, 0, D / 2 - 0.22] }, W, H, 0.45, x => H + 0.03 * Math.sin(x * 2), [{ x0: -dw / 2, x1: dw / 2, y0: 0, y1: dh }], opt);
-    for (const s of [1, -1]) LP.panel(MP, { at: [s * (W / 2 - 0.22), 0, 0], rot: s * Math.PI / 2 }, -(D - 0.4) / 2, (D - 0.4) / 2, 0, () => H, 0.45, opt);
+    for (const s of [1, -1]) LP.panel(MP, { at: [s * (W / 2 - 0.22), 0, 0], rot: s * Math.PI / 2 }, -(D - 0.92) / 2, (D - 0.92) / 2, 0, () => H, 0.45, opt);
     LP.panel(MP, { at: [0, 0, -D / 2 + 0.22], rot: Math.PI }, -W / 2, W / 2, 0, () => H, 0.45, opt);
     AA.box(P.mudTop, [0, H - 0.1, 0], [W - 0.4, 0.12, D - 0.4], LP.c('mudLight'), 1, {});
     AA.box(P.dark, [0, H / 2, -D / 2 + 0.46], [W - 0.9, H - 0.3, 0.02], LP.c('dark'), 1, {});
@@ -126,14 +126,14 @@
     for (const s of [1, -1]) place(P, { at: [s * dw / 2, 0, D / 2 + 0.03], rot: s * 1.35 }, () => {
       const lw = dw / 2 - 0.02;
       AA.box(P.wood, [-s * lw / 2, dh / 2, 0.02], [lw, dh - 0.04, 0.04], vary(LP.c('wood'), rng, 0.06), 1, {});
-      for (const y of [0.25, dh / 2, dh - 0.25]) AA.box(P.wood, [-s * lw / 2, y, 0.05], [lw, 0.09, 0.03], LP.c('woodDark'), 1, {});
+      for (const y of [0.25, dh / 2, dh - 0.25]) AA.box(P.wood, [-s * lw / 2, y, 0.06], [lw - 0.02, 0.09, 0.03], LP.c('woodDark'), 1, {});
     });
     awning(P, -dw / 2 - 0.5, dw / 2 + 0.5, D / 2 + 0.05, D / 2 + 1.3, dh + 0.45, dh - 0.05, p.roof, rng);
     for (const s of [1, -1]) post(P, [s * (dw / 2 + 0.45), 0, D / 2 + 1.28], dh - 0.05, 0.045, rng);
     if (p.goods !== 'none') {
       const types = p.goods === 'spices' ? ['spice_red', 'spice_yellow', 'coffee', 'cardamom'] : ['rice', 'coffee', 'rice', 'spice_yellow'];
       for (let k = 0; k < 4; k++) sackInto(P, { at: [(k < 2 ? -1 : 1) * (dw / 2 + 0.05 + (k % 2) * 0.48), 0, D / 2 + 0.7], rot: rng() * 6 }, { height: 0.62, radius: 0.24, open: true, goods: types[k] }, rng);
-      for (let k = 0; k < 3; k++) sackInto(P, { at: [-W / 2 + 0.9 + k * 0.5, 0, -D / 2 + 0.75], rot: rng() * 6 }, { height: 0.75, radius: 0.27, open: false }, rng);
+      for (let k = 0; k < 3; k++) sackInto(P, { at: [-W / 2 + 0.9 + k * 0.5, 0.06, -D / 2 + 0.75], rot: rng() * 6 }, { height: 0.75, radius: 0.22, open: false }, rng);
     }
     return done('lp_shop', P, { height: H + 0.1, radius: Math.max(W, D) / 2 + 0.8, collider: { type: 'box', size: [W, H, D] }, door: { x: 0, z: D / 2, width: dw } });
   }
@@ -149,7 +149,7 @@
   function cart(p, q) {
     const P = kit(), rng = AA.rng(p.seed), L = p.length, W = 1.15, R = p.wheel, bedY = R + 0.08;
     AA.box(P.wood, [0, bedY, 0], [W, 0.04, L], vary(LP.c('woodLight'), rng, 0.05), 1, {});
-    for (let k = 1; k < 7; k++) AA.box(P.dark, [-W / 2 + k * W / 7, bedY + 0.021, 0], [0.008, 0.002, L], LP.c('wood'), 1, {});
+    for (let k = 1; k < 7; k++) AA.box(P.dark, [-W / 2 + k * W / 7, bedY + 0.023, 0], [0.008, 0.006, L - 0.02], LP.c('wood'), 1, {});
     let hitch = null;
     if (p.animal !== 'none') {
       const id = 'lp_' + p.animal, ap = AA.params(AA.assets[id], { seed: p.seed + 5, harness: true }), am = AA.assets[id].generate(ap, 'low').meta.hitch;
@@ -167,7 +167,7 @@
       plank(P, [s * (W / 2 - 0.01), bedY + 0.16, 0], [0.04, 0.24, L], rng);
       for (const z of [-L / 2 + 0.05, -L / 6, L / 6, L / 2 - 0.05]) plank(P, [s * (W / 2 - 0.01), bedY + 0.16, z], [0.06, 0.3, 0.06], rng, 'wood');
     }
-    plank(P, [0, bedY + 0.16, -L / 2 + 0.01], [W, 0.24, 0.04], rng);
+    plank(P, [0, bedY + 0.16, -L / 2 + 0.01], [W - 0.1, 0.24, 0.04], rng);
     if (p.animal === 'none') { plank(P, [0, bedY + 0.16, L / 2 + 0.6 + p.shafts / 2 - 0.05], [W - 0.1, 0.06, 0.06], rng, 'wood'); plank(P, [0, (bedY - 0.06) / 2, L / 2 + 0.35], [0.06, bedY - 0.06, 0.06], rng, 'wood'); }
     LP.prism(P.metal, [-W / 2 - 0.12, R, -0.1], [W / 2 + 0.12, R, -0.1], 0.03, 0.03, 6, LP.c('#3a3330'));
     for (const s of [1, -1]) wheel(P, [s * (W / 2 + 0.1), R, -0.1], R, rng, q);
@@ -190,10 +190,10 @@
     basketInto(P, null, { radius: r, height: h, flare: tall ? 1.1 : 1.3, goods: p.goods, handles: p.handles }, rng);
     return done('lp_basket', P, { height: h + 0.08, radius: r * 1.3, collider: { type: 'cylinder', radius: r * 1.2, height: h }, physics: { mass: 3, friction: 0.7 } });
   }
-  function fenceRun(P, x0, x1, z, style, H, rng) {
+  function fenceRun(P, x0, x1, z, style, H, rng, noEnds) {
     const L = x1 - x0, n = Math.max(1, Math.round(L / (style === 'fronds' ? 1.6 : 2)));
-    for (let k = 0; k <= n; k++) post(P, [lerp(x0, x1, k / n), 0, z], H + 0.12, style === 'fronds' ? 0.05 : 0.06, rng);
-    if (style === 'rails') { for (const y of [H * 0.3, H * 0.62, H * 0.92]) for (let k = 0; k < n; k++) { const a = lerp(x0, x1, k / n), b = lerp(x0, x1, (k + 1) / n); AA.box(P.wood, [(a + b) / 2, y + (rng() - 0.5) * 0.03, z + 0.06], [b - a + 0.12, 0.08, 0.04], vary(LP.c('woodLight'), rng, 0.12), 1, {}, (rng() - 0.5) * 0.04); } }
+    for (let k = 0; k <= n; k++) if (!noEnds || (k > 0 && k < n)) post(P, [lerp(x0, x1, k / n), 0, z], H + 0.12, style === 'fronds' ? 0.05 : 0.06, rng);
+    if (style === 'rails') { for (const y of [H * 0.3, H * 0.62, H * 0.92]) for (let k = 0; k < n; k++) { const a = lerp(x0, x1, k / n), b = lerp(x0, x1, (k + 1) / n); AA.box(P.wood, [(a + b) / 2, y + (rng() - 0.5) * 0.03, z + 0.06 + (k % 2) * 0.012], [b - a - 0.01, 0.08, 0.04], vary(LP.c('woodLight'), rng, 0.12), 1, {}, (rng() - 0.5) * 0.04); } }
     else if (style === 'pickets') { for (const y of [H * 0.25, H * 0.75]) AA.box(P.wood, [(x0 + x1) / 2, y, z + 0.05], [L + 0.1, 0.07, 0.035], LP.c('wood'), 1, {}); for (let x = x0 + 0.08; x < x1 - 0.04; x += 0.18) { const h = H * (0.95 + rng() * 0.1); AA.box(P.wood, [x, h / 2, z + 0.08], [0.1, h, 0.025], vary(LP.c('woodLight'), rng, 0.14), 1, {}); LP.tri(P.wood, [x - 0.05, h, z + 0.0925], [x + 0.05, h, z + 0.0925], [x, h + 0.07, z + 0.0925], LP.c('woodLight'), [0, 0, 1]); } }
     else { for (let x = x0 + 0.04; x < x1 - 0.02; x += 0.09) { const h = H * (0.9 + rng() * 0.2), col = vary(LP.c('palmDry'), rng, 0.14); LP.tri(P.weave, [x - 0.05, 0, z], [x + 0.05, 0, z], [x + (rng() - 0.5) * 0.06, h, z], col, [0, 0, 1]); } for (const y of [H * 0.35, H * 0.75]) LP.prism(P.rope, [x0, y, z + 0.03], [x1, y, z + 0.03], 0.012, 0.012, 4, LP.c('#9a7a4a')); }
   }
@@ -201,8 +201,8 @@
   function pen(p, q) {
     const P = kit(), rng = AA.rng(p.seed), W = p.width, D = p.depth, H = p.height, g2 = 1.4;
     place(P, { at: [0, 0, -D / 2], rot: 0 }, () => fenceRun(P, -W / 2, W / 2, 0, p.style, H, rng));
-    place(P, { at: [-W / 2, 0, 0], rot: Math.PI / 2 }, () => fenceRun(P, -D / 2, D / 2, 0, p.style, H, rng));
-    place(P, { at: [W / 2, 0, 0], rot: -Math.PI / 2 }, () => fenceRun(P, -D / 2, D / 2, 0, p.style, H, rng));
+    place(P, { at: [-W / 2, 0, 0], rot: Math.PI / 2 }, () => fenceRun(P, -D / 2, D / 2, 0, p.style, H, rng, true)); // أعمدة الزوايا من الضلعين الآخرين
+    place(P, { at: [W / 2, 0, 0], rot: -Math.PI / 2 }, () => fenceRun(P, -D / 2, D / 2, 0, p.style, H, rng, true));
     place(P, { at: [0, 0, D / 2], rot: Math.PI }, () => { fenceRun(P, -W / 2, -g2 / 2, 0, p.style, H, rng); fenceRun(P, g2 / 2, W / 2, 0, p.style, H, rng); });
     place(P, { at: [-g2 / 2, 0, D / 2], rot: -p.gate * 1.4 }, () => {
       for (const y of [0.15, H * 0.5, H - 0.08]) AA.box(P.wood, [g2 / 2, y, 0], [g2 - 0.04, 0.08, 0.045], vary(LP.c('woodLight'), rng, 0.1), 1, {});

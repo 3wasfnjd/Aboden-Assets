@@ -182,8 +182,8 @@ function houseDoor(over){ const k = JSON.stringify(over); if (!doorCache[k]) doo
 // قناع مستطيل ناعم الحواف (لرسم الأزقة على الأرض)
 const rect = (x, z, x0, x1, z0, z1, soft) => { const dx = Math.max(x0 - x, x - x1), dz = Math.max(z0 - z, z - z1), d = Math.max(dx, dz); return 1 - AA.smooth(-soft, soft, d); };
 
-// حي نجدي مسوّر: بوابة غربية ببرجين، زقاق رئيسي (5 م) يتسع إلى براحة أمام المسجد فيها البئر والحوض ومجلس قهوة،
-// صفّان من البيوت وزقاق خلفي، بستان نخل مسوّر جنوباً يسقيه مجرى الماء، وحوش غنم، وأبراج على زوايا السور.
+// حي نجدي مسوّر: بوابة غربية ببرجين، زقاق رئيسي (5 م) يتسع إلى براحة أمام المسجد فيها البئر ومجلس قهوة،
+// صفّان من البيوت وزقاق خلفي، بستان نخل مسوّر جنوباً عند مدخله البركة وتسقيه الساقية، وحوش غنم، وأبراج على زوايا السور.
 function haraEntries(){
   const PI = Math.PI, houses = [], backRow = [], lanterns = [], zirs = [], fills = [];
   const north = [[-21, 8, 7, 1, {}], [-11.5, 9, 8, 2, { roofRoom: true }], [11.5, 8, 7.5, 1, { worn: true, tower: true }], [21, 9, 8, 2, {}]];
@@ -200,7 +200,7 @@ function haraEntries(){
   for (const [x, W, D, F, ex] of south) addHouse(houses, x, 2.5 + D / 2, PI, Object.assign({ seed: sd++, width: W, depth: D, floors: F }, ex), true);
   for (const [x, W, D, F, ex] of [[-22, 7, 6.5, 1, {}], [-13, 8, 7, 2, {}], [13, 8, 7, 1, { roofRoom: true }], [22, 7, 6.5, 2, { worn: true }]]) addHouse(backRow, x, -12 - D / 2, 0, Object.assign({ seed: sd++, width: W, depth: D, floors: F }, ex), false);
   // جدران تسد الفراغات بين البيوت على الزقاق
-  for (const [x, z, L] of [[-16.5, -2.75, 1.5], [16, -2.75, 1.5], [-15.25, 2.75, 2], [15.75, 2.75, 2]]) fills.push({ x, z, over: { seed: sd++, length: L, height: 3.3 } });
+  for (const [x, z, L] of [[-16.5, -2.79, 1.5], [16, -2.79, 1.5], [-15.25, 2.79, 2], [15.75, 2.79, 2]]) fills.push({ x, z, over: { seed: sd++, length: L, height: 3.3 } }); // وجه الجدار خلف واجهة البيت بقليل حتى لا تتنافس الطبقتان
   // السور: أضلاع بأطوال ثابتة حتى تتشارك الشكل
   const N = [-20.25, -6.75, 6.75, 20.25];
   const surLong = N.map(x => ({ x, z: -23, rot: PI })).concat(N.map(x => ({ x, z: 19, rot: 0 })));
@@ -215,8 +215,9 @@ function haraEntries(){
     { id:'sur',           lod:'low', inst:[{ x:-6.3, z:14.25, rot:-PI / 2, over:{ seed:120, length:9.5, height:2.6, thickness:0.6, crenels:false, loopholes:false } }, { x:5.8, z:14.75, rot:PI / 2, over:{ seed:121, length:8.5, height:2.6, thickness:0.6, crenels:false, loopholes:false } }] },
     { id:'wall',          inst: fills },
     { id:'well',          inst:[{ x:-2.5, z:-5.2, over:{ seed:61, trough:true, courses:3 } }] },
-    { id:'water_basin',   inst:[{ x:2.6, z:-5.6, over:{ seed:62 } }] },
-    { id:'water_channel', shared:true, inst:[{ x:2.6, z:-3.7, over:{ seed:63, length:2 } }, { x:2.6, z:-1.7 }, { x:2.6, z:0.3 }, { x:2.6, z:2.3 }, { x:2.6, z:4.3 }, { x:2.6, z:6.3 }] },
+    // البركة عند مدخل بستان النخل (جنوب الزقاق) والساقية تجري منها إلى داخل البستان، فتبقى البراحة والزقاق فاضية للمشاة
+    { id:'water_basin',   inst:[{ x:3.0, z:4.2, over:{ seed:62 } }] },
+    { id:'water_channel', shared:true, inst:[{ x:3.0, z:6.3, over:{ seed:63, length:2 } }, { x:3.0, z:8.3 }] },
     { id:'palm',          lod:'low', inst:[{ x:5.2, z:5.8, over:{ seed:64, height:8, bunches:3 } }, { x:-0.4, z:7.5, over:{ seed:65, height:10, lean:0.5 } }, { x:4.4, z:9.6, over:{ seed:66, height:6.5, bunches:4 } }] },
     { id:'palm',          shared:true, lod:'low', inst:[{ x:-3.5, z:11, rot:0.4, over:{ seed:130, height:9 } }, { x:0.8, z:13.6, rot:2.2, scale:1.1 }, { x:3.9, z:16, rot:4.1, scale:0.9 }, { x:-2.2, z:16.9, rot:1.3, scale:1.05 }, { x:-4.8, z:14.6, rot:5.2, scale:0.85 }, { x:2.8, z:12.0, rot:3.3, scale:0.95 }, { x:-17, z:-21, rot:1, scale:0.9 }, { x:17.5, z:16.5, rot:2.4 }] },
     { id:'fasila',        lod:'low', inst:[{ x:0.2, z:4.6, over:{ seed:67 } }, { x:-3.5, z:6.4, over:{ seed:68, fronds:10, frondLen:1.4 } }, { x:1.8, z:17.4, over:{ seed:131 } }] },
@@ -264,7 +265,7 @@ function souqEntries(){
   // البائعون: خلف البسطة مباشرة
   const sellerAt = k => { const [x, z] = L2W(k.x, k.z, k.rot || 0, 0, -0.3); return { x, z, rot: k.rot || 0 }; };
   const sl = kiosks.map(sellerAt);
-  const shopsN = [{ x:-12.5, z:-4.9, over:{ seed:1, roof:'red', width:4 } }, { x:-8, z:-4.9, over:{ seed:2, roof:'palm', goods:'grain', width:4 } }, { x:8, z:-4.9, over:{ seed:3, roof:'green', width:5 } }, { x:12.5, z:-4.9, over:{ seed:11, roof:'red', width:4 } }];
+  const shopsN = [{ x:-12.5, z:-4.9, over:{ seed:1, roof:'red', width:4 } }, { x:-8, z:-4.9, over:{ seed:2, roof:'palm', goods:'grain', width:4 } }, { x:8, z:-4.9, over:{ seed:3, roof:'green', width:5 } }, { x:12.53, z:-4.9, over:{ seed:11, roof:'red', width:4 } }];
   const shopsS = [{ x:-12.5, z:4.9, rot:PI, over:{ seed:12, roof:'palm', width:4 } }, { x:8.2, z:4.9, rot:PI, over:{ seed:13, roof:'blue', goods:'grain', width:4 } }, { x:12.6, z:4.9, rot:PI, over:{ seed:14, roof:'green', goods:'none', width:4 } }];
   const shopSit = (sh) => { const [x, z] = L2W(sh.x, sh.z, sh.rot || 0, 0, 2.1); return { x, z, rot: sh.rot || 0 }; };
   const ss = [shopSit(shopsN[1]), shopSit(shopsS[0]), shopSit(shopsN[2])];

@@ -105,7 +105,7 @@
       Cl.skinFn = AA.autoSkin(sk, ['hips', 'spine', 'chest', 'neck', 'clavL', 'clavR'], 4);
       const prof = [[0.3, 0.165, 0.13], [0.4, 0.17, 0.135], [0.52, 0.18, 0.14], [0.66, 0.185, 0.135], [0.72, 0.12, 0.1], [0.76, 0.07, 0.07]];
       AA.loft(Cl, { path: prof.map(r => [0, r[0], 0]), sides: 8, up: () => [0, 0, 1], capStart: true, radius: t => { const r = prof[Math.round(t * (prof.length - 1))]; return [r[1], r[2]]; }, color: () => gcol });
-      AA.loft(Cl, { path: [[0, 0.34, 0], [0, 0.37, 0]], sides: 8, up: () => [0, 0, 1], radius: () => [0.172, 0.138], color: () => LP.c('#3a2e27') });
+      AA.loft(Cl, { path: [[0, 0.34, 0], [0, 0.37, 0]], sides: 8, up: () => [0, 0, 1], radius: () => [0.18, 0.146], color: () => LP.c('#3a2e27') });
       for (const [sd, x] of [['L', 1], ['R', -1]]) {
         Cl.setSkin([[id('thigh' + sd), 1]]); LP.prism(Cl, [B.hipX * x, B.hip + 0.02, 0], [B.hipX * x, B.knee, 0.01], 0.075, 0.062, 6, gcol);
         Cl.setSkin([[id('shin' + sd), 1]]); LP.prism(Cl, [B.hipX * x, B.knee + 0.01, 0.01], [B.hipX * x, B.ankle + 0.02, 0], 0.062, 0.056, 6, gcol);
@@ -191,7 +191,7 @@
       LP.prism(Pl, [0, 1.065, 0.0], [0, 1.085, 0.0], B.hr + 0.075, B.hr + 0.06, 10, hc, { sx: 1, rot: 0.3 });
       LP.prism(Pl, [0, 1.24, -0.2], [0, 1.27, 0.15], 0.03, 0.03, 4, mixc(hc, [0, 0, 0], 0.12));
     } else if (H.type === 'girlHair') {
-      hairCap(B.hr + 0.014, d => d[1] > -0.05 || d[2] < -0.1);
+      hairCap(B.hr + 0.014, d => d[1] > -0.05 || (d[2] < -0.1 && d[1] > -0.6));
       AA.box(Hr, [0, 1.1, 0.215], [0.3, 0.06, 0.05], hairC, 1, {}); // غُرّة
       for (const s of [1, -1]) { LP.ico(Hr, [s * 0.2, 0.93, -0.08], [0.07, 0.11, 0.07], 0, () => hairC); LP.ico(Hr, [s * 0.215, 1.03, -0.07], 0.035, 0, () => LP.c('#d43b35')); }
     } else if (H.type === 'hair') hairCap(B.hr + 0.012, d => d[1] > 0.12 || (d[2] < -0.25 && d[1] > -0.45));

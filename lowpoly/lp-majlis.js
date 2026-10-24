@@ -62,14 +62,14 @@
       const border = i === 0 || j === 0 || i === n - 1 || j === m - 1, col = border ? C[(i + j) % 2 ? 3 : 2] : C[(i + j) % 2];
       LP.quad(P.rug, AA.xform([x0, y + th, z1], o), AA.xform([x1, y + th, z1], o), AA.xform([x1, y + th, z0], o), AA.xform([x0, y + th, z0], o), col, [0, 1, 0]);
     }
-    AA.box(P.rug, [0, y + th / 2, 0], [L, th, W], C[3], 1, o);
+    AA.box(P.rug, [0, y + th / 2 - 0.003, 0], [L, th - 0.006, W], C[3], 1, o); // أخفض من وجه النقشة حتى لا يتنافسا
     if (fringe) for (const s of [1, -1]) for (let k = 0; k < 8; k++) { const z = lerp(-W / 2 + 0.06, W / 2 - 0.06, k / 7); LP.tri(P.cloth, AA.xform([s * L / 2, y + 0.006, z - 0.02], o), AA.xform([s * L / 2, y + 0.006, z + 0.02], o), AA.xform([s * (L / 2 + 0.07), y + 0.004, z], o), LP.c('#efe8da'), [0, 1, 0]); }
   }
   function carpet(p, q) { const P = kit(), rng = AA.rng(p.seed); rugInto(P, {}, p.length, p.width, rng, true); return done('lp_carpet', P, { height: 0.06, radius: Math.hypot(p.length, p.width) / 2, collider: { type: 'none' }, seats: { length: p.length, width: p.width } }); }
   // ---------- الجلسة الأرضية ----------
   function seatRun(P, o, L, rng) {
-    AA.box(P.sadu, [0, 0.11, 0], [L, 0.13, 0.72], LP.c('#8a2a24'), 1, o);
-    for (let k = 0; k < Math.max(2, Math.round(L / 0.5)); k++) AA.box(P.sadu, [-L / 2 + (k + 0.5) * L / Math.max(2, Math.round(L / 0.5)), 0.178, 0.36], [L / Math.max(2, Math.round(L / 0.5)) - 0.01, 0.012, 0.005], LP.c(SADU[k % SADU.length]), 1, o);
+    AA.box(P.sadu, [0, 0.115, 0], [L, 0.13, 0.72], LP.c('#8a2a24'), 1, o);
+    for (let k = 0; k < Math.max(2, Math.round(L / 0.5)); k++) AA.box(P.sadu, [-L / 2 + (k + 0.5) * L / Math.max(2, Math.round(L / 0.5)), 0.18, 0.366], [L / Math.max(2, Math.round(L / 0.5)) - 0.01, 0.012, 0.01], LP.c(SADU[k % SADU.length]), 1, o);
     const n = Math.max(1, Math.round(L / 0.75));
     for (let k = 0; k < n; k++) {
       const x = -L / 2 + (k + 0.5) * L / n, w = L / n - 0.04, oo = { at: AA.xform([x, 0.42, -0.27], o), rot: o.rot || 0 }, st = P.sadu.vertexCount;

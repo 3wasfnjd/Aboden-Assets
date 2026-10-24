@@ -66,7 +66,7 @@
     const P = kit(), A = p.arm, T = p.thickness, s = STEP[q];
     const top = ph => x => p.height + 0.03 * Math.sin(x * 2.3 + ph);
     AA.mudPanel(P, { L: A, H: p.height, T, taper: 0.04, step: s, seed: p.seed, top: top(1), at: [A / 2 - T / 2, 0, 0] });
-    AA.mudPanel(P, { L: A, H: p.height, T, taper: 0.04, step: s, seed: p.seed + 5, top: top(2), at: [0, 0, -(A / 2 - T / 2)], rot: Math.PI / 2 });
+    AA.mudPanel(P, { L: A - T / 2, H: p.height, T, taper: 0.04, step: s, seed: p.seed + 5, top: top(2), at: [0, 0, -(A / 2 - T / 2) - T / 4], rot: Math.PI / 2 }); // يبدأ داخل الضلع الأول حتى لا تتطابق الأوجه عند الزاوية
     return done('wall_corner', P, p, { height: p.height, radius: A, collider: { type: 'compound' } });
   }
 

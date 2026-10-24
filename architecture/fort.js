@@ -23,8 +23,9 @@
 
   // صف شُرَف على حافة جدار (span بالطول عند ارتفاع y، على بُعد z من المنتصف)
   function crenelRow(P, o, L, y, z, d, k, gap) {
-    const n = Math.max(1, Math.round((L - 0.4) / gap));
-    for (let i = 0; i <= n; i++) { const x = -L / 2 + 0.2 + i * (L - 0.4) / n; AA.najdiCrenel(P, { at: X(o, [x, y, z]), rot: o.rot || 0 }, d, k); }
+    // موزّعة داخل الطول (نصف مسافة عند كل طرف) حتى لا تتطابق شُرفة الطرف مع شُرفة القطعة المجاورة
+    const n = Math.max(1, Math.round(L / gap));
+    for (let i = 0; i < n; i++) { const x = -L / 2 + (i + 0.5) * L / n; AA.najdiCrenel(P, { at: X(o, [x, y, z]), rot: o.rot || 0 }, d, k); }
   }
   // أوتاد خشب بارزة (سقالات البناء النجدية) على وجه عمودي
   function pegs(P, o, xs, ys, zf, rng) {
@@ -37,7 +38,7 @@
     const r = AA.mudPanel(P, { L, H, T, taper: T * 0.22, step: st, seed: p.seed, r: 0.1, disp: 0.04, top: x => H + 0.04 * Math.sin(x * 1.3 + p.seed) });
     const zt = r.faceZ(H);
     // دروة خارجية (ساتر) تحمي الممشى، بشُرَف مدرّجة ومرامي
-    const pr = AA.mudPanel(P, { L, H: 0.9, T: 0.3, taper: 0.02, step: st, seed: p.seed + 3, r: 0.05, disp: 0.015, at: [0, H - 0.02, zt - 0.17], noEnds: false });
+    const pr = AA.mudPanel(P, { L: L - 0.02, H: 0.9, T: 0.3, taper: 0.02, step: st, seed: p.seed + 3, r: 0.05, disp: 0.015, at: [0, H - 0.02, zt - 0.17], noEnds: false });
     if (p.crenels) crenelRow(P, { at: [0, 0, 0] }, L, H + 0.88, zt - 0.17, 0.22, 1.15, q === 'low' ? 1.6 : 0.85);
     if (p.loopholes) for (let x = -L / 2 + 0.7; x < L / 2 - 0.5; x += 1.4) { // مرامي صغيرة في الساتر
       const y = H + 0.42, z = zt - 0.17 + pr.faceZ(0.42) + 0.006;

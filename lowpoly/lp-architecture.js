@@ -57,8 +57,9 @@
     return { faceAt: y => sz / 2 - tpz * (y - y0) / h, faceXAt: y => sx / 2 - tpx * (y - y0) / h };
   }
   // تفاصيل: مثلث تهوية، نافذة داكنة بعتبة، رؤوس جذوع، باب نجدي، شُرفة
-  function vent(P, o, x, y, z, s) { LP.tri(P.dark, X(o, [x - s * 0.55, y, z]), X(o, [x + s * 0.55, y, z]), X(o, [x, y + s * 1.1, z]), LP.c('dark'), RD(o, [0, 0, 1])); }
+  function vent(P, o, x, y, z, s) { z += 0.012; LP.tri(P.dark, X(o, [x - s * 0.55, y, z]), X(o, [x + s * 0.55, y, z]), X(o, [x, y + s * 1.1, z]), LP.c('dark'), RD(o, [0, 0, 1])); }
   function win(P, o, x, y, z, w, h, sill) {
+    z += 0.012;
     quad(P.dark, X(o, [x - w / 2, y - h / 2, z]), X(o, [x + w / 2, y - h / 2, z]), X(o, [x + w / 2, y + h / 2, z]), X(o, [x - w / 2, y + h / 2, z]), LP.c('dark'), RD(o, [0, 0, 1]));
     if (sill) AA.box(P.wood, [x, y - h / 2 - 0.05, z + 0.04], [w + 0.18, 0.06, 0.1], LP.c('wood'), 1, o);
   }
@@ -79,7 +80,7 @@
     return y + 0.34 * k;
   }
   function crenelRow(P, o, L, y, z, k, step, C) {
-    const n = Math.max(1, Math.round(L / (step || 0.9)));
+    const n = Math.max(1, Math.floor(L / Math.max(step || 0.9, 0.95 * k))); // بدون تداخل بين الشُّرَف المتجاورة
     for (let i = 0; i < n; i++) crenel(P, X(o, [-L / 2 + (i + 0.5) * L / n, y, z]), k, o.rot || 0, C);
   }
   function wornPatches(P, o, L, H, z, rng, n) { // طوب ظاهر: بقع أغمق بارزة قليلاً
@@ -99,7 +100,7 @@
   function corner(p, q) {
     const P = kit(), rng = AA.rng(p.seed), A = p.arm, T = p.thickness, H = p.height;
     panel(P, { at: [A / 2 - T / 2, 0, 0] }, -A / 2, A / 2, 0, wavy(H, 1), T, { taper: 0.04, Href: H, rng });
-    panel(P, { at: [0, 0, -(A / 2 - T / 2)], rot: Math.PI / 2 }, -A / 2, A / 2, 0, wavy(H, 2), T, { taper: 0.04, Href: H, rng });
+    panel(P, { at: [0, 0, -(A / 2 - T / 2)], rot: Math.PI / 2 }, -A / 2 + T, A / 2, 0, wavy(H, 2), T, { taper: 0.04, Href: H, rng }); // ينتهي عند ظهر الضلع الأول حتى لا تتطابق الأوجه
     if (p.worn) wornPatches(P, { at: [A / 2 - T / 2, 0, 0] }, A, H, T / 2 - 0.03, rng, 3);
     return done('lp_wall_corner', P, { height: H, radius: A, collider: { type: 'compound' } });
   }
@@ -237,7 +238,7 @@
     const P = kit(), Wt = new AA.Builder(), rng = AA.rng(p.seed), S = p.size, h = p.rimHeight, w = 0.24, half = S / 2;
     for (let s = 0; s < 4; s++) {
       const o = { rot: s * Math.PI / 2 }, n = Math.max(2, Math.round(S / 0.55));
-      for (let k = 0; k < n; k++) { const x = -half + (k + 0.5) * S / n; if (s === 0 && p.inlet && Math.abs(x) < 0.2) continue; AA.box(P.wall, [x, h / 2, half - w / 2], [S / n - 0.02, h, w], vary(LP.c(STONE[(k + s) % 3]), rng, 0.05), 1, o); }
+      const span = s % 2 ? S - 2 * w : S; for (let k = 0; k < n; k++) { const x = -span / 2 + (k + 0.5) * span / n; if (s === 0 && p.inlet && Math.abs(x) < 0.2) continue; AA.box(P.wall, [x, h / 2, half - w / 2], [span / n - 0.02, h, w], vary(LP.c(STONE[(k + s) % 3]), rng, 0.05), 1, o); }
     }
     AA.box(P.top, [0, 0.03, 0], [S - 2 * w, 0.06, S - 2 * w], LP.c('#9c8a6c'), 1, {});
     if (p.water) waterRect(Wt, -half + w, half - w, -half + w, half - w, h - 0.08);
@@ -277,7 +278,7 @@
     const P = kit(), rng = AA.rng(p.seed), L = p.length, H = p.height, T = p.thickness;
     const r = panel(P, {}, -L / 2, L / 2, 0, wavy(H, p.seed, 0.04), T, { taper: T * 0.22, Href: H, rng });
     const zt = r.faceZ(H);
-    const pr = panel(P, { at: [0, 0, zt - 0.17] }, -L / 2, L / 2, H - 0.02, () => H + 0.88, 0.3, { taper: 0.02, Href: 1, rng, n: Math.ceil(L / 2) });
+    const pr = panel(P, { at: [0, 0, zt - 0.17] }, -L / 2 + 0.01, L / 2 - 0.01, H - 0.02, () => H + 0.88, 0.3, { taper: 0.02, Href: 1, rng, n: Math.ceil(L / 2) });
     if (p.crenels) crenelRow(P, { at: [0, 0, 0] }, L, H + 0.88, zt - 0.17, 0.22 / 0.24, 0.85);
     if (p.loopholes) for (let x = -L / 2 + 0.7; x < L / 2 - 0.5; x += 1.4) win(P, {}, x, H + 0.42, zt - 0.17 + 0.16, 0.1, 0.22, false);
     if (p.buttress) for (const x of [-L / 2 + 0.6, L / 2 - 0.6]) block(P, { at: [x, 0, 0.1] }, 1.1, T + 0.5, 0, H * 0.75, { taperZ: 0.25, rng });
@@ -336,7 +337,7 @@
     panel(P, { at: [0, 0, zb + T / 2], rot: Math.PI }, -W / 2, W / 2, 0, top(1), T, opt);
     for (const s of [1, -1]) {
       const o = { at: [s * (W / 2 - T / 2), 0, zb + D / 2], rot: s * Math.PI / 2 };
-      const r = panel(P, o, -D / 2, D / 2, 0, top(2 + s), T, opt);
+      const r = panel(P, o, s > 0 ? -D / 2 + 0.12 : -D / 2 + T + 0.02, s > 0 ? D / 2 - T - 0.02 : D / 2 - 0.12, 0, top(2 + s), T, opt); // تبدأ داخل جدار القبلة وتنتهي داخل الرواق
       for (let z = 1.6; z < D - 1.2; z += 2.2) win(P, o, s * (z - D / 2), 1.5, r.faceZ(1.5) + 0.01, 0.5, 0.65, false);
     }
     // الرواق على الصحن: فتحات بين أعمدة
@@ -357,12 +358,12 @@
       if (q !== 'low') { for (const s of [1, -1]) crenelRow(P, { at: [s * (W / 2 - T / 2), 0, zb + D / 2], rot: s * Math.PI / 2 }, D - 1.4, H - 0.02, 0, 1.1, 0.9); crenelRow(P, { at: [0, 0, zb + T / 2], rot: Math.PI }, W - 1.4, H - 0.02, 0, 1.1, 0.9); }
       for (const [sx, sz] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) crenel(P, [sx * (W / 2 - 0.3), H - 0.03, sz > 0 ? zh - 0.3 : zb + 0.3], 1.45, 0, MUD, true);
     }
-    beams(P, {}, -W / 2 + 0.7, W / 2 - 0.5, roofY - 0.12, zh - 0.28 + fr.faceZ(roofY), 0.65);
+    beams(P, {}, -W / 2 + 0.75, W / 2 - 0.75, roofY - 0.12, zh - 0.28 + fr.faceZ(roofY), 0.65);
     // سور الصحن المنخفض ومدخله
     const cw = 2.3, cT = 0.45, zc = zh + C, gwid = 1.6, copt = { taper: 0.03, Href: cw, rng };
-    panelOpen(P, { at: [0, 0, zc - cT / 2] }, W, cw, cT, x => cw + 0.03 * Math.sin(x * 2.3), [{ x0: -gwid / 2, x1: gwid / 2, y0: 0, y1: 2.1 }], copt);
+    panelOpen(P, { at: [0, 0, zc - cT / 2] }, W - 0.03, cw, cT, x => cw + 0.03 * Math.sin(x * 2.3), [{ x0: -gwid / 2, x1: gwid / 2, y0: 0, y1: 2.1 }], copt);
     AA.box(P.wood, [0, 2.18, zc - cT / 2 + 0.2], [gwid + 0.5, 0.14, 0.12], LP.c('wood'), 1, {});
-    for (const s of [1, -1]) panel(P, { at: [s * (W / 2 - cT / 2), 0, zh + C / 2], rot: s * Math.PI / 2 }, -C / 2, C / 2, 0, x => cw + 0.03 * Math.sin(x * 2.1 + s), cT, copt);
+    for (const s of [1, -1]) panel(P, { at: [s * (W / 2 - cT / 2), 0, zh + C / 2], rot: s * Math.PI / 2 }, s > 0 ? -C / 2 + 0.05 : -C / 2 + cT + 0.02, s > 0 ? C / 2 - cT - 0.02 : C / 2 - 0.05, 0, x => cw + 0.03 * Math.sin(x * 2.1 + s), cT, copt);
     for (const s of [1, -1]) doorLeaf(P, { at: [s * gwid / 2, 0, zc - cT / 2 + 0.12], rot: s * -1.2 }, s > 0 ? -gwid / 2 + 0.01 : 0.01, gwid / 2 - 0.02, 2.08, 0, 'teal');
     let mz = null;
     if (p.minaret) { const mb = 2.6, at = [W / 2 - mb / 2 - 0.05, 0, zc - mb / 2 - 0.05]; minaretInto(P, at, p.minaretHeight, mb, rng); doorLeaf(P, { at, rot: -Math.PI / 2 }, -0.4, 0.8, 1.8, mb / 2 + 0.01, 'teal'); mz = at; }

@@ -57,7 +57,7 @@
     }
   }
   // قوس عجلة في المقطع السفلي (من الخلف للأمام)
-  const arch = (zc, R, y0, n) => { const pts = [], Ra = R + 0.08; for (let k = 0; k <= n; k++) { const a = Math.PI - k / n * Math.PI; pts.push([zc + Math.cos(a) * Ra, Math.max(y0, R + Math.sin(a) * Ra * 0.95)]); } return pts; };
+  const arch = (zc, R, y0, n, yMax) => { const pts = [], Ra = R + 0.08; for (let k = 0; k <= n; k++) { const a = Math.PI - k / n * Math.PI; pts.push([zc + Math.cos(a) * Ra, Math.min(yMax || 9, Math.max(y0, R + Math.sin(a) * Ra * 0.95))]); } return pts; };
   function wheelInto(T, Rm, c, R, w, sx, q, rimCol, axis) {
     const n = q === 'low' ? 8 : 12, ax = axis === 'z' ? [0, 0, 1] : [1, 0, 0], a = V.madd(c, ax, -w / 2), b = V.madd(c, ax, w / 2);
     LP.prism(T, a, b, R, R, n, LP.c('#232220'), { rot: Math.PI / n });
@@ -81,7 +81,7 @@
       AA.box(P.trim, [0, (s.bottom + s.hoodY) / 2 + 0.05, zF + 0.01], [hoodW * 2 - 0.12, s.hoodY - s.bottom - 0.25, 0.04], LP.c('#2a2a2a'), 1, {}); // الشبك
       for (let k = 0; k < 6; k++) AA.box(P.chrome, [0, s.bottom + 0.25 + k * 0.1, zF + 0.035], [hoodW * 2 - 0.2, 0.025, 0.01], LP.c('#c9cacb'), 1, {});
     } else {
-      const bot = [[zR, s.bottom]].concat(arch(s.axR, s.R, s.bottom, an), arch(s.axF, s.R, s.bottom, an), [[zF, s.bottom]]);
+      const bot = [[zR, s.bottom]].concat(arch(s.axR, s.R, s.bottom, an, s.bed ? s.bed - 0.05 : null), arch(s.axF, s.R, s.bottom, an), [[zF, s.bottom]]);
       const top = s.bed ? [[zF, s.bumperY + 0.1], [zF - 0.05, s.hoodY - 0.06], [zF - 0.3, s.hoodY], [s.cowlZ, s.hoodY + 0.02], [s.cabRear, s.belt], [s.cabRear, s.bed], [zR, s.bed]]
         : [[zF, s.bumperY + 0.1], [zF - 0.05, s.hoodY - 0.06], [zF - 0.3, s.hoodY], [s.cowlZ, s.hoodY + 0.02], [zR + 0.02, s.belt], [zR, s.belt - 0.1]];
       prof = bot.concat(top);
@@ -128,7 +128,7 @@
       const ly = s.truck ? s.hoodY - 0.35 : s.hoodY - 0.2, lx = s.truck ? sx * 0.62 : sx * (hw - 0.22);
       if (s.roundLamps) LP.prism(P.lamp, [lx, ly, zF - 0.01], [lx, ly, zF + 0.025], 0.09, 0.09, 8, LP.c('#fff6dc'), { rot: Math.PI / 8 });
       else AA.box(P.lamp, [lx, ly, zF + 0.005], [0.3, 0.12, 0.03], LP.c('#fff6dc'), 1, {});
-      AA.box(P.amber, [sx * (hw - 0.05), s.bumperY + 0.12, zF + 0.01], [0.1, 0.06, 0.03], LP.c('#f2a33a'), 1, {});
+      AA.box(P.amber, [sx * (hw - 0.09), s.bumperY + 0.12, zF + 0.01], [0.1, 0.06, 0.03], LP.c('#f2a33a'), 1, {});
       if (!s.truck) AA.box(P.tail, [sx * (hw - 0.1), s.belt - 0.25, zR - 0.005], [0.12, 0.2, 0.03], LP.c('#b8231a'), 1, {});
       // مرايا جانبية
       AA.box(P.trim, [sx * (hw + 0.1), s.belt + 0.12, s.cowlZ - 0.12], [0.1, 0.14, 0.04], LP.c('#2a2a2a'), 1, {});
@@ -174,8 +174,8 @@
     bodyInto(P, s, p, q, rng);
     const paint = LP.c(PAINT[p.color] || PAINT.white), inC = mixc(paint, [0.2, 0.2, 0.2], 0.25);
     // جدران الصندوق والباب الخلفي
-    for (const sx of [1, -1]) AA.box(P.paint, [sx * (W - 0.06), (fy + s.belt) / 2, (zb0 + zb1) / 2], [0.06, s.belt - fy, zb0 - zb1 + 0.1], vary(paint, rng, 0.02), 1, {});
-    AA.box(P.paint, [0, (fy + s.belt) / 2, zb1 - 0.03], [W * 2 - 0.06, s.belt - fy, 0.06], vary(paint, rng, 0.02), 1, {});
+    for (const sx of [1, -1]) AA.box(P.paint, [sx * (W - 0.07), (fy + s.belt) / 2, (zb0 + zb1) / 2], [0.06, s.belt - fy, zb0 - zb1 + 0.1], vary(paint, rng, 0.02), 1, {});
+    AA.box(P.paint, [0, (fy + s.belt) / 2 - 0.005, zb1 - 0.03], [(W - 0.1) * 2, s.belt - fy - 0.01, 0.06], vary(paint, rng, 0.02), 1, {});
     AA.box(P.paint, [0, fy + 0.01, (zb0 + zb1) / 2], [wi * 2, 0.02, zb0 - zb1], mixc(inC, [0.1, 0.1, 0.1], 0.4), 1, {});
     for (const sx of [1, -1]) AA.box(P.paint, [sx * (wi - 0.14), fy + 0.12, s.axR], [0.28, 0.24, 0.98], inC, 1, {});
     for (const sx of [1, -1]) AA.box(P.tail, [sx * (W - 0.08), s.belt - 0.22, zb1 - 0.065], [0.12, 0.22, 0.02], LP.c('#b8231a'), 1, {});
@@ -226,11 +226,11 @@
       const z0 = 0.8, z1 = zEnd + 0.05, bw = 1.2, H = p.sideH, rows = Math.max(2, Math.round(H / 0.3)), COLS = ['#2a5a9a', '#c9302a', '#e0b030', '#2f7a4a'];
       const at = t => lerp(z0 - 0.2, z1 + 0.2, t), plankCol = r => p.painted ? LP.c(COLS[r % 4]) : vary(LP.c('woodLight'), rng, 0.1);
       AA.box(P.wood, [0, fy, (z0 + z1) / 2], [bw * 2, 0.07, z0 - z1], LP.c('woodLight'), 1, {});
-      for (const sx of [1, -1]) AA.box(P.paint, [sx * (bw - 0.06), fy - 0.12, (z0 + z1) / 2], [0.12, 0.18, z0 - z1], LP.c('#3a3a3a'), 1, {});
+      for (const sx of [1, -1]) AA.box(P.paint, [sx * (bw - 0.07), fy - 0.12, (z0 + z1) / 2], [0.1, 0.18, z0 - z1 - 0.02], LP.c('#3a3a3a'), 1, {});
       for (let r = 0; r < rows; r++) { const y = fy + 0.04 + (r + 0.5) * H / rows, h = H / rows - 0.02, c = plankCol(r);
         for (const sx of [1, -1]) AA.box(p.painted ? P.paint : P.wood, [sx * bw, y, (z0 + z1) / 2], [0.05, h, z0 - z1], c, 1, {});
-        AA.box(p.painted ? P.paint : P.wood, [0, y, z1], [bw * 2, h, 0.05], c, 1, {}); }
-      for (let r = 0; r < rows + 2; r++) { const y = fy + 0.04 + (r + 0.5) * (H + 0.6) / (rows + 2); AA.box(p.painted ? P.paint : P.wood, [0, y, z0], [bw * 2, (H + 0.6) / (rows + 2) - 0.02, 0.06], plankCol(r + 1), 1, {}); }
+        AA.box(p.painted ? P.paint : P.wood, [0, y, z1], [bw * 2 - 0.06, h, 0.05], c, 1, {}); }
+      for (let r = 0; r < rows + 2; r++) { const y = fy + 0.04 + (r + 0.5) * (H + 0.6) / (rows + 2); AA.box(p.painted ? P.paint : P.wood, [0, y, z0], [bw * 2 - 0.06, (H + 0.6) / (rows + 2) - 0.02, 0.06], plankCol(r + 1), 1, {}); }
       for (const z of [z0, (z0 + z1) / 2, z1]) for (const sx of [1, -1]) AA.box(P.paint, [sx * (bw + 0.03), fy + H / 2 + 0.03, z], [0.07, H + 0.06, 0.09], LP.c('#383838'), 1, {});
       const ld = p.load, S = LP.souq;
       if (ld === 'sacks') for (let k = 0; k < 14; k++) S.sackInto(P, { at: [(k % 3 - 1) * 0.7, fy + 0.04 + (k > 8 ? 0.5 : 0), at(((k % 9) / 3 | 0) * 0.33 + 0.12 + (k > 8 ? 0.1 : 0))], rot: rng() * 6 }, { height: 0.6, radius: 0.27, open: false }, rng);

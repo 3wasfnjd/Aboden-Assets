@@ -120,11 +120,11 @@
     const W = c.w, D = c.d, H = c.h, t = 0.022, slats = Math.max(2, Math.round(H / 0.11));
     place(P, o, () => {
       const tint = c.tint || [0.95, 0.86, 0.72];
-      for (const [cx, cz] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) plank(P, [cx * (W / 2 - 0.025), H / 2, cz * (D / 2 - 0.025)], [0.05, H, 0.05], rng, mixc(tint, [0.6, 0.5, 0.4], 0.25));
+      for (const [cx, cz] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) plank(P, [cx * (W / 2 - 0.018), H / 2, cz * (D / 2 - 0.018)], [0.05, H, 0.05], rng, mixc(tint, [0.6, 0.5, 0.4], 0.25));
       for (let k = 0; k < slats; k++) {
         const y = (k + 0.5) * H / slats, sh = H / slats - 0.025;
         plank(P, [0, y, D / 2 - t / 2], [W - 0.012, sh, t], rng, tint); plank(P, [0, y, -D / 2 + t / 2], [W - 0.012, sh, t], rng, tint);
-        plank(P, [W / 2 - t / 2, y, 0], [t, sh, D - 0.06], rng, tint); plank(P, [-W / 2 + t / 2, y, 0], [t, sh, D - 0.06], rng, tint);
+        plank(P, [W / 2 - t / 2 - 0.004, y, 0], [t, sh, D - 2 * t - 0.01], rng, tint); plank(P, [-W / 2 + t / 2 + 0.004, y, 0], [t, sh, D - 2 * t - 0.01], rng, tint); // الجانبان بين اللوحين الأمامي والخلفي
       }
       plank(P, [0, 0.035, 0], [W - 0.03, 0.024, D - 0.03], rng, mixc(tint, [0.5, 0.4, 0.3], 0.3));
       if (c.lid) for (let k = 0; k < 4; k++) plank(P, [0, H + 0.012, -D / 2 + (k + 0.5) * D / 4], [W, 0.024, D / 4 - 0.01], rng, tint);
@@ -356,7 +356,7 @@
     if (style === 'rails') {
       for (const y of [H * 0.3, H * 0.62, H * 0.92]) for (let k = 0; k < n; k++) {
         const a = lerp(x0, x1, k / n), b = lerp(x0, x1, (k + 1) / n), sag = (rng() - 0.5) * 0.03;
-        AA.box(P.wood, [(a + b) / 2, y + sag, z + 0.06], [b - a + 0.12, 0.08, 0.04], vary([0.86, 0.78, 0.68], rng, 0.12), 0.6, {}, (rng() - 0.5) * 0.04);
+        AA.box(P.wood, [(a + b) / 2, y + sag, z + 0.06 + (k % 2) * 0.012], [b - a - 0.01, 0.08, 0.04], vary([0.86, 0.78, 0.68], rng, 0.12), 0.6, {}, (rng() - 0.5) * 0.04);
       }
     } else if (style === 'pickets') {
       for (const y of [H * 0.25, H * 0.75]) AA.box(P.wood, [(x0 + x1) / 2, y, z + 0.05], [L + 0.1, 0.07, 0.035], vary([0.8, 0.72, 0.62], rng, 0.1), 0.6, {});

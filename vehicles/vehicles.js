@@ -22,6 +22,7 @@
     // الأبواب: كل باب جزء مستقل بمفصّل عمودي عند حافته الأمامية (يُفتح للخارج)
     (ex.doors || []).forEach((d, k) => { for (const [sd, sx] of [['L', 1], ['R', -1]]) {
       const hinge = { id: 'door' + k + sd, pivot: [sx * ex.W, 0, d[1]], axis: 'y', sign: -sx, max: 1.15 };
+      for (const B of [P['door' + k + sd], P['dglass' + k + sd]]) if (B) for (let i = 0; i < B.pos.length; i += 3) B.pos[i] += sx * 0.004; // خارج سطح الجسم بقليل حتى لا تتنافس الطبقتان
       parts['door' + k + sd] = { builder: P['door' + k + sd], material: { kind: 'paint', roughness: 0.36, metalness: 0.12, doubleSided: true, hinge } };
       parts['dglass' + k + sd] = { builder: P['dglass' + k + sd], material: { kind: 'glass', roughness: 0.05, opacity: 0.42, doubleSided: true, color: [0.1, 0.13, 0.15], hinge } };
     } });
@@ -242,7 +243,7 @@
     AA.quad(P.interior, [[-W + 0.06, s.floorY, s.cowlZ - 0.1], [W - 0.06, s.floorY, s.cowlZ - 0.1], [W - 0.06, s.belt, s.cowlZ - 0.1], [-W + 0.06, s.belt, s.cowlZ - 0.1]], [[0, 0], [1, 0], [1, 1], [0, 1]], [[0.6, 0.55, 0.5]], [0, 0, -1]);
     if (s.bed) AA.quad(P.interior, [[-W + 0.06, s.floorY, s.cabRear + 0.03], [W - 0.06, s.floorY, s.cabRear + 0.03], [W - 0.06, s.belt, s.cabRear + 0.03], [-W + 0.06, s.belt, s.cabRear + 0.03]], [[0, 0], [1, 0], [1, 1], [0, 1]], [[0.6, 0.55, 0.5]], [0, 0, 1]);
     const archTop = z => { let y = s.bottom + 0.1; for (const zc of arches) if (Math.abs(z - zc) < Ra) y = Math.max(y, s.R + Math.sqrt(Ra * Ra - (z - zc) * (z - zc)) + 0.06); return y; };
-    if (p.stripe) for (const [y0, y1] of [[s.belt - 0.24, s.belt - 0.2], [s.belt - 0.18, s.belt - 0.165]]) sidePoly(P.trim, clipZ([[zB + 0.15, y0], [zF - 0.2, y0], [zF - 0.2, y1], [zB + 0.15, y1]], -9, 9), wBody, 0.004, [1, 1, 1]);
+    if (p.stripe) for (const [y0, y1] of [[s.belt - 0.24, s.belt - 0.2], [s.belt - 0.18, s.belt - 0.165]]) sidePoly(P.trim, clipZ([[zB + 0.15, y0], [zF - 0.2, y0], [zF - 0.2, y1], [zB + 0.15, y1]], -9, 9), wBody, 0.008, [1, 1, 1]); // فوق سطح الأبواب أيضاً
     // شريط بلاستيك سفلي وحواف فتحات العجلات
     for (const zc of arches) for (const sx of [1, -1]) {
       const pts = arch(zc).map(pt => [sx * (W + 0.01), pt[1], pt[0]]);
@@ -398,9 +399,9 @@
         const y = fy + 0.04 + (r + 0.5) * H / rows, h = H / rows - 0.02, c = plankCol(r);
         const PB = p.painted ? P.paint : P.wood;
         for (const sx of [1, -1]) AA.box(PB, [sx * bw, y, (z0 + z1) / 2], [0.05, h, z0 - z1], c, 1, {});
-        AA.box(PB, [0, y, z1], [bw * 2, h, 0.05], c, 1, {});
+        AA.box(PB, [0, y, z1], [bw * 2 - 0.06, h, 0.05], c, 1, {});
       }
-      for (let r = 0; r < rows + 2; r++) { const y = fy + 0.04 + (r + 0.5) * (H + 0.6) / (rows + 2); AA.box(p.painted ? P.paint : P.wood, [0, y, z0], [bw * 2, (H + 0.6) / (rows + 2) - 0.02, 0.06], plankCol(r + 1), 1, {}); }
+      for (let r = 0; r < rows + 2; r++) { const y = fy + 0.04 + (r + 0.5) * (H + 0.6) / (rows + 2); AA.box(p.painted ? P.paint : P.wood, [0, y, z0], [bw * 2 - 0.06, (H + 0.6) / (rows + 2) - 0.02, 0.06], plankCol(r + 1), 1, {}); }
       for (const z of [z0, (z0 + z1) / 2, z1]) for (const sx of [1, -1]) AA.box(P.paint, [sx * (bw + 0.03), fy + H / 2 + 0.03, z], [0.07, H + 0.06, 0.09], [0.22, 0.22, 0.22], 1, {}); // أعمدة حديد
       for (const sx of [1, -1]) for (let k = 1; k < 5; k++) AA.box(P.chrome, [sx * (bw + 0.035), fy + 0.04 + H * 0.5, lerp(z0, z1, k / 5)], [0.02, 0.06, 0.06], [1, 1, 1], 1, {}); // أقفال
       const ld = p.load, at = t => lerp(z0 - 0.2, z1 + 0.2, t);
