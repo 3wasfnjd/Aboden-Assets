@@ -29,16 +29,7 @@
   }
   const SKIN = { mid: 'skin', light: '#efc19a', tan: '#c98d5e', dark: '#a8714a' };
 
-  // تكبير الأصل كله (الرؤوس، الهيكل، إزاحة الحركات، والبيانات) بمعامل k
-  function scaleOut(out, k) {
-    if (Math.abs(k - 1) < 1e-4) return out;
-    for (const p of Object.values(out.parts)) { const P = p.positions; for (let i = 0; i < P.length; i++) P[i] *= k; }
-    for (const b of out.skeleton.bones) { b.head = b.head.map(v => v * k); b.tail = b.tail.map(v => v * k); }
-    for (const c of Object.values(out.clips || {})) if (c.root) for (let i = 0; i < c.root.length; i++) c.root[i] *= k;
-    const m = out.meta; m.height *= k; m.radius *= k; if (m.walkSpeed) m.walkSpeed *= k;
-    if (m.collider) { m.collider.radius *= k; m.collider.height *= k; }
-    return out;
-  }
+  const scaleOut = LP.scaleOut;
 
   // غطاء رأس من قماش (شماغ، غترة، شيلة): قطعة واحدة متصلة تغطي الرأس وتنفتح حول الوجه وتنسدل على الكتفين
   // o = { pattern: bool (نقشة الشماغ)، color، open (نصف فتحة الوجه)، fold (ثنية الجبهة)، tip (ذيل الظهر)، front (طول الطرفين)، stripes (حاشية بخط أحمر) }

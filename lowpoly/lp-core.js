@@ -100,6 +100,17 @@
     LP.ico(B, c, rr, o.detail == null ? 1 : o.detail, d => { const t = AA.clamp(d[1] * 0.5 + 0.5 + (rng() - 0.5) * 0.25, 0, 0.999); return AA.vary(cols[Math.floor(t * cols.length)], rng, 0.08); },
       { shape: d => { const k = 1 + (h(d) - 0.5) * 2 * j; return [d[0] * k, d[1] * k * (d[1] < 0 ? (o.flatBottom == null ? 0.55 : o.flatBottom) : 1), d[2] * k]; }, sway: o.sway || 0, phase: o.phase || 0, flutter: o.flutter || 0, keep: o.keep });
   };
+  // تكبير أصل كامل (الرؤوس، الهيكل، إزاحة الحركات، والبيانات) بمعامل k
+  LP.scaleOut = function (out, k) {
+    if (Math.abs(k - 1) < 1e-4) return out;
+    for (const p of Object.values(out.parts)) { const P = p.positions; for (let i = 0; i < P.length; i++) P[i] *= k; }
+    if (out.skeleton) for (const b of out.skeleton.bones) { b.head = b.head.map(v => v * k); b.tail = b.tail.map(v => v * k); }
+    for (const c of Object.values(out.clips || {})) if (c.root) for (let i = 0; i < c.root.length; i++) c.root[i] *= k;
+    const m = out.meta; for (const key of ['height', 'radius', 'walkSpeed']) if (typeof m[key] === 'number') m[key] *= k;
+    if (m.collider) { for (const key of ['radius', 'height']) if (typeof m.collider[key] === 'number') m.collider[key] *= k; if (m.collider.size) m.collider.size = m.collider.size.map(v => v * k); }
+    if (m.seat) m.seat = m.seat.map(v => v * k);
+    return out;
+  };
   // مادة مسطحة بلون الرؤوس فقط
   LP.mat = (kind, extra) => Object.assign({ kind, roughness: 0.92 }, extra || {});
 })(typeof window !== 'undefined' ? window : globalThis);
