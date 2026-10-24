@@ -89,14 +89,16 @@
     branchTo(W, [0, 0, 0], fork, 0.28, 0.2, LP.c('#7d6250'), sw);
     const nb = low ? 3 : 5, tips = [];
     for (let k = 0; k < nb; k++) { const a = k / nb * Math.PI * 2 + rng() * 0.5, t = [Math.cos(a) * S * 0.6, H * (0.6 + rng() * 0.15), Math.sin(a) * S * 0.6]; branchTo(W, fork, t, 0.13, 0.05, LP.c('#8d7260'), sw); tips.push(t); }
-    LP.clump(L, [0, H * 0.75, 0], [S * 0.9, H * 0.25, S * 0.9], C, rng, { detail: low ? 1 : 2, sway: 0.3, jitter: 0.25 });
-    const n = Math.round((low ? 8 : 18) * p.density);
+    // تاج من عدة كتل مستطيلة رأسياً، وخصلات ريشية متدلية (مثلثات رفيعة) على الأطراف
+    const nC = Math.round((low ? 5 : 8) * p.density);
+    for (let k = 0; k < nC; k++) { const a = k * 2.39996, rr = k ? S * (0.35 + 0.35 * rng()) : 0, c = [Math.cos(a) * rr, H * (0.68 + rng() * 0.18), Math.sin(a) * rr]; LP.clump(L, c, [S * 0.42, H * 0.2, S * 0.42], C, rng, { detail: low ? 0 : 1, sway: 0.3, phase: k, jitter: 0.2 }); }
+    const n = Math.round((low ? 10 : 26) * p.density);
     for (let k = 0; k < n; k++) {
-      const a = k * 2.39996 + rng() * 0.4, rr = S * (0.7 + rng() * 0.3), top = [Math.cos(a) * rr, H * (0.6 + rng() * 0.3), Math.sin(a) * rr], len = p.droop * (0.8 + rng() * 0.5);
-      // كتلة متدلية: مخروط مقلوب بستة أضلاع
-      LP.prism(L, top, V.add(top, [Math.cos(a) * 0.25, -len * 1.3, Math.sin(a) * 0.25]), S * 0.2, 0.015, 5, AA.vary(C[1 + (k % 3)], rng, 0.1), { sway: pp => 0.4 + 0.3 * (top[1] - pp[1]), phase: k, rot: rng() });
+      const a = k * 2.39996 + rng() * 0.4, rr = S * (0.6 + rng() * 0.35), top = [Math.cos(a) * rr, H * (0.6 + rng() * 0.22), Math.sin(a) * rr], len = p.droop * (0.7 + rng() * 0.6), out = [Math.cos(a), 0, Math.sin(a)], side = [-Math.sin(a), 0, Math.cos(a)];
+      const col = AA.vary(C[1 + (k % 3)], rng, 0.08), tip = V.add(V.add(top, V.scale(out, 0.12)), [0, -len, 0]);
+      for (const sd of [-1, 1]) { const b0 = V.add(top, V.scale(side, sd * 0.09)); const i0 = L.v(b0, col, 0.4, k, 0.3), i1 = L.v(V.add(top, V.scale(out, 0.05)), col, 0.4, k, 0.3), i2 = L.v(tip, col, 0.9, k, 0.8); L.t(i0, i1, i2); }
     }
-    return LP.finalize('lp_athl', { wood: { builder: W, material: LP.mat('wood') }, leaves: { builder: L, material: LP.mat('leaves') } },
+    return LP.finalize('lp_athl', { wood: { builder: W, material: LP.mat('wood') }, leaves: { builder: L, material: LP.mat('leaves', { doubleSided: true }) } },
       { height: H, stiffness: 0.006, radius: S * 1.4, collider: { type: 'cylinder', radius: 0.4, height: 1.8 } });
   }
 

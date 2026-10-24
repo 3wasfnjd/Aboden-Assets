@@ -31,12 +31,12 @@
     const P = kit(), rng = AA.rng(p.seed), L = p.length, D = p.depth, hc = p.height, hf = hc * 0.78, hb = hc * 0.62, nPole = Math.max(2, Math.round(L / 2.6)), sp = L / nPole, low = q === 'low';
     const poleX = []; for (let k = 0; k <= nPole; k++) poleX.push(-L / 2 + k * sp);
     const C = p.color === 'brown' ? ['#4a3a2e', '#5a4636', '#c9b48a'] : ['#2b2522', '#3a322c', '#bfb4a0'];
-    const hairCol = (pt, i, j) => vary(LP.c(j % 5 === 2 ? C[2] : (i + j) % 2 ? C[0] : C[1]), rng, 0.04);
+    const hairCol = (pt, i, j) => vary(LP.c(j % 4 === 2 ? C[1] : C[0]), rng, 0.05);
     const base = z => { const t = (z + D / 2) / D; return t < 0.5 ? lerp(hb, hc, smooth(0, 1, t * 2) * 0.7 + t * 2 * 0.3) : lerp(hc, hf, smooth(0, 1, (t - 0.5) * 2) * 0.7 + (t - 0.5) * 2 * 0.3); };
     const roofH = (x, z) => { let dx = Infinity; for (const px of poleX) dx = Math.min(dx, Math.abs(x - px)); const edge = Math.abs(z) / (D / 2), sag = (0.1 + 0.16 * edge) * (1 - Math.cos(Math.PI * clamp(dx / (sp / 2), 0, 1))) / 2; return base(z) - sag; };
     const nu = nPole * (low ? 2 : 4), nv = low ? 4 : 7, ov = 0.15;
     sheet(P.hair, nu, nv, (i, j) => { const x = lerp(-L / 2 - ov, L / 2 + ov, i / nu), z = lerp(-D / 2, D / 2, j / nv); return [x, roofH(x, z), z]; }, hairCol, () => [0, 1, 0], pp => 0.04 * Math.abs(pp[2]) / D);
-    sheet(P.hair, nu, 1, (i, j) => { const x = lerp(-L / 2 - ov, L / 2 + ov, i / nu), y0 = roofH(x, D / 2); return [x, y0 - 0.32 * j, D / 2 + 0.02 * j]; }, (pt, i) => LP.c(i % 2 ? C[0] : C[2]), () => [0, 0, 1]);
+    sheet(P.hair, nu, 1, (i, j) => { const x = lerp(-L / 2 - ov, L / 2 + ov, i / nu), y0 = roofH(x, D / 2); return [x, y0 - 0.32 * j, D / 2 + 0.02 * j]; }, (pt, i) => LP.c(i % 3 === 1 ? C[2] : C[1]), () => [0, 0, 1]);
     const br = low ? 2 : 4;
     sheet(P.hair, nu, br, (i, j) => { const x = lerp(-L / 2 - ov, L / 2 + ov, i / nu), t = j / br, y0 = roofH(x, -D / 2); return [x, lerp(y0, 0.02, t), -D / 2 - 0.35 * t * t]; }, hairCol, () => [0, 0, -1]);
     if (p.sides) for (const sx of [1, -1]) { const nz = low ? 3 : 6, ny = low ? 2 : 4, xE = sx * (L / 2 + ov);

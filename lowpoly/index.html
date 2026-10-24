@@ -80,7 +80,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   <header>
     <div class="brand">عبودين قيمز · حزمة لو-بولي</div>
     <div class="titleRow"><h1 id="sceneTitle">الحي النجدي</h1><span class="ver">v0.8</span></div>
-    <p>نفس أصول المستودع ونفس المشاهد بأسلوب لو-بولي: أوجه مسطحة وألوان صريحة وعدد مثلثات قليل جداً، والشخصيات تشيبي. كل أصل هنا له نفس معاملات الأصل الواقعي المقابل.</p>
+    <p>نفس أصول المستودع ونفس المشاهد بأسلوب لو-بولي: أوجه مسطحة وألوان صريحة وعدد مثلثات قليل جداً، والشخصيات تشيبي. كل أصل هنا له نفس معاملات الأصل الواقعي المقابل، ونفس المشاهد.</p>
   </header>
 
   <div class="tabs" id="tabs" role="group" aria-label="الفئات">
@@ -141,6 +141,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 <script src="lp-core.js"></script>
 <script src="lp-animals.js"></script>
 <script src="lp-architecture.js"></script>
+<script src="lp-badia.js"></script>
 <script src="lp-characters.js"></script>
 <script src="lp-majlis.js"></script>
 <script src="lp-plants.js"></script>
@@ -375,6 +376,8 @@ const SCENES = {
 };
 // حزمة لو-بولي: كل أصل في المشاهد يُستبدل بنظيره lp_
 for (const s of Object.values(SCENES)) s.entries = s.entries.map(e => Object.assign(e, { id: 'lp_' + e.id.replace(/^lp_/, '') })).filter(e => A[e.id]);
+// تعديلات صغيرة خاصة بالحزمة (الشخصيات التشيبي أعرض قليلاً): [مشهد، أصل، بذرة، إزاحة x، إزاحة z]
+for (const [sc, id, seed, dx, dz] of [['hara', 'lp_shaib', 75, 0, 0.12]]) for (const e of (SCENES[sc] || { entries: [] }).entries) if (e.id === id) for (const i of e.inst) if (i.over && i.over.seed === seed) { i.x += dx; i.z += dz; }
 let ENTRIES = [];
 function groundH(x, z){
   const r = Math.hypot(x, z);

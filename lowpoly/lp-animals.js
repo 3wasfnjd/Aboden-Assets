@@ -199,8 +199,8 @@
     // الجسم: صوف متكتل (كتل كرات أوجه) أو شعر الماعز (منشور بأطراف متدلية)
     Bd.skinFn = AA.autoSkin(sk, ['root', 'rear', 'chest'], 3);
     if (br.wool) {
-      LP.clump(Bd, P3(0, 0.6, -0.02), [0.3 * S, 0.28 * S, 0.5 * S], [jit(cB), jit(cB), cB, AA.mixc(cB, [1, 1, 1], 0.08)], rng, { detail: q === 'low' ? 1 : 2, jitter: 0.1, flatBottom: 1 });
-      for (let k = 0; k < (q === 'low' ? 4 : 8); k++) { const a = k * 2.39996, z = (k / 8 - 0.5) * 0.7; LP.clump(Bd, P3(Math.cos(a) * 0.17, 0.7 + Math.sin(a) * 0.06, z), 0.13 * S, [jit(cB), jit(cB)], rng, { detail: 0, jitter: 0.2 }); }
+      LP.clump(Bd, P3(0, 0.6, -0.02), [0.26 * S, 0.27 * S, 0.47 * S], [jit(cB), jit(cB), cB, AA.mixc(cB, [1, 1, 1], 0.08)], rng, { detail: q === 'low' ? 1 : 2, jitter: 0.1, flatBottom: 1 });
+      for (let k = 0; k < (q === 'low' ? 4 : 8); k++) { const a = k * 2.39996, z = (k / 8 - 0.5) * 0.7; LP.clump(Bd, P3(Math.cos(a) * 0.13, 0.7 + Math.sin(a) * 0.06, z), 0.12 * S, [jit(cB), jit(cB)], rng, { detail: 0, jitter: 0.2 }); }
     } else {
       const rows = [[-0.48, 0.12, 0.12, 0.16], [-0.38, 0.2, 0.17, 0.3], [0, 0.21, 0.16, 0.34], [0.32, 0.2, 0.17, 0.32], [0.44, 0.13, 0.13, 0.18]];
       AA.loft(Bd, { path: rows.map(r => P3(0, 0.64, r[0])), sides: 8, up: () => [0, 1, 0], capStart: true, capEnd: true, radius: (t, a) => { const r = rows[Math.round(t * (rows.length - 1))]; return [r[1] * S, (Math.cos(a) > 0 ? r[2] : r[3]) * S]; }, color: () => jit(cB) });
