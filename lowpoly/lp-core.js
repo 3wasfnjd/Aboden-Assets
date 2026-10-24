@@ -87,6 +87,19 @@
     out.style = 'lowpoly';
     return out;
   };
+  // تسجيل أصل لو-بولي بنفس معاملات الأصل الواقعي المقابل (من lp-schemas.js)، مع إضافات اختيارية
+  LP.def = function (base, generate, extra) {
+    const S = (AA.lpSchemas || {})[base] || {}, e = extra || {};
+    AA.assets['lp_' + base] = Object.assign({ id: 'lp_' + base, name: S.name || base, nameEn: 'Low-poly ' + (S.nameEn || base), category: 'lowpoly', base,
+      schema: S.schema || [], presets: S.presets || {}, clips: S.clips || undefined, generate }, e);
+  };
+  // كتلة أوراق عضوية: كرة أوجه بتشويه ثابت (من اتجاه الرأس) وتلوين بالارتفاع
+  LP.clump = function (B, c, r, cols, rng, o) {
+    o = o || {}; const j = o.jitter == null ? 0.22 : o.jitter, seed = rng() * 100, rr = Array.isArray(r) ? r : [r, r, r];
+    const h = d => { const s = Math.sin(d[0] * 12.9898 + d[1] * 78.233 + d[2] * 37.719 + seed) * 43758.5453; return s - Math.floor(s); };
+    LP.ico(B, c, rr, o.detail == null ? 1 : o.detail, d => { const t = AA.clamp(d[1] * 0.5 + 0.5 + (rng() - 0.5) * 0.25, 0, 0.999); return AA.vary(cols[Math.floor(t * cols.length)], rng, 0.08); },
+      { shape: d => { const k = 1 + (h(d) - 0.5) * 2 * j; return [d[0] * k, d[1] * k * (d[1] < 0 ? (o.flatBottom == null ? 0.55 : o.flatBottom) : 1), d[2] * k]; }, sway: o.sway || 0, phase: o.phase || 0, flutter: o.flutter || 0, keep: o.keep });
+  };
   // مادة مسطحة بلون الرؤوس فقط
   LP.mat = (kind, extra) => Object.assign({ kind, roughness: 0.92 }, extra || {});
 })(typeof window !== 'undefined' ? window : globalThis);

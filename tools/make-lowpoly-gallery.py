@@ -5,7 +5,7 @@ src = open(os.path.join(R, 'index.html'), encoding='utf-8').read()
 # السكربتات: الأساس + ملفات الحزمة فقط
 core = ['core/math.js', 'core/builder.js', 'core/tree.js', 'core/texture.js', 'core/mud.js', 'core/skeleton.js']
 lp = sorted(f for f in os.listdir(os.path.join(R, 'lowpoly')) if f.startswith('lp-') and f.endswith('.js'))
-lp = ['lp-core.js'] + [f for f in lp if f != 'lp-core.js']
+lp = ['lp-schemas.js', 'lp-core.js'] + [f for f in lp if f not in ('lp-core.js', 'lp-schemas.js')]
 tags = '\n'.join(f'<script src="../{c}"></script>' for c in core) + '\n' + '\n'.join(f'<script src="{f}"></script>' for f in lp) + '\n<script src="../core/viewer-three.js"></script>'
 a = src.index('<script src="core/math.js"></script>'); b = src.index('<script src="core/viewer-three.js"></script>') + len('<script src="core/viewer-three.js"></script>')
 src = src[:a] + tags + src[b:]

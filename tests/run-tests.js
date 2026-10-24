@@ -12,7 +12,7 @@ vm.createContext(ctx);
 const order = ['core/math.js', 'core/builder.js', 'core/tree.js', 'core/texture.js', 'core/mud.js', 'core/skeleton.js'];
 const assetDirs = ['plants', 'architecture', 'animals', 'characters', 'souq', 'majlis', 'terrain', 'vehicles', 'badia', 'lowpoly'].filter(d => fs.existsSync(path.join(root, d)));
 for (const f of order) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
-for (const d of assetDirs) for (const f of fs.readdirSync(path.join(root, d)).filter(x => x.endsWith('.js') && x !== 'scenes.js').sort((a, b) => (b === 'lp-core.js') - (a === 'lp-core.js') || a.localeCompare(b)))
+for (const d of assetDirs) for (const f of fs.readdirSync(path.join(root, d)).filter(x => x.endsWith('.js') && x !== 'scenes.js').sort((a, b) => ((b === 'lp-schemas.js') * 2 + (b === 'lp-core.js')) - ((a === 'lp-schemas.js') * 2 + (a === 'lp-core.js')) || a.localeCompare(b)))
   vm.runInContext(fs.readFileSync(path.join(root, d, f), 'utf8'), ctx, { filename: d + '/' + f });
 
 const AA = ctx.AA;
