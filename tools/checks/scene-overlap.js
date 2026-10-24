@@ -7,16 +7,17 @@ window.__overlap = function(sceneId){
   const ARCH = new Set(['najdi_house','wall','sur','tower','gate','mosque','wall_corner','wall_door','shop','kiosk','fence','pen','dakka','water_channel','water_basin','well']);
   const PLANT = new Set(['palm','fasila','sidr','talh','athl','arfaj','thumam']);
   for (const e of ENT) e.inst.forEach((i, k) => {
+    const eid = e.id.replace(/^lp_/, ''); // حزمة لو-بولي: نفس قواعد الأصل الواقعي
     const g = i.group; if (!g) return;
     // صندوق محلي (بدون دوران) — نستبعد الحبال والأوتاد
     const pos = g.position.clone(), rot = g.rotation.y, sc = g.scale.x; g.position.set(0,0,0); g.rotation.y = 0; g.scale.setScalar(1); g.updateMatrixWorld(true);
-    const box = new T.Box3(); g.traverse(o => { if (!o.isMesh) return; if (/rope/.test(o.name) || ((e.id==='bait_shaar'||e.id==='khaima') && o.name==='woodDark')) return; o.geometry.computeBoundingBox(); const b = o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld); box.union(b); });
+    const box = new T.Box3(); g.traverse(o => { if (!o.isMesh) return; if (/rope/.test(o.name) || ((eid==='bait_shaar'||eid==='khaima') && o.name==='woodDark')) return; o.geometry.computeBoundingBox(); const b = o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld); box.union(b); });
     g.position.copy(pos); g.rotation.y = rot; g.scale.setScalar(sc); g.updateMatrixWorld(true);
     let mn = box.min.clone().multiplyScalar(sc), mx = box.max.clone().multiplyScalar(sc);
     const col = (i.built || e.built).meta.collider;
-    if (col && col.type === 'box' && col.size && /najdi_house|shop|kiosk|wall|sur|cart|jeep|pickup|lorry|wayt|crate/.test(e.id)) { const [sx, sy, sz] = col.size; mn.set(-sx / 2 * sc, 0, -sz / 2 * sc); mx.set(sx / 2 * sc, sy * sc, sz / 2 * sc); if (/cart/.test(e.id)) { mn.x = box.min.x * sc; mx.x = box.max.x * sc; mn.z = box.min.z * sc; mx.z = box.max.z * sc; } }
-    if (PLANT.has(e.id.replace(/^lp_/, ''))) { const r = e.id==='arfaj'||e.id==='thumam' ? 0.5 : 0.35; mn.set(-r, 0, -r); mx.set(r, 2, r); } // جذع فقط
-    items.push({ id: e.id, k, x: pos.x, z: pos.z, rot, mn, mx, walk: i.walk || i.loop ? (i.walk || i.loop) : null, loop: !!i.loop, y0: pos.y });
+    if (col && col.type === 'box' && col.size && /najdi_house|shop|kiosk|wall|sur|cart|jeep|pickup|lorry|wayt|crate/.test(eid)) { const [sx, sy, sz] = col.size; mn.set(-sx / 2 * sc, 0, -sz / 2 * sc); mx.set(sx / 2 * sc, sy * sc, sz / 2 * sc); if (/cart/.test(eid)) { mn.x = box.min.x * sc; mx.x = box.max.x * sc; mn.z = box.min.z * sc; mx.z = box.max.z * sc; } }
+    if (PLANT.has(eid)) { const r = eid==='arfaj'||eid==='thumam' ? 0.5 : 0.35; mn.set(-r, 0, -r); mx.set(r, 2, r); } // جذع فقط
+    items.push({ id: eid, k, x: pos.x, z: pos.z, rot, mn, mx, walk: i.walk || i.loop ? (i.walk || i.loop) : null, loop: !!i.loop, y0: pos.y });
   });
   const corners = it => [[it.mn.x,it.mn.z],[it.mx.x,it.mn.z],[it.mx.x,it.mx.z],[it.mn.x,it.mx.z]].map(([x,z]) => [it.x + x*Math.cos(it.rot) + z*Math.sin(it.rot), it.z - x*Math.sin(it.rot) + z*Math.cos(it.rot)]);
   const axes = it => [[Math.cos(it.rot), -Math.sin(it.rot)], [Math.sin(it.rot), Math.cos(it.rot)]];

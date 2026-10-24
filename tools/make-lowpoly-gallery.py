@@ -12,14 +12,15 @@ src = src[:a] + tags + src[b:]
 # العنوان والوصف والتبويبات
 src = src.replace('<title>مستودع عبودين</title>', '<title>عبودين لو-بولي</title>')
 src = src.replace('عبودين قيمز · مستودع الأصول', 'عبودين قيمز · حزمة لو-بولي')
-src = re.sub(r'<p>كل أصل هنا مبني بالكود[^<]*</p>', '<p>نفس أصول المستودع بأسلوب لو-بولي: أوجه مسطحة وألوان صريحة وعدد مثلثات قليل جداً، والشخصيات تشيبي. هذه عينات أولى للاعتماد قبل إكمال الباقي.</p>', src)
-a = src.index('<div class="tabs" id="tabs"'); b = src.index('</div>', a) + 6
-src = src[:a] + '<div class="tabs" id="tabs" role="group" aria-label="الفئات">\n    <button type="button" data-s="lp" aria-pressed="true">العينات</button>\n  </div>' + src[b:]
-# المشاهد
-a = src.index('const SCENES = {'); b = src.index('let ENTRIES = [];')
-scenes = open(os.path.join(R, 'lowpoly', 'scenes.js'), encoding='utf-8').read()
-src = src[:a] + scenes + '\n' + src[b:]
-src = src.replace("loadScene(SCENES[startTab] ? startTab : 'hara');", "loadScene(SCENES[startTab] ? startTab : 'lp');")
+src = re.sub(r'<p>كل أصل هنا مبني بالكود[^<]*</p>', '<p>نفس أصول المستودع ونفس المشاهد بأسلوب لو-بولي: أوجه مسطحة وألوان صريحة وعدد مثلثات قليل جداً، والشخصيات تشيبي. كل أصل هنا له نفس معاملات الأصل الواقعي المقابل.</p>', src)
+# المشاهد: نفس مشاهد الحزمة الواقعية، وكل أصل X يُستبدل بنظيره lp_X (ويُتجاهل ما ليس له نظير بعد)
+a = src.index('let ENTRIES = [];')
+remap = """// حزمة لو-بولي: كل أصل في المشاهد يُستبدل بنظيره lp_
+for (const s of Object.values(SCENES)) s.entries = s.entries.map(e => Object.assign(e, { id: 'lp_' + e.id.replace(/^lp_/, '') })).filter(e => A[e.id]);
+"""
+src = src[:a] + remap + src[a:]
+src = src.replace("e.id === 'palm'", "e.id === 'lp_palm'")
+src = src.replace("A.najdi_house.generate(AA.params(A.najdi_house, over)", "A.lp_najdi_house.generate(AA.params(A.lp_najdi_house, over)")
 # الأرض: مثلثات كبيرة مسطحة بدون خامة
 src = src.replace("const g = new T.PlaneGeometry(180, 180, 220, 220); g.rotateX(-Math.PI / 2);", "const g = new T.PlaneGeometry(180, 180, 60, 60).toNonIndexed(); g.rotateX(-Math.PI / 2);")
 src = re.sub(r"const m = new T\.Mesh\(g, X\.style === 'toon'[\s\S]*?\}\)\);", "const m = new T.Mesh(g, new T.MeshStandardMaterial({ vertexColors: true, roughness: 1, flatShading: true }));", src, count=1)
